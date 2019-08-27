@@ -1,0 +1,6 @@
+config:
+- local_path: /Users/yevgeniy_valeyev/golang/src
+  bucket: some-bucket
+  storage_class: STANDARD_IA
+- local_path: /some/other/path
+  bucket: some-other-bucket

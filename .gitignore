@@ -1,0 +1,10 @@
+### OSX Finder .DS_Store
+.DS_Store
+
+### IntelliJ IDEA
+.idea/*
+*.iml
+
+### Binary file
+s3sync-service
+
