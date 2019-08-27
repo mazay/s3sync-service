@@ -1,6 +1,7 @@
 config:
-- local_path: /Users/yevgeniy_valeyev/golang/src
-  bucket: some-bucket
-  storage_class: STANDARD_IA
-- local_path: /some/other/path
-  bucket: some-other-bucket
+- local_path: /Users/yevgeniy_valeyev/golang/src/mazay/s3sync-service
+  bucket: test-s3sync-service
+  exclusions:
+    - .git
+# - local_path: /some/other/path
+#   bucket: some-other-bucket
