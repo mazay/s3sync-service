@@ -1,5 +1,5 @@
 config:
-- local_path: /Users/yevgeniy_valeyev/golang/src/mazay/s3sync-service
+- local_path: ./
   bucket: test-s3sync-service
   exclusions:
     - .git
