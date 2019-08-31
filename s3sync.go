@@ -17,6 +17,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+func generateS3Key(bucketPath string, root string, path string) string {
+	relativePath, _ := filepath.Rel(root, path)
+	return filepath.Join(bucketPath, relativePath)
+}
+
 func getS3Session(site Site) *session.Session {
 	config := aws.Config{Region: aws.String(site.BucketRegion)}
 
@@ -68,9 +73,7 @@ func uploadFile(s3Service *s3.S3, file string, timeout time.Duration, site Site)
 		site.StorageClass = "STANDARD"
 	}
 
-	// Generate S3 key
-	relativePath, _ := filepath.Rel(site.LocalPath, file)
-	s3Key := filepath.Join(site.BucketPath, relativePath)
+	s3Key := generateS3Key(site.BucketPath, site.LocalPath, file)
 
 	f, fileErr := os.Open(file)
 
@@ -97,17 +100,49 @@ func uploadFile(s3Service *s3.S3, file string, timeout time.Duration, site Site)
 	}
 }
 
-func syncFile(timeout time.Duration, site Site) {
+func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
+	input := &s3.DeleteObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(s3Key),
+	}
+
+	_, err := s3Service.DeleteObject(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return
+	}
+
+	fmt.Printf("removed s3 object: %s/%s\n", bucketName, s3Key)
+}
+
+func syncSite(timeout time.Duration, site Site) {
 	s3Service := s3.New(getS3Session(site))
 
 	awsItems, err := getAwsS3ItemMap(s3Service, site.Bucket)
-	files, err := FilePathWalkDir(site.LocalPath, site.Exclusions, awsItems, site.BucketPath)
+	uploadFiles, deleteKeys, err := FilePathWalkDir(site.LocalPath, site.Exclusions, awsItems, site.BucketPath)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, file := range files {
+	// Upload files
+	for _, file := range uploadFiles {
 		uploadFile(s3Service, file, timeout, site)
+	}
+
+	// Delete retired files
+	if site.RetireDeleted {
+		for _, key := range deleteKeys {
+			deleteFile(s3Service, site.Bucket, key)
+		}
 	}
 }

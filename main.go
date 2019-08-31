@@ -17,6 +17,6 @@ func main() {
 	readFile(&config, configpath)
 
 	for _, site := range config.Config {
-		syncFile(timeout, site)
+		syncSite(timeout, site)
 	}
 }

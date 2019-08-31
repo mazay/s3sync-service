@@ -16,6 +16,7 @@ type Site struct {
 	StorageClass    string   `yaml:"storage_class"`
 	AccessKey       string   `yaml:"access_key"`
 	SecretAccessKey string   `yaml:"secret_access_key"`
+	RetireDeleted   bool     `yaml:"retire_deleted"`
 	Exclusions      []string `yaml:",flow"`
 }
 

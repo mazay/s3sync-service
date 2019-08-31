@@ -9,6 +9,16 @@ import (
 	"regexp"
 )
 
+func checkIfInList(item string, list []string) bool {
+	for _, i := range list {
+		if i == item {
+			return true
+		}
+	}
+
+	return false
+}
+
 func checkIfExcluded(path string, exclusions []string) bool {
 	var excluded bool
 	excluded = false
@@ -23,9 +33,11 @@ func checkIfExcluded(path string, exclusions []string) bool {
 	return excluded
 }
 
-// FilePathWalkDir walks throught the directory and all subdirectories returning list of files
-func FilePathWalkDir(root string, exclusions []string, awsItems map[string]string, bucketPath string) ([]string, error) {
-	var files []string
+// FilePathWalkDir walks throught the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
+func FilePathWalkDir(root string, exclusions []string, awsItems map[string]string, bucketPath string) ([]string, []string, error) {
+	var uploadFiles []string
+	var deleteKeys []string
+	var localS3Keys []string
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -37,19 +49,25 @@ func FilePathWalkDir(root string, exclusions []string, awsItems map[string]strin
 			if excluded {
 				fmt.Printf("skipping without errors: %+v \n", path)
 			} else {
-				relativeRoot, _ := filepath.Rel(bucketPath, root)
-				relativePath, _ := filepath.Rel(relativeRoot, path)
-				checksumRemote, _ := awsItems[relativePath]
+				s3Key := generateS3Key(bucketPath, root, path)
+				localS3Keys = append(localS3Keys, s3Key)
+				checksumRemote, _ := awsItems[s3Key]
 				filename := compareChecksum(path, checksumRemote)
 				if len(filename) > 0 {
-					files = append(files, path)
+					uploadFiles = append(uploadFiles, path)
 				}
 			}
 		}
 		return nil
 	})
 
-	return files, err
+	for key := range awsItems {
+		if !checkIfInList(key, localS3Keys) {
+			deleteKeys = append(deleteKeys, key)
+		}
+	}
+
+	return uploadFiles, deleteKeys, err
 }
 
 func compareChecksum(filename string, checksumRemote string) string {

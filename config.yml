@@ -1,8 +1,9 @@
 config:
 - local_path: ./
   bucket: test-s3sync-service
+  retire_deleted: true
   exclusions:
-    - .git
+    - .git/
     - s3sync-service
 # - local_path: /some/other/path
 #   bucket: some-other-bucket
