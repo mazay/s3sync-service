@@ -38,4 +38,4 @@ config:
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | AWS Access Key | n/a | no |
 | secret_access_key | AWS Secret Access Key | n/a | no |
-| exclusions | List of regexp exclude filters | n/a | no |
+| exclusions | List of regexp filters for exclusions | n/a | no |
