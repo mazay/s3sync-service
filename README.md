@@ -2,13 +2,14 @@
 
 ## Description
 
-The tool is aimed to sync data into S3 storage service in background.
+The tool is aimed to sync data into S3 storage service for multiple _sites_ (path + bucket combination).
 
 ## Configuration
 
 Exaple configuration:
 ```yaml
-config:
+upload_workers: 10
+sites:
 - local_path: /local/path1
   bucket: backup-bucket-path1
   bucket_region: us-east-1
@@ -28,6 +29,13 @@ config:
   exclusions:
     - "[Tt]humbs.db"
 ```
+### Generic configuration options
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| upload_workers | Number of upload workers for the service | 10 | no |
+
+### Sites configuration options
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|

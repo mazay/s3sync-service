@@ -21,7 +21,8 @@ type Site struct {
 
 // Config structure - contains lst of Site options
 type Config struct {
-	Config []Site `yaml:",flow"`
+	UploadWorkers int    `yaml:"upload_workers"`
+	Sites         []Site `yaml:",flow"`
 }
 
 func configProcessError(err error) {

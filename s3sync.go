@@ -122,7 +122,7 @@ func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
 	logger.Printf("removed s3 object: %s/%s\n", bucketName, s3Key)
 }
 
-func syncSite(timeout time.Duration, site Site) {
+func syncSite(timeout time.Duration, site Site, uploadCh chan<- UploadCFG) {
 	s3Service := s3.New(getS3Session(site))
 
 	awsItems, err := getAwsS3ItemMap(s3Service, site.Bucket)
@@ -134,13 +134,15 @@ func syncSite(timeout time.Duration, site Site) {
 
 	// Upload files
 	for _, file := range uploadFiles {
-		uploadFile(s3Service, file, timeout, site)
+		uploadCh <- UploadCFG{s3Service, file, timeout, site}
 	}
 
 	// Delete retired files
 	if site.RetireDeleted {
 		for _, key := range deleteKeys {
-			deleteFile(s3Service, site.Bucket, key)
+			go deleteFile(s3Service, site.Bucket, key)
+			// Send 1 request per 5 seconds to avoid AWS throtling
+			time.Sleep(5)
 		}
 	}
 }

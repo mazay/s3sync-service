@@ -38,6 +38,8 @@ func FilePathWalkDir(root string, exclusions []string, awsItems map[string]strin
 	var uploadFiles []string
 	var deleteKeys []string
 	var localS3Keys []string
+	var filescount int
+	ch := make(chan string)
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -49,18 +51,26 @@ func FilePathWalkDir(root string, exclusions []string, awsItems map[string]strin
 			if excluded {
 				logger.Printf("skipping without errors: %+v \n", path)
 			} else {
+				filescount++
 				s3Key := generateS3Key(bucketPath, root, path)
 				localS3Keys = append(localS3Keys, s3Key)
 				checksumRemote, _ := awsItems[s3Key]
-				filename := compareChecksum(path, checksumRemote)
-				if len(filename) > 0 {
-					uploadFiles = append(uploadFiles, path)
-				}
+				go compareChecksum(path, checksumRemote, ch)
 			}
 		}
 		return nil
 	})
 
+	// Wait for checksums to be compared
+	var filename string
+	for i := 0; i < filescount; i++ {
+		filename = <-ch
+		if len(filename) > 0 {
+			uploadFiles = append(uploadFiles, filename)
+		}
+	}
+
+	// Generate a list of deleted files
 	for key := range awsItems {
 		if !checkIfInList(key, localS3Keys) {
 			deleteKeys = append(deleteKeys, key)
@@ -70,19 +80,23 @@ func FilePathWalkDir(root string, exclusions []string, awsItems map[string]strin
 	return uploadFiles, deleteKeys, err
 }
 
-func compareChecksum(filename string, checksumRemote string) string {
+func compareChecksum(filename string, checksumRemote string, ch chan<- string) {
 	if checksumRemote == "" {
-		return filename
+		ch <- filename
+		return
 	}
 
 	contents, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return ""
+	if err == nil {
+		sum := md5.Sum(contents)
+		sumString := fmt.Sprintf("%x", sum)
+		// checksums don't match, mark for upload
+		if sumString != checksumRemote {
+			ch <- filename
+			return
+		}
+		// Files matched
+		ch <- ""
+		return
 	}
-	sum := md5.Sum(contents)
-	sumString := fmt.Sprintf("%x", sum)
-	if sumString != checksumRemote {
-		return filename
-	}
-	return ""
 }
