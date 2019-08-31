@@ -9,12 +9,14 @@ import (
 
 // Site is a option for backing up data to S3
 type Site struct {
-	LocalPath    string   `yaml:"local_path"`
-	Bucket       string   `yaml:"bucket"`
-	BucketPath   string   `yaml:"bucket_path"`
-	BucketRegion string   `yaml:"bucket_region"`
-	StorageClass string   `yaml:"storage_class"`
-	Exclusions   []string `yaml:",flow"`
+	LocalPath       string   `yaml:"local_path"`
+	Bucket          string   `yaml:"bucket"`
+	BucketPath      string   `yaml:"bucket_path"`
+	BucketRegion    string   `yaml:"bucket_region"`
+	StorageClass    string   `yaml:"storage_class"`
+	AccessKey       string   `yaml:"access_key"`
+	SecretAccessKey string   `yaml:"secret_access_key"`
+	Exclusions      []string `yaml:",flow"`
 }
 
 // Config structure - contains lst of Site options

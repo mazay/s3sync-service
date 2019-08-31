@@ -48,12 +48,6 @@ func main() {
 	readFile(&config, configpath)
 
 	for _, site := range config.Config {
-		// Set default value for StorageClass, available values are here
-		// https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare
-		if site.StorageClass == "" {
-			site.StorageClass = "STANDARD"
-		}
-
 		files, err := FilePathWalkDir(site.LocalPath, site.Exclusions)
 		if err != nil {
 			log.Fatal(err)

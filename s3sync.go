@@ -9,16 +9,26 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+func getS3Session(site Site) *session.Session {
+	config := aws.Config{Region: aws.String(site.BucketRegion)}
+
+	if site.AccessKey != "" && site.SecretAccessKey != "" {
+		config.Credentials = credentials.NewStaticCredentials(site.AccessKey, site.SecretAccessKey, "")
+	}
+
+	return session.Must(session.NewSession(&config))
+}
+
 func syncFile(file string, timeout time.Duration, site Site) {
 	var cancelFn func()
 
-	sess := session.Must(session.NewSession())
-	svc := s3.New(sess)
+	svc := s3.New(getS3Session(site))
 
 	ctx := context.Background()
 
@@ -28,6 +38,12 @@ func syncFile(file string, timeout time.Duration, site Site) {
 
 	if cancelFn != nil {
 		defer cancelFn()
+	}
+
+	// Set default value for StorageClass, available values are here
+	// https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare
+	if site.StorageClass == "" {
+		site.StorageClass = "STANDARD"
 	}
 
 	// Generate S3 key

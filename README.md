@@ -11,19 +11,20 @@ Exaple configuration:
 config:
 - local_path: /local/path1
   bucket: backup-bucket-path1
+  bucket_region: us-east-1
+  access_key: AKIAI44QH8DHBEXAMPLE
+  secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
   exclusions:
     - .ds_store
     - .appledouble
 - local_path: /local/path2
   bucket: generic-backup-bucket
   bucket_path: /path2
-  bucket_region: us-east-1
   exclusions:
     - thumbs.db
 - local_path: /local/path3
   bucket: generic-backup-bucket
   bucket_path: /path3
-  bucket_region: us-east-1
   exclusions:
     - thumbs.db
 ```
@@ -35,4 +36,6 @@ config:
 | bucket_path | S3 path prefix | n/a | no |
 | bucket_region | S3 bucket region if [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) or [aws cli configuration](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration) should be overriden | AWS CLI configuration | no |
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
+| access_key | AWS Access Key | n/a | no |
+| secret_access_key | AWS Secret Access Key | n/a | no |
 | exclusions | List of regexp exclude filters | n/a | no |
