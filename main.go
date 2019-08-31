@@ -2,8 +2,14 @@ package main
 
 import (
 	"flag"
+	"log"
+	"os"
+	"sync"
 	"time"
 )
+
+var wg = sync.WaitGroup{}
+var logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 func main() {
 	var config Config
@@ -16,7 +22,9 @@ func main() {
 
 	readFile(&config, configpath)
 
+	wg.Add(len(config.Config))
 	for _, site := range config.Config {
-		syncSite(timeout, site)
+		go syncSite(timeout, site)
 	}
+	wg.Wait()
 }

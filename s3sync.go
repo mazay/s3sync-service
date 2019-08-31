@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -78,7 +76,7 @@ func uploadFile(s3Service *s3.S3, file string, timeout time.Duration, site Site)
 	f, fileErr := os.Open(file)
 
 	if fileErr != nil {
-		fmt.Fprintf(os.Stderr, "failed to open file %q, %v", file, fileErr)
+		logger.Printf("failed to open file %q, %v", file, fileErr)
 	} else {
 		_, err := s3Service.PutObjectWithContext(ctx, &s3.PutObjectInput{
 			Bucket:       aws.String(site.Bucket),
@@ -89,14 +87,14 @@ func uploadFile(s3Service *s3.S3, file string, timeout time.Duration, site Site)
 
 		if err != nil {
 			if aerr, ok := err.(awserr.Error); ok && aerr.Code() == request.CanceledErrorCode {
-				fmt.Fprintf(os.Stderr, "upload canceled due to timeout, %v\n", err)
+				logger.Printf("upload canceled due to timeout, %v\n", err)
 			} else {
-				fmt.Fprintf(os.Stderr, "failed to upload object, %v\n", err)
+				logger.Printf("failed to upload object, %v\n", err)
 			}
 			os.Exit(1)
 		}
 
-		fmt.Printf("successfully uploaded file to %s/%s\n", site.Bucket, s3Key)
+		logger.Printf("successfully uploaded file to %s/%s\n", site.Bucket, s3Key)
 	}
 }
 
@@ -111,17 +109,17 @@ func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
-				fmt.Println(aerr.Error())
+				logger.Println(aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			logger.Println(err.Error())
 		}
 		return
 	}
 
-	fmt.Printf("removed s3 object: %s/%s\n", bucketName, s3Key)
+	logger.Printf("removed s3 object: %s/%s\n", bucketName, s3Key)
 }
 
 func syncSite(timeout time.Duration, site Site) {
@@ -131,7 +129,7 @@ func syncSite(timeout time.Duration, site Site) {
 	uploadFiles, deleteKeys, err := FilePathWalkDir(site.LocalPath, site.Exclusions, awsItems, site.BucketPath)
 
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	// Upload files

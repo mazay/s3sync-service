@@ -47,7 +47,7 @@ func FilePathWalkDir(root string, exclusions []string, awsItems map[string]strin
 		if !info.IsDir() {
 			excluded := checkIfExcluded(path, exclusions)
 			if excluded {
-				fmt.Printf("skipping without errors: %+v \n", path)
+				logger.Printf("skipping without errors: %+v \n", path)
 			} else {
 				s3Key := generateS3Key(bucketPath, root, path)
 				localS3Keys = append(localS3Keys, s3Key)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v2"
@@ -26,7 +25,7 @@ type Config struct {
 }
 
 func configProcessError(err error) {
-	fmt.Println(err)
+	logger.Println(err)
 	os.Exit(2)
 }
 

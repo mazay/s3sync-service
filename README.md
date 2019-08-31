@@ -15,18 +15,18 @@ config:
   access_key: AKIAI44QH8DHBEXAMPLE
   secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
   exclusions:
-    - .ds_store
-    - .appledouble
+    - .[Dd][Ss]_[Ss]tore
+    - .[Aa]pple[Dd]ouble
 - local_path: /local/path2
   bucket: generic-backup-bucket
   bucket_path: /path2
   exclusions:
-    - thumbs.db
+    - "[Tt]humbs.db"
 - local_path: /local/path3
   bucket: generic-backup-bucket
   bucket_path: /path3
   exclusions:
-    - thumbs.db
+    - "[Tt]humbs.db"
 ```
 
 | Variable | Description | Default | Required |
