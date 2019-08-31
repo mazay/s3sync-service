@@ -39,7 +39,7 @@ func main() {
 		config.UploadWorkers = 10
 	}
 
-	uploadCh := make(chan UploadCFG)
+	uploadCh := make(chan UploadCFG, 500)
 	for x := 0; x < config.UploadWorkers; x++ {
 		go uploadWorker(uploadCh)
 	}

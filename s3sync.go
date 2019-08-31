@@ -21,7 +21,10 @@ func generateS3Key(bucketPath string, root string, path string) string {
 }
 
 func getS3Session(site Site) *session.Session {
-	config := aws.Config{Region: aws.String(site.BucketRegion)}
+	config := aws.Config{
+		Region:     aws.String(site.BucketRegion),
+		MaxRetries: aws.Int(-1),
+	}
 
 	if site.AccessKey != "" && site.SecretAccessKey != "" {
 		config.Credentials = credentials.NewStaticCredentials(site.AccessKey, site.SecretAccessKey, "")
@@ -94,7 +97,7 @@ func uploadFile(s3Service *s3.S3, file string, timeout time.Duration, site Site)
 			os.Exit(1)
 		}
 
-		logger.Printf("successfully uploaded file to %s/%s\n", site.Bucket, s3Key)
+		logger.Printf("successfully uploaded file: %s/%s\n", site.Bucket, s3Key)
 	}
 }
 
@@ -145,4 +148,7 @@ func syncSite(timeout time.Duration, site Site, uploadCh chan<- UploadCFG) {
 			time.Sleep(5)
 		}
 	}
+
+	// Watch directory for realtime sync
+	watch(s3Service, timeout, site, uploadCh)
 }

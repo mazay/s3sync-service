@@ -4,6 +4,8 @@
 
 The tool is aimed to sync data into S3 storage service for multiple _sites_ (path + bucket combination).
 
+On start, the `s3sync-service` compares local directory contents with S3 (using checksums/ETag) - copies new files and removes files deleted locally from S3 storage (if `retire_deleted` is set to `true`). Once the initial sync is over the `s3sync-service` start watching the specified local directories and subdirectories for changes in order to perform real-time sync to S3.
+
 ## Configuration
 
 Exaple configuration:
@@ -39,7 +41,7 @@ sites:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| local_path | Local file systme path to be synced with S3 | n/a | yes |
+| local_path | Local file system path to be synced with S3, using relative path is known to cause some issues. | n/a | yes |
 | bucket | S3 bucet name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
 | bucket_region | S3 bucket region if [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) or [aws cli configuration](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration) should be overriden | AWS CLI configuration | no |
