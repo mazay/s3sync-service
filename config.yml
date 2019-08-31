@@ -3,5 +3,6 @@ config:
   bucket: test-s3sync-service
   exclusions:
     - .git
+    - s3sync-service
 # - local_path: /some/other/path
 #   bucket: some-other-bucket

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,10 +31,11 @@ func getS3Service(site Site) *s3.S3 {
 	return s3.New(getS3Session(site))
 }
 
-func getAwsS3ItemMap(s3Service *s3.S3) (map[string]string, error) {
+func getAwsS3ItemMap(s3Service *s3.S3, bucketName string) (map[string]string, error) {
 	var loi s3.ListObjectsInput
 	var items = make(map[string]string)
 
+	loi.SetBucket(bucketName)
 	obj, err := s3Service.ListObjects(&loi)
 
 	if err == nil {
@@ -47,10 +49,8 @@ func getAwsS3ItemMap(s3Service *s3.S3) (map[string]string, error) {
 	return nil, err
 }
 
-func syncFile(file string, timeout time.Duration, site Site) {
+func uploadFile(s3Service *s3.S3, file string, timeout time.Duration, site Site) {
 	var cancelFn func()
-
-	svc := s3.New(getS3Session(site))
 
 	ctx := context.Background()
 
@@ -77,7 +77,7 @@ func syncFile(file string, timeout time.Duration, site Site) {
 	if fileErr != nil {
 		fmt.Fprintf(os.Stderr, "failed to open file %q, %v", file, fileErr)
 	} else {
-		_, err := svc.PutObjectWithContext(ctx, &s3.PutObjectInput{
+		_, err := s3Service.PutObjectWithContext(ctx, &s3.PutObjectInput{
 			Bucket:       aws.String(site.Bucket),
 			Key:          aws.String(s3Key),
 			Body:         f,
@@ -94,5 +94,20 @@ func syncFile(file string, timeout time.Duration, site Site) {
 		}
 
 		fmt.Printf("successfully uploaded file to %s/%s\n", site.Bucket, s3Key)
+	}
+}
+
+func syncFile(timeout time.Duration, site Site) {
+	s3Service := s3.New(getS3Session(site))
+
+	awsItems, err := getAwsS3ItemMap(s3Service, site.Bucket)
+	files, err := FilePathWalkDir(site.LocalPath, site.Exclusions, awsItems, site.BucketPath)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		uploadFile(s3Service, file, timeout, site)
 	}
 }

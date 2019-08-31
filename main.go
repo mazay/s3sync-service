@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"time"
 )
 
@@ -18,13 +17,6 @@ func main() {
 	readFile(&config, configpath)
 
 	for _, site := range config.Config {
-		files, err := FilePathWalkDir(site.LocalPath, site.Exclusions)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for _, f := range files {
-			syncFile(f, timeout, site)
-		}
+		syncFile(timeout, site)
 	}
 }
