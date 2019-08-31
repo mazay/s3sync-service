@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,6 +24,27 @@ func getS3Session(site Site) *session.Session {
 	}
 
 	return session.Must(session.NewSession(&config))
+}
+
+func getS3Service(site Site) *s3.S3 {
+	return s3.New(getS3Session(site))
+}
+
+func getAwsS3ItemMap(s3Service *s3.S3) (map[string]string, error) {
+	var loi s3.ListObjectsInput
+	var items = make(map[string]string)
+
+	obj, err := s3Service.ListObjects(&loi)
+
+	if err == nil {
+		for _, s3obj := range obj.Contents {
+			eTag := strings.Trim(*(s3obj.ETag), "\"")
+			items[*(s3obj.Key)] = eTag
+		}
+		return items, nil
+	}
+
+	return nil, err
 }
 
 func syncFile(file string, timeout time.Duration, site Site) {
