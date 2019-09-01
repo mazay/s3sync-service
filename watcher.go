@@ -22,8 +22,10 @@ func watch(s3Service *s3.S3, timeout time.Duration, site Site, uploadCh chan<- U
 					// Convert filepath to string
 					filepath := fmt.Sprint(event.Path)
 					if fmt.Sprint(event.Op) == "REMOVE" {
-						s3Key := generateS3Key(site.BucketPath, site.LocalPath, filepath)
-						deleteFile(s3Service, site.Bucket, s3Key)
+						if site.RetireDeleted {
+							s3Key := generateS3Key(site.BucketPath, site.LocalPath, filepath)
+							deleteFile(s3Service, site.Bucket, s3Key)
+						}
 					} else if fmt.Sprint(event.Op) == "RENAME" || fmt.Sprint(event.Op) == "MOVE" {
 						// Upload the new object with new name/path
 						uploadCh <- UploadCFG{s3Service, filepath, timeout, site}
