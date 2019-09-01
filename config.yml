@@ -1,13 +1,13 @@
 upload_workers: 10
 sites:
-- local_path: /Users/yevgeniy_valeyev/test-s3sync-service
+- local_path: /some/local/path
   bucket: test-s3sync-service
   retire_deleted: true
   exclusions:
     - .[Dd][Ss]_[Ss]tore
-# - local_path: /some/other/local/path
-#   bucket: some-s3-bucket
-#   exclusions:
-#     - .[Dd][Ss]_[Ss]tore
-#     - .[Aa]pple[Dd]ouble
-#     - "[Tt]humbs.db"
+- local_path: /some/other/local/path
+  bucket: some-s3-bucket
+  exclusions:
+    - .[Dd][Ss]_[Ss]tore
+    - .[Aa]pple[Dd]ouble
+    - "[Tt]humbs.db"
