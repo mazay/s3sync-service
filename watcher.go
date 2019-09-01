@@ -9,7 +9,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func watch(s3Service *s3.S3, timeout time.Duration, site Site, uploadCh chan<- UploadCFG) {
+func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 	w := watcher.New()
 	w.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
 
@@ -28,7 +28,7 @@ func watch(s3Service *s3.S3, timeout time.Duration, site Site, uploadCh chan<- U
 						}
 					} else if fmt.Sprint(event.Op) == "RENAME" || fmt.Sprint(event.Op) == "MOVE" {
 						// Upload the new object with new name/path
-						uploadCh <- UploadCFG{s3Service, filepath, timeout, site}
+						uploadCh <- UploadCFG{s3Service, filepath, site}
 						// remove the old object
 						oldFilepath := fmt.Sprint(event.OldPath)
 						removedS3Key := generateS3Key(site.BucketPath, site.LocalPath, oldFilepath)
@@ -38,7 +38,7 @@ func watch(s3Service *s3.S3, timeout time.Duration, site Site, uploadCh chan<- U
 						if excluded {
 							logger.Printf("skipping without errors: %+v \n", filepath)
 						} else {
-							fileWatcher(s3Service, timeout, site, uploadCh, event, filepath)
+							fileWatcher(s3Service, site, uploadCh, event, filepath)
 						}
 					}
 				}
@@ -62,7 +62,7 @@ func watch(s3Service *s3.S3, timeout time.Duration, site Site, uploadCh chan<- U
 
 // fileWatcher is watching for file mtime and adds the file into the upload queue if it's > 30 seconds old
 // Workaround for - https://github.com/radovskyb/watcher/issues/66
-func fileWatcher(s3Service *s3.S3, timeout time.Duration, site Site, uploadCh chan<- UploadCFG, event watcher.Event, filepath string) {
+func fileWatcher(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG, event watcher.Event, filepath string) {
 	for {
 		select {
 		case <-time.After(time.Second):
@@ -70,7 +70,7 @@ func fileWatcher(s3Service *s3.S3, timeout time.Duration, site Site, uploadCh ch
 			mtime := file.ModTime()
 			if time.Now().Sub(mtime).Seconds() >= 30 {
 				logger.Printf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
-				uploadCh <- UploadCFG{s3Service, filepath, timeout, site}
+				uploadCh <- UploadCFG{s3Service, filepath, site}
 				return
 			}
 		}

@@ -55,13 +55,13 @@ func getAwsS3ItemMap(s3Service *s3.S3, bucketName string) (map[string]string, er
 	return nil, err
 }
 
-func uploadFile(s3Service *s3.S3, file string, timeout time.Duration, site Site) {
+func uploadFile(s3Service *s3.S3, file string, site Site) {
 	var cancelFn func()
 
 	ctx := context.Background()
 
-	if timeout > 0 {
-		ctx, cancelFn = context.WithTimeout(ctx, timeout)
+	if site.UploadTimeout > 0 {
+		ctx, cancelFn = context.WithTimeout(ctx, site.UploadTimeout)
 	}
 
 	if cancelFn != nil {
@@ -125,19 +125,14 @@ func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
 	logger.Printf("removed s3 object: %s/%s\n", bucketName, s3Key)
 }
 
-func syncSite(timeout time.Duration, site Site, uploadCh chan<- UploadCFG) {
+func syncSite(site Site, uploadCh chan<- UploadCFG) {
 	s3Service := s3.New(getS3Session(site))
 
 	awsItems, err := getAwsS3ItemMap(s3Service, site.Bucket)
-	uploadFiles, deleteKeys, err := FilePathWalkDir(site.LocalPath, site.Exclusions, awsItems, site.BucketPath)
+	deleteKeys, err := FilePathWalkDir(site, awsItems, s3Service, uploadCh)
 
 	if err != nil {
 		logger.Fatal(err)
-	}
-
-	// Upload files
-	for _, file := range uploadFiles {
-		uploadCh <- UploadCFG{s3Service, file, timeout, site}
 	}
 
 	// Delete retired files
@@ -150,5 +145,5 @@ func syncSite(timeout time.Duration, site Site, uploadCh chan<- UploadCFG) {
 	}
 
 	// Watch directory for realtime sync
-	watch(s3Service, timeout, site, uploadCh)
+	watch(s3Service, site, uploadCh)
 }

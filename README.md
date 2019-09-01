@@ -35,6 +35,7 @@ sites:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
+| upload_timeout | Timeout for S3 upload | n/a | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | upload_workers | Number of upload workers for the service | 10 | no |
 
@@ -45,7 +46,7 @@ sites:
 | local_path | Local file system path to be synced with S3, using relative path is known to cause some issues. | n/a | yes |
 | bucket | S3 bucet name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
-| bucket_region | S3 bucket region if [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) or [aws cli configuration](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration) should be overriden | AWS CLI configuration | no |
+| bucket_region | S3 bucket region | n/a | yes |
 | retire_deleted | Remove files from S3 which do not exist locally | `false` | no |
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | AWS Access Key | n/a | no |

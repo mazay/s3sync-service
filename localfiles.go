@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func checkIfInList(item string, list []string) bool {
@@ -34,25 +36,24 @@ func checkIfExcluded(path string, exclusions []string) bool {
 }
 
 // FilePathWalkDir walks throught the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
-func FilePathWalkDir(root string, exclusions []string, awsItems map[string]string, bucketPath string) ([]string, []string, error) {
-	var uploadFiles []string
+func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG) ([]string, error) {
 	var deleteKeys []string
 	var localS3Keys []string
 	var filescount int
 	ch := make(chan string)
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(site.LocalPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() {
-			excluded := checkIfExcluded(path, exclusions)
+			excluded := checkIfExcluded(path, site.Exclusions)
 			if excluded {
 				logger.Printf("skipping without errors: %+v \n", path)
 			} else {
 				filescount++
-				s3Key := generateS3Key(bucketPath, root, path)
+				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 				localS3Keys = append(localS3Keys, s3Key)
 				checksumRemote, _ := awsItems[s3Key]
 				go compareChecksum(path, checksumRemote, ch)
@@ -66,7 +67,8 @@ func FilePathWalkDir(root string, exclusions []string, awsItems map[string]strin
 	for i := 0; i < filescount; i++ {
 		filename = <-ch
 		if len(filename) > 0 {
-			uploadFiles = append(uploadFiles, filename)
+			// Add file to the upload queue
+			uploadCh <- UploadCFG{s3Service, filename, site}
 		}
 	}
 
@@ -77,7 +79,7 @@ func FilePathWalkDir(root string, exclusions []string, awsItems map[string]strin
 		}
 	}
 
-	return uploadFiles, deleteKeys, err
+	return deleteKeys, err
 }
 
 func compareChecksum(filename string, checksumRemote string, ch chan<- string) {
