@@ -35,7 +35,7 @@ sites:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usega | `0` | no |
+| upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | upload_workers | Number of upload workers for the service | 10 | no |
 
 ### Sites configuration options
