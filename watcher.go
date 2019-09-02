@@ -10,6 +10,8 @@ import (
 )
 
 func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
+	logger.Printf("starting the FS watcher for site %s\n", site.Bucket)
+
 	w := watcher.New()
 	w.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
 
