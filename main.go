@@ -73,7 +73,7 @@ func checksumWorker(checksumCh <-chan ChecksumCFG, uploadCh chan<- UploadCFG) {
 		filename := compareChecksum(cfg.filename, cfg.checksumRemote)
 		if len(filename) > 0 {
 			// Add file to the upload queue
-			uploadCh <- UploadCFG{cfg.UploadCFG.s3Service, cfg.UploadCFG.file, cfg.UploadCFG.site}
+			uploadCh <- cfg.UploadCFG
 		}
 	}
 }
