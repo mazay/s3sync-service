@@ -125,11 +125,11 @@ func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
 	logger.Printf("removed s3 object: %s/%s\n", bucketName, s3Key)
 }
 
-func syncSite(site Site, uploadCh chan<- UploadCFG) {
+func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
 	s3Service := s3.New(getS3Session(site))
 
 	awsItems, err := getAwsS3ItemMap(s3Service, site.Bucket)
-	deleteKeys, err := FilePathWalkDir(site, awsItems, s3Service, uploadCh)
+	deleteKeys, err := FilePathWalkDir(site, awsItems, s3Service, checksumCh)
 
 	if err != nil {
 		logger.Fatal(err)

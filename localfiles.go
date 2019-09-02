@@ -36,11 +36,9 @@ func checkIfExcluded(path string, exclusions []string) bool {
 }
 
 // FilePathWalkDir walks throught the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
-func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG) ([]string, error) {
+func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, checksumCh chan<- ChecksumCFG) ([]string, error) {
 	var deleteKeys []string
 	var localS3Keys []string
-	var filescount int
-	ch := make(chan string)
 
 	err := filepath.Walk(site.LocalPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -52,25 +50,14 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 			if excluded {
 				logger.Printf("skipping without errors: %+v \n", path)
 			} else {
-				filescount++
 				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 				localS3Keys = append(localS3Keys, s3Key)
 				checksumRemote, _ := awsItems[s3Key]
-				go compareChecksum(path, checksumRemote, ch)
+				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site}, path, checksumRemote}
 			}
 		}
 		return nil
 	})
-
-	// Wait for checksums to be compared
-	var filename string
-	for i := 0; i < filescount; i++ {
-		filename = <-ch
-		if len(filename) > 0 {
-			// Add file to the upload queue
-			uploadCh <- UploadCFG{s3Service, filename, site}
-		}
-	}
 
 	// Generate a list of deleted files
 	for key := range awsItems {
@@ -82,10 +69,9 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 	return deleteKeys, err
 }
 
-func compareChecksum(filename string, checksumRemote string, ch chan<- string) {
+func compareChecksum(filename string, checksumRemote string) string {
 	if checksumRemote == "" {
-		ch <- filename
-		return
+		return filename
 	}
 
 	contents, err := ioutil.ReadFile(filename)
@@ -94,11 +80,10 @@ func compareChecksum(filename string, checksumRemote string, ch chan<- string) {
 		sumString := fmt.Sprintf("%x", sum)
 		// checksums don't match, mark for upload
 		if sumString != checksumRemote {
-			ch <- filename
-			return
+			return filename
 		}
 		// Files matched
-		ch <- ""
-		return
+		return ""
 	}
+	return filename
 }
