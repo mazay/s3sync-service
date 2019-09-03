@@ -68,7 +68,7 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 	if fileErr != nil {
 		logger.Printf("failed to open file %q, %v", file, fileErr)
 	} else {
-		result, err := uploader.Upload(&s3manager.UploadInput{
+		_, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket:       aws.String(site.Bucket),
 			Key:          aws.String(s3Key),
 			Body:         f,
@@ -79,7 +79,7 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 			logger.Printf("failed to upload object, %v\n", err)
 		}
 
-		logger.Printf("successfully uploaded file: %s\n", result.Location)
+		logger.Printf("successfully uploaded file: %s/%s\n", site.Bucket, s3Key)
 	}
 	defer f.Close()
 }
