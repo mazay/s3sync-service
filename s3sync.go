@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,8 +47,7 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 				logger.Printf("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
 				items[aws.StringValue(s3obj.Key)] = "none"
 			} else {
-				eTag := aws.StringValue(s3obj.ETag)
-				items[aws.StringValue(s3obj.Key)] = eTag
+				items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
 			}
 		}
 		return items, nil
