@@ -2,9 +2,18 @@
 
 ## Description
 
-The tool is aimed to sync data into S3 storage service for multiple _sites_ (path + bucket combination).
+The `s3sync-service` tool is asynchronously syncing data to S3 storage service for multiple _sites_ (path + bucket combination).
 
-On start, the `s3sync-service` compares local directory contents with S3 (using checksums/ETag) - copies new files and removes files deleted locally from S3 storage (if `retire_deleted` is set to `true`). Once the initial sync is over the `s3sync-service` start watching the specified local directories and subdirectories for changes in order to perform real-time sync to S3.
+On start, the `s3sync-service` compares local directory contents with S3 (using checksums<->ETag and also validates StorageClass) - copies new files and removes files deleted locally from S3 storage (if `retire_deleted` is set to `true`). Once the initial sync is over the `s3sync-service` start watching the specified local directories and subdirectories for changes in order to perform real-time sync to S3.
+
+## Command line arguments
+
+```bash
+> ./s3sync-service -h
+Usage of ./s3sync-service:
+  -c string
+    	Path to the config.yml (default "config.yml")
+```
 
 ## Configuration
 
@@ -32,6 +41,7 @@ sites:
   exclusions:
     - "[Tt]humbs.db"
 ```
+
 ### Generic configuration options
 
 | Variable | Description | Default | Required |
