@@ -1,18 +1,16 @@
 package main
 
 import (
-	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 func generateS3Key(bucketPath string, root string, path string) string {
@@ -37,17 +35,20 @@ func getS3Service(site Site) *s3.S3 {
 	return s3.New(getS3Session(site))
 }
 
-func getAwsS3ItemMap(s3Service *s3.S3, bucketName string) (map[string]string, error) {
-	var loi s3.ListObjectsInput
+func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 	var items = make(map[string]string)
 
-	loi.SetBucket(bucketName)
-	obj, err := s3Service.ListObjects(&loi)
+	obj, err := s3Service.ListObjects(&s3.ListObjectsInput{Bucket: aws.String(site.Bucket)})
 
 	if err == nil {
 		for _, s3obj := range obj.Contents {
-			eTag := strings.Trim(*(s3obj.ETag), "\"")
-			items[*(s3obj.Key)] = eTag
+			if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
+				logger.Printf("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
+				items[aws.StringValue(s3obj.Key)] = "none"
+			} else {
+				eTag := aws.StringValue(s3obj.ETag)
+				items[aws.StringValue(s3obj.Key)] = eTag
+			}
 		}
 		return items, nil
 	}
@@ -56,32 +57,18 @@ func getAwsS3ItemMap(s3Service *s3.S3, bucketName string) (map[string]string, er
 }
 
 func uploadFile(s3Service *s3.S3, file string, site Site) {
-	var cancelFn func()
-
-	ctx := context.Background()
-
-	if site.UploadTimeout > 0 {
-		ctx, cancelFn = context.WithTimeout(ctx, site.UploadTimeout)
-	}
-
-	if cancelFn != nil {
-		defer cancelFn()
-	}
-
-	// Set default value for StorageClass, available values are here
-	// https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare
-	if site.StorageClass == "" {
-		site.StorageClass = "STANDARD"
-	}
-
 	s3Key := generateS3Key(site.BucketPath, site.LocalPath, file)
+	uploader := s3manager.NewUploader(getS3Session(site), func(u *s3manager.Uploader) {
+		u.PartSize = 5 * 1024 * 1024
+		u.Concurrency = 5
+	})
 
 	f, fileErr := os.Open(file)
 
 	if fileErr != nil {
 		logger.Printf("failed to open file %q, %v", file, fileErr)
 	} else {
-		_, err := s3Service.PutObjectWithContext(ctx, &s3.PutObjectInput{
+		result, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket:       aws.String(site.Bucket),
 			Key:          aws.String(s3Key),
 			Body:         f,
@@ -89,16 +76,12 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 		})
 
 		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok && aerr.Code() == request.CanceledErrorCode {
-				logger.Printf("upload canceled due to timeout, %v\n", err)
-			} else {
-				logger.Printf("failed to upload object, %v\n", err)
-			}
-			os.Exit(1)
+			logger.Printf("failed to upload object, %v\n", err)
 		}
 
-		logger.Printf("successfully uploaded file: %s/%s\n", site.Bucket, s3Key)
+		logger.Printf("successfully uploaded file: %s\n", result.Location)
 	}
+	defer f.Close()
 }
 
 func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
@@ -128,7 +111,7 @@ func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
 func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
 	s3Service := s3.New(getS3Session(site))
 
-	awsItems, err := getAwsS3ItemMap(s3Service, site.Bucket)
+	awsItems, err := getAwsS3ItemMap(s3Service, site)
 	deleteKeys, err := FilePathWalkDir(site, awsItems, s3Service, checksumCh)
 
 	if err != nil {

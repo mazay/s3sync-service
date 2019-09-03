@@ -56,7 +56,10 @@ func main() {
 	// Start separate thread for each site
 	wg.Add(len(config.Sites))
 	for _, site := range config.Sites {
-		site.UploadTimeout = config.UploadTimeout
+		// Set default value for StorageClass
+		if site.StorageClass == "" {
+			site.StorageClass = "STANDARD"
+		}
 		go syncSite(site, uploadCh, checksumCh)
 	}
 	wg.Wait()
