@@ -15,6 +15,7 @@ sites:
 - local_path: /local/path1
   bucket: backup-bucket-path1
   bucket_region: us-east-1
+  storage_class: STANDARD_IA
   access_key: AKIAI44QH8DHBEXAMPLE
   secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
   exclusions:
@@ -35,7 +36,6 @@ sites:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| upload_timeout | Timeout for S3 upload | n/a | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | upload_workers | Number of upload workers for the service | 10 | no |
 
