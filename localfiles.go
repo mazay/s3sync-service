@@ -49,7 +49,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, ch
 		if !info.IsDir() {
 			excluded := checkIfExcluded(path, site.Exclusions)
 			if excluded {
-				logger.Printf("skipping without errors: %+v \n", path)
+				logger.Debug("skipping without errors: %+v", path)
 			} else {
 				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 				localS3Keys = append(localS3Keys, s3Key)
@@ -82,14 +82,14 @@ func compareChecksum(filename string, checksumRemote string) string {
 
 	file, err := os.Open(filename)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Error(err)
 		return ""
 	}
 	defer file.Close()
 
 	dataSize, err := file.Seek(0, io.SeekEnd)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Error(err)
 		return ""
 	}
 
@@ -100,7 +100,7 @@ func compareChecksum(filename string, checksumRemote string) string {
 		}
 		sum, err := chunkMd5Sum(file, start, length)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Error(err)
 			return ""
 		}
 		sumOfSums = append(sumOfSums, sum...)
@@ -113,7 +113,7 @@ func compareChecksum(filename string, checksumRemote string) string {
 		h := md5.New()
 		_, err := h.Write(sumOfSums)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Error(err)
 			return ""
 		}
 		finalSum = h.Sum(nil)

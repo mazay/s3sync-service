@@ -21,6 +21,7 @@ type Site struct {
 
 // Config structure - contains lst of Site options
 type Config struct {
+	LogLevel          string `yaml:"loglevel"`
 	UploadQueueBuffer int    `yaml:"upload_queue_buffer"`
 	UploadWorkers     int    `yaml:"upload_workers"`
 	Sites             []Site `yaml:",flow"`
