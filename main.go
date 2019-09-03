@@ -12,11 +12,18 @@ import (
 var wg = sync.WaitGroup{}
 var logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
 
-// UploadCFG describes structure of upload configuration for the uploadWorker
+// UploadCFG - structure for the upload queue
 type UploadCFG struct {
 	s3Service *s3.S3
 	file      string
 	site      Site
+}
+
+// ChecksumCFG - structure for the checksum comparison queue
+type ChecksumCFG struct {
+	UploadCFG      UploadCFG
+	filename       string
+	checksumRemote string
 }
 
 func main() {
@@ -40,18 +47,36 @@ func main() {
 		go uploadWorker(uploadCh)
 	}
 
+	// Init checksum checker workers
+	checksumCh := make(chan ChecksumCFG)
+	for x := 0; x < 20; x++ {
+		go checksumWorker(checksumCh, uploadCh)
+	}
+
 	// Start separate thread for each site
 	wg.Add(len(config.Sites))
 	for _, site := range config.Sites {
-		site.UploadTimeout = config.UploadTimeout
-		go syncSite(site, uploadCh)
+		// Set default value for StorageClass
+		if site.StorageClass == "" {
+			site.StorageClass = "STANDARD"
+		}
+		go syncSite(site, uploadCh, checksumCh)
 	}
 	wg.Wait()
 }
 
 func uploadWorker(uploadCh <-chan UploadCFG) {
 	for cfg := range uploadCh {
-		uploadConfig := cfg
-		uploadFile(uploadConfig.s3Service, uploadConfig.file, uploadConfig.site)
+		uploadFile(cfg.s3Service, cfg.file, cfg.site)
+	}
+}
+
+func checksumWorker(checksumCh <-chan ChecksumCFG, uploadCh chan<- UploadCFG) {
+	for cfg := range checksumCh {
+		filename := compareChecksum(cfg.filename, cfg.checksumRemote)
+		if len(filename) > 0 {
+			// Add file to the upload queue
+			uploadCh <- cfg.UploadCFG
+		}
 	}
 }

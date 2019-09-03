@@ -2,9 +2,18 @@
 
 ## Description
 
-The tool is aimed to sync data into S3 storage service for multiple _sites_ (path + bucket combination).
+The `s3sync-service` tool is asynchronously syncing data to S3 storage service for multiple _sites_ (path + bucket combination).
 
-On start, the `s3sync-service` compares local directory contents with S3 (using checksums/ETag) - copies new files and removes files deleted locally from S3 storage (if `retire_deleted` is set to `true`). Once the initial sync is over the `s3sync-service` start watching the specified local directories and subdirectories for changes in order to perform real-time sync to S3.
+On start, the `s3sync-service` compares local directory contents with S3 (using checksums<->ETag and also validates StorageClass) - copies new files and removes files deleted locally from S3 storage (if `retire_deleted` is set to `true`). Once the initial sync is over the `s3sync-service` start watching the specified local directories and subdirectories for changes in order to perform real-time sync to S3.
+
+## Command line arguments
+
+```bash
+> ./s3sync-service -h
+Usage of ./s3sync-service:
+  -c string
+    	Path to the config.yml (default "config.yml")
+```
 
 ## Configuration
 
@@ -15,6 +24,7 @@ sites:
 - local_path: /local/path1
   bucket: backup-bucket-path1
   bucket_region: us-east-1
+  storage_class: STANDARD_IA
   access_key: AKIAI44QH8DHBEXAMPLE
   secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
   exclusions:
@@ -31,11 +41,11 @@ sites:
   exclusions:
     - "[Tt]humbs.db"
 ```
+
 ### Generic configuration options
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| upload_timeout | Timeout for S3 upload | n/a | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | upload_workers | Number of upload workers for the service | 10 | no |
 

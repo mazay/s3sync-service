@@ -2,11 +2,12 @@ package main
 
 import (
 	"crypto/md5"
-	"fmt"
-	"io/ioutil"
+	"encoding/hex"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -36,11 +37,9 @@ func checkIfExcluded(path string, exclusions []string) bool {
 }
 
 // FilePathWalkDir walks throught the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
-func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG) ([]string, error) {
+func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, checksumCh chan<- ChecksumCFG) ([]string, error) {
 	var deleteKeys []string
 	var localS3Keys []string
-	var filescount int
-	ch := make(chan string)
 
 	err := filepath.Walk(site.LocalPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -52,25 +51,14 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 			if excluded {
 				logger.Printf("skipping without errors: %+v \n", path)
 			} else {
-				filescount++
 				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 				localS3Keys = append(localS3Keys, s3Key)
 				checksumRemote, _ := awsItems[s3Key]
-				go compareChecksum(path, checksumRemote, ch)
+				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site}, path, checksumRemote}
 			}
 		}
 		return nil
 	})
-
-	// Wait for checksums to be compared
-	var filename string
-	for i := 0; i < filescount; i++ {
-		filename = <-ch
-		if len(filename) > 0 {
-			// Add file to the upload queue
-			uploadCh <- UploadCFG{s3Service, filename, site}
-		}
-	}
 
 	// Generate a list of deleted files
 	for key := range awsItems {
@@ -82,23 +70,75 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 	return deleteKeys, err
 }
 
-func compareChecksum(filename string, checksumRemote string, ch chan<- string) {
+func compareChecksum(filename string, checksumRemote string) string {
+	var sumOfSums []byte
+	var parts int
+	var finalSum []byte
+	chunkSize := int64(5 * 1024 * 1024)
+
 	if checksumRemote == "" {
-		ch <- filename
-		return
+		return filename
 	}
 
-	contents, err := ioutil.ReadFile(filename)
-	if err == nil {
-		sum := md5.Sum(contents)
-		sumString := fmt.Sprintf("%x", sum)
-		// checksums don't match, mark for upload
-		if sumString != checksumRemote {
-			ch <- filename
-			return
-		}
-		// Files matched
-		ch <- ""
-		return
+	file, err := os.Open(filename)
+	if err != nil {
+		logger.Fatal(err)
+		return ""
 	}
+	defer file.Close()
+
+	dataSize, err := file.Seek(0, io.SeekEnd)
+	if err != nil {
+		logger.Fatal(err)
+		return ""
+	}
+
+	for start := int64(0); start < dataSize; start += chunkSize {
+		length := chunkSize
+		if start+chunkSize > dataSize {
+			length = dataSize - start
+		}
+		sum, err := chunkMd5Sum(file, start, length)
+		if err != nil {
+			logger.Fatal(err)
+			return ""
+		}
+		sumOfSums = append(sumOfSums, sum...)
+		parts++
+	}
+
+	if parts == 1 {
+		finalSum = sumOfSums
+	} else {
+		h := md5.New()
+		_, err := h.Write(sumOfSums)
+		if err != nil {
+			logger.Fatal(err)
+			return ""
+		}
+		finalSum = h.Sum(nil)
+	}
+
+	sumHex := hex.EncodeToString(finalSum)
+
+	if parts > 1 {
+		sumHex += "-" + strconv.Itoa(parts)
+	}
+
+	if sumHex != checksumRemote {
+		// checksums don't match, mark for upload
+		return filename
+	}
+	// Files matched
+	return ""
+}
+
+func chunkMd5Sum(file io.ReadSeeker, start int64, length int64) ([]byte, error) {
+	file.Seek(start, io.SeekStart)
+	h := md5.New()
+	if _, err := io.CopyN(h, file, length); err != nil {
+		return nil, err
+	}
+
+	return h.Sum(nil), nil
 }
