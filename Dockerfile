@@ -12,7 +12,7 @@ RUN go get -d -v ./...
 RUN go install -v ./...
 RUN go build
 
-RUN rm -rf /go/src/github.com /go/src/gopkg.in
+RUN rm -rf /go/src/github.com /go/src/gopkg.in /go/src/golang.org
 RUN rm *.go
 
 CMD ["./s3sync-service"]
