@@ -39,21 +39,27 @@ func getS3Service(site Site) *s3.S3 {
 func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 	var items = make(map[string]string)
 
-	obj, err := s3Service.ListObjects(&s3.ListObjectsInput{Bucket: aws.String(site.Bucket)})
+	params := &s3.ListObjectsInput{Bucket: aws.String(site.Bucket)}
 
-	if err == nil {
-		for _, s3obj := range obj.Contents {
-			if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
-				logger.Info("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
-				items[aws.StringValue(s3obj.Key)] = "none"
-			} else {
-				items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
+	err := s3Service.ListObjectsPages(params,
+		func(page *s3.ListObjectsOutput, last bool) bool {
+			// Process the objects for each page
+			for _, s3obj := range page.Contents {
+				if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
+					logger.Info("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
+					items[aws.StringValue(s3obj.Key)] = "none"
+				} else {
+					items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
+				}
 			}
-		}
-		return items, nil
+			return true
+		},
+	)
+	if err != nil {
+		logger.Errorf("Error listing %s objects: %s", *params.Bucket, err)
+		return nil, err
 	}
-
-	return nil, err
+	return items, nil
 }
 
 func uploadFile(s3Service *s3.S3, file string, site Site) {
