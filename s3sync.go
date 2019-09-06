@@ -44,7 +44,7 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 	if err == nil {
 		for _, s3obj := range obj.Contents {
 			if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
-				logger.Printf("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
+				logger.Info("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
 				items[aws.StringValue(s3obj.Key)] = "none"
 			} else {
 				items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
@@ -66,7 +66,7 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 	f, fileErr := os.Open(file)
 
 	if fileErr != nil {
-		logger.Printf("failed to open file %q, %v", file, fileErr)
+		logger.Errorf("failed to open file %q, %v", file, fileErr)
 	} else {
 		_, err := uploader.Upload(&s3manager.UploadInput{
 			Bucket:       aws.String(site.Bucket),
@@ -76,10 +76,10 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 		})
 
 		if err != nil {
-			logger.Printf("failed to upload object, %v\n", err)
+			logger.Errorf("failed to upload object, %v", err)
 		}
 
-		logger.Printf("successfully uploaded file: %s/%s\n", site.Bucket, s3Key)
+		logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 	}
 	defer f.Close()
 }
@@ -95,17 +95,17 @@ func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
-				logger.Println(aerr.Error())
+				logger.Errorln(aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			logger.Println(err.Error())
+			logger.Errorln(err.Error())
 		}
 		return
 	}
 
-	logger.Printf("removed s3 object: %s/%s\n", bucketName, s3Key)
+	logger.Infof("removed s3 object: %s/%s", bucketName, s3Key)
 }
 
 func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
@@ -115,7 +115,7 @@ func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCF
 	deleteKeys, err := FilePathWalkDir(site, awsItems, s3Service, checksumCh)
 
 	if err != nil {
-		logger.Fatal(err)
+		logger.Errorln(err)
 	}
 
 	// Delete retired files

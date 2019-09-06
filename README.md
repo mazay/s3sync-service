@@ -46,6 +46,7 @@ sites:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
+| loglevel | Logging level, valid options are - `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. With log level set to `trace` logger will output everything, with `debug` everything apart from `trace` and so on. | `info` | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | upload_workers | Number of upload workers for the service | 10 | no |
 

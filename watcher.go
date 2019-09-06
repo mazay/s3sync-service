@@ -10,7 +10,7 @@ import (
 )
 
 func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
-	logger.Printf("starting the FS watcher for site %s\n", site.Bucket)
+	logger.Printf("starting the FS watcher for site %s", site.Bucket)
 
 	w := watcher.New()
 	w.FilterOps(watcher.Create, watcher.Write, watcher.Remove, watcher.Rename, watcher.Move)
@@ -20,7 +20,7 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 			select {
 			case event := <-w.Event:
 				if !event.IsDir() {
-					logger.Println(event)
+					logger.Infoln(event)
 					// Convert filepath to string
 					filepath := fmt.Sprint(event.Path)
 					if fmt.Sprint(event.Op) == "REMOVE" {
@@ -38,14 +38,14 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 					} else {
 						excluded := checkIfExcluded(filepath, site.Exclusions)
 						if excluded {
-							logger.Printf("skipping without errors: %+v \n", filepath)
+							logger.Debugf("skipping without errors: %+v", filepath)
 						} else {
 							fileWatcher(s3Service, site, uploadCh, event, filepath)
 						}
 					}
 				}
 			case err := <-w.Error:
-				logger.Fatal(err)
+				logger.Errorln(err)
 			case <-w.Closed:
 				return
 			}
@@ -53,12 +53,12 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 	}()
 
 	if err := w.AddRecursive(site.LocalPath); err != nil {
-		logger.Fatal(err)
+		logger.Errorln(err)
 	}
 
 	// Start the watching process - it'll check for changes every 100ms.
 	if err := w.Start(time.Millisecond * 100); err != nil {
-		logger.Fatal(err)
+		logger.Errorln(err)
 	}
 }
 
@@ -71,7 +71,7 @@ func fileWatcher(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG, event w
 			file, _ := os.Stat(filepath)
 			mtime := file.ModTime()
 			if time.Now().Sub(mtime).Seconds() >= 30 {
-				logger.Printf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
+				logger.Debugf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
 				uploadCh <- UploadCFG{s3Service, filepath, site}
 				return
 			}

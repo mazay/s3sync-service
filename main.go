@@ -2,15 +2,12 @@ package main
 
 import (
 	"flag"
-	"log"
-	"os"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 var wg = sync.WaitGroup{}
-var logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // UploadCFG - structure for the upload queue
 type UploadCFG struct {
@@ -36,6 +33,9 @@ func main() {
 
 	// Read config file
 	readFile(&config, configpath)
+
+	// init logger
+	initLogger(config)
 
 	// Init upload worker
 	if config.UploadWorkers == 0 {
