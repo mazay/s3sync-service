@@ -8,23 +8,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func checkIfInList(item string, list []string) bool {
-	for _, i := range list {
-		if i == item {
-			return true
-		}
-	}
-
-	return false
-}
-
 func checkIfExcluded(path string, exclusions []string) bool {
-	var excluded bool
-	excluded = false
+	excluded := false
 
 	for _, exclusion := range exclusions {
 		re := regexp.MustCompile(exclusion)
@@ -37,13 +27,10 @@ func checkIfExcluded(path string, exclusions []string) bool {
 }
 
 // FilePathWalkDir walks throught the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
-func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, checksumCh chan<- ChecksumCFG) ([]string, error) {
-	var deleteKeys []string
-	var localS3Keys []string
-
+func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
 	err := filepath.Walk(site.LocalPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			logger.Error(err)
 		}
 
 		if !info.IsDir() {
@@ -52,22 +39,30 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, ch
 				logger.Debug("skipping without errors: %+v", path)
 			} else {
 				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
-				localS3Keys = append(localS3Keys, s3Key)
 				checksumRemote, _ := awsItems[s3Key]
-				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site}, path, checksumRemote}
+				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, checksumRemote}
 			}
 		}
 		return nil
 	})
 
-	// Generate a list of deleted files
-	for key := range awsItems {
-		if !checkIfInList(key, localS3Keys) {
-			deleteKeys = append(deleteKeys, key)
+	// Check for deleted files
+	if site.RetireDeleted {
+		for key := range awsItems {
+			// Generate localPath by removing BucketPath from the key value and addint LocalPath
+			localPath := filepath.Join(site.LocalPath, strings.Replace(key, site.BucketPath, "", 1))
+			// Send s3 key for deleteion if generated localPath does not exist
+			if _, err := os.Stat(localPath); os.IsNotExist(err) {
+				uploadCh <- UploadCFG{s3Service, key, site, "delete"}
+			}
 		}
 	}
 
-	return deleteKeys, err
+	if err != nil {
+		logger.Error(err)
+	}
+
+	return
 }
 
 func compareChecksum(filename string, checksumRemote string) string {

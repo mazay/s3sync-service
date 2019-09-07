@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -90,9 +89,9 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 	defer f.Close()
 }
 
-func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
+func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 	input := &s3.DeleteObjectInput{
-		Bucket: aws.String(bucketName),
+		Bucket: aws.String(site.Bucket),
 		Key:    aws.String(s3Key),
 	}
 
@@ -111,26 +110,19 @@ func deleteFile(s3Service *s3.S3, bucketName string, s3Key string) {
 		return
 	}
 
-	logger.Infof("removed s3 object: %s/%s", bucketName, s3Key)
+	logger.Infof("removed s3 object: %s/%s", site.Bucket, s3Key)
 }
 
 func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
 	s3Service := s3.New(getS3Session(site))
 
 	awsItems, err := getAwsS3ItemMap(s3Service, site)
-	deleteKeys, err := FilePathWalkDir(site, awsItems, s3Service, checksumCh)
 
 	if err != nil {
 		logger.Errorln(err)
-	}
-
-	// Delete retired files
-	if site.RetireDeleted {
-		for _, key := range deleteKeys {
-			go deleteFile(s3Service, site.Bucket, key)
-			// Send 1 request per 5 seconds to avoid AWS throtling
-			time.Sleep(5)
-		}
+		os.Exit(3)
+	} else {
+		FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)
 	}
 
 	// Watch directory for realtime sync

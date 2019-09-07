@@ -14,6 +14,7 @@ type UploadCFG struct {
 	s3Service *s3.S3
 	file      string
 	site      Site
+	action    string
 }
 
 // ChecksumCFG - structure for the checksum comparison queue
@@ -67,7 +68,13 @@ func main() {
 
 func uploadWorker(uploadCh <-chan UploadCFG) {
 	for cfg := range uploadCh {
-		uploadFile(cfg.s3Service, cfg.file, cfg.site)
+		if cfg.action == "upload" {
+			uploadFile(cfg.s3Service, cfg.file, cfg.site)
+		} else if cfg.action == "delete" {
+			deleteFile(cfg.s3Service, cfg.file, cfg.site)
+		} else {
+			logger.Errorf("programming error, unknown action: %s", cfg.action)
+		}
 	}
 }
 
