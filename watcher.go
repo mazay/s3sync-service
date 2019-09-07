@@ -26,15 +26,15 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 					if fmt.Sprint(event.Op) == "REMOVE" {
 						if site.RetireDeleted {
 							s3Key := generateS3Key(site.BucketPath, site.LocalPath, filepath)
-							deleteFile(s3Service, site.Bucket, s3Key)
+							uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
 						}
 					} else if fmt.Sprint(event.Op) == "RENAME" || fmt.Sprint(event.Op) == "MOVE" {
 						// Upload the new object with new name/path
-						uploadCh <- UploadCFG{s3Service, filepath, site}
+						uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
 						// remove the old object
 						oldFilepath := fmt.Sprint(event.OldPath)
 						removedS3Key := generateS3Key(site.BucketPath, site.LocalPath, oldFilepath)
-						deleteFile(s3Service, site.Bucket, removedS3Key)
+						uploadCh <- UploadCFG{s3Service, removedS3Key, site, "delete"}
 					} else {
 						excluded := checkIfExcluded(filepath, site.Exclusions)
 						if excluded {
@@ -72,7 +72,7 @@ func fileWatcher(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG, event w
 			mtime := file.ModTime()
 			if time.Now().Sub(mtime).Seconds() >= 30 {
 				logger.Debugf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
-				uploadCh <- UploadCFG{s3Service, filepath, site}
+				uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
 				return
 			}
 		}
