@@ -56,8 +56,8 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 		logger.Errorln(err)
 	}
 
-	// Start the watching process - it'll check for changes every 100ms.
-	if err := w.Start(time.Millisecond * 100); err != nil {
+	// Start the watching process - it'll check for changes every Xms.
+	if err := w.Start(time.Millisecond * site.WatchInterval); err != nil {
 		logger.Errorln(err)
 	}
 }

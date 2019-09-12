@@ -6,13 +6,12 @@ The `s3sync-service` tool is asynchronously syncing data to S3 storage service f
 
 On start, the `s3sync-service` compares local directory contents with S3 (using checksums<->ETag and also validates StorageClass) - copies new files and removes files deleted locally from S3 storage (if `retire_deleted` is set to `true`). Once the initial sync is over the `s3sync-service` start watching the specified local directories and subdirectories for changes in order to perform real-time sync to S3.
 
-## Command line arguments
+## Running the s3sync-service
 
+1. Create directory with [configuration file](##Configuration), eg. - `/path/to/config/config.yml`.
+2. Run docker container with providing AWS credentials via environment variables (IAM role should also do the trick), alternatively credentials could be provided in the [config file](##Configuration), mount directory containing the config file and all of the backup directories listed in the config file:
 ```bash
-> ./s3sync-service -h
-Usage of ./s3sync-service:
-  -c string
-    	Path to the config.yml (default "config.yml")
+docker run --rm -ti -e "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE" -e "AWS_SECRET_ACCESS_KEY=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY" -e "AWS_DEFAULT_REGION=us-east-1" -e "DST_BUCKET=family-photo-archive" -v "/path/to/config:/opt/s3sync-service" -v "/backup/path:/backup" zmazay/s3sync-service "./s3sync-service -c /opt/s3sync-service/config.yml"
 ```
 
 ## Configuration
@@ -48,7 +47,8 @@ sites:
 |----------|-------------|---------|----------|
 | loglevel | Logging level, valid options are - `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. With log level set to `trace` logger will output everything, with `debug` everything apart from `trace` and so on. | `info` | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
-| upload_workers | Number of upload workers for the service | 10 | no |
+| upload_workers | Number of upload workers for the service | `10` | no |
+| watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
 
 ### Sites configuration options
 
@@ -62,4 +62,5 @@ sites:
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | AWS Access Key | n/a | no |
 | secret_access_key | AWS Secret Access Key | n/a | no |
+| watch_interval | Interval for file system watcher in milliseconds, overrides global setting | `global.watch_interval` | no |
 | exclusions | List of regexp filters for exclusions | n/a | no |
