@@ -38,6 +38,11 @@ func main() {
 	// init logger
 	initLogger(config)
 
+	// Set global WatchInterval
+	if config.WatchInterval == 0 {
+		config.WatchInterval = 1000
+	}
+
 	// Init upload worker
 	if config.UploadWorkers == 0 {
 		config.UploadWorkers = 10
@@ -60,6 +65,10 @@ func main() {
 		// Set default value for StorageClass
 		if site.StorageClass == "" {
 			site.StorageClass = "STANDARD"
+		}
+		// Set site WatchInterval
+		if site.WatchInterval == 0 {
+			site.WatchInterval = config.WatchInterval
 		}
 		go syncSite(site, uploadCh, checksumCh)
 	}

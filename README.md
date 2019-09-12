@@ -48,7 +48,8 @@ sites:
 |----------|-------------|---------|----------|
 | loglevel | Logging level, valid options are - `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. With log level set to `trace` logger will output everything, with `debug` everything apart from `trace` and so on. | `info` | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
-| upload_workers | Number of upload workers for the service | 10 | no |
+| upload_workers | Number of upload workers for the service | `10` | no |
+| watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
 
 ### Sites configuration options
 
@@ -62,4 +63,5 @@ sites:
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | AWS Access Key | n/a | no |
 | secret_access_key | AWS Secret Access Key | n/a | no |
+| watch_interval | Interval for file system watcher in milliseconds, overrides global setting | `global.watch_interval` | no |
 | exclusions | List of regexp filters for exclusions | n/a | no |
