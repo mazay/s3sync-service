@@ -11,7 +11,14 @@ On start, the `s3sync-service` compares local directory contents with S3 (using 
 1. Create directory with [configuration file](#Configuration), eg. - `/path/to/config/config.yml`.
 2. Run docker container with providing AWS credentials via environment variables (IAM role should also do the trick), alternatively credentials could be provided in the [config file](#Configuration), mount directory containing the config file and all of the backup directories listed in the config file:
 ```bash
-docker run --rm -ti -e "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE" -e "AWS_SECRET_ACCESS_KEY=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY" -e "AWS_DEFAULT_REGION=us-east-1" -e "DST_BUCKET=family-photo-archive" -v "/path/to/config:/opt/s3sync-service" -v "/backup/path:/backup" zmazay/s3sync-service "./s3sync-service -c /opt/s3sync-service/config.yml"
+docker run --rm -ti \
+-e "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE" \
+-e "AWS_SECRET_ACCESS_KEY=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY" \
+-e "AWS_DEFAULT_REGION=us-east-1" \
+-v "/path/to/config:/opt/s3sync-service" \
+-v "/backup/path:/backup" \
+zmazay/s3sync-service \
+"./s3sync-service -c /opt/s3sync-service/config.yml"
 ```
 
 ## Configuration
