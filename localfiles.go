@@ -36,7 +36,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 		if !info.IsDir() {
 			excluded := checkIfExcluded(path, site.Exclusions)
 			if excluded {
-				logger.Debug("skipping without errors: %+v", path)
+				logger.Debugf("skipping without errors: %+v", path)
 			} else {
 				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 				checksumRemote, _ := awsItems[s3Key]
