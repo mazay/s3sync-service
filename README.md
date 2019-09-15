@@ -10,6 +10,7 @@ On start, the `s3sync-service` compares local directory contents with S3 (using 
 
 1. Create directory with [configuration file](#Configuration), eg. - `/path/to/config/config.yml`.
 2. Run docker container with providing AWS credentials via environment variables (IAM role should also do the trick), alternatively credentials could be provided in the [config file](#Configuration), mount directory containing the config file and all of the backup directories listed in the config file:
+
 ```bash
 docker run --rm -ti \
 -e "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE" \
@@ -24,6 +25,7 @@ zmazay/s3sync-service \
 ## Configuration
 
 Exaple configuration:
+
 ```yaml
 upload_workers: 10
 sites:

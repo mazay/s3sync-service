@@ -1,4 +1,4 @@
-FROM golang:1.9.7-alpine
+FROM golang:1.13.0-alpine
 
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 
