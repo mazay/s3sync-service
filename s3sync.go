@@ -45,7 +45,7 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 			// Process the objects for each page
 			for _, s3obj := range page.Contents {
 				if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
-					logger.Info("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
+					logger.Infof("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
 					items[aws.StringValue(s3obj.Key)] = "none"
 				} else {
 					items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")

@@ -23,22 +23,22 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 					logger.Infoln(event)
 					// Convert filepath to string
 					filepath := fmt.Sprint(event.Path)
-					if fmt.Sprint(event.Op) == "REMOVE" {
-						if site.RetireDeleted {
-							s3Key := generateS3Key(site.BucketPath, site.LocalPath, filepath)
-							uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
-						}
-					} else if fmt.Sprint(event.Op) == "RENAME" || fmt.Sprint(event.Op) == "MOVE" {
-						// Upload the new object with new name/path
-						uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
-						// remove the old object
-						oldFilepath := fmt.Sprint(event.OldPath)
-						removedS3Key := generateS3Key(site.BucketPath, site.LocalPath, oldFilepath)
-						uploadCh <- UploadCFG{s3Service, removedS3Key, site, "delete"}
+					excluded := checkIfExcluded(filepath, site.Exclusions)
+					if excluded {
+						logger.Debugf("skipping without errors: %+v", filepath)
 					} else {
-						excluded := checkIfExcluded(filepath, site.Exclusions)
-						if excluded {
-							logger.Debugf("skipping without errors: %+v", filepath)
+						if fmt.Sprint(event.Op) == "REMOVE" {
+							if site.RetireDeleted {
+								s3Key := generateS3Key(site.BucketPath, site.LocalPath, filepath)
+								uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
+							}
+						} else if fmt.Sprint(event.Op) == "RENAME" || fmt.Sprint(event.Op) == "MOVE" {
+							// Upload the new object with new name/path
+							uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
+							// remove the old object
+							oldFilepath := fmt.Sprint(event.OldPath)
+							removedS3Key := generateS3Key(site.BucketPath, site.LocalPath, oldFilepath)
+							uploadCh <- UploadCFG{s3Service, removedS3Key, site, "delete"}
 						} else {
 							fileWatcher(s3Service, site, uploadCh, event, filepath)
 						}

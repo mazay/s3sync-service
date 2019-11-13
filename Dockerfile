@@ -1,18 +1,14 @@
-FROM golang:1.13.0-alpine
-
-LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
-
+FROM golang:1.13.0-alpine AS builder
 WORKDIR /go/src/s3sync-service
-
-RUN apk add git && rm -rf /var/cache/apk/*
-
+RUN apk add git
 COPY *.go ./
-
 RUN go get -d -v ./...
 RUN go install -v ./...
 RUN go build
 
-RUN rm -rf /go/src/github.com /go/src/gopkg.in /go/src/golang.org
-RUN rm *.go
-
+FROM alpine:latest
+LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /go/src/s3sync-service/s3sync-service .
 CMD ["./s3sync-service"]
