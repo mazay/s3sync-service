@@ -39,7 +39,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 			if excluded {
 				logger.Debugf("skipping without errors: %+v", path)
 				// Delete the excluded object if already in the cloud
-				if awsItems[s3Key] != "" {
+				if awsItems[s3Key] != "" && site.RetireDeleted {
 					uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
 				}
 			} else {
