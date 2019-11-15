@@ -39,13 +39,13 @@ sites:
     - .[Dd][Ss]_[Ss]tore
     - .[Aa]pple[Dd]ouble
 - local_path: /local/path2
-  bucket: generic-backup-bucket
-  bucket_path: /path2
+  bucket: backup-bucket-path2
+  bucket_path: path2
   exclusions:
     - "[Tt]humbs.db"
 - local_path: /local/path3
-  bucket: generic-backup-bucket
-  bucket_path: /path3
+  bucket: backup-bucket-path3
+  bucket_path: path3
   exclusions:
     - "[Tt]humbs.db"
 ```
