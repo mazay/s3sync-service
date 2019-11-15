@@ -25,6 +25,7 @@ type Site struct {
 type Config struct {
 	AccessKey         string        `yaml:"access_key"`
 	SecretAccessKey   string        `yaml:"secret_access_key"`
+	AwsRegion         string        `yaml:"aws_region"`
 	LogLevel          string        `yaml:"loglevel"`
 	UploadQueueBuffer int           `yaml:"upload_queue_buffer"`
 	UploadWorkers     int           `yaml:"upload_workers"`

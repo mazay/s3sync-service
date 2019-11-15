@@ -56,6 +56,7 @@ sites:
 |----------|-------------|---------|----------|
 | access_key | Global AWS Access Key | n/a | no |
 | secret_access_key | Global AWS Secret Access Key | n/a | no |
+| aws_region | AWS region | n/a | no |
 | loglevel | Logging level, valid options are - `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. With log level set to `trace` logger will output everything, with `debug` everything apart from `trace` and so on. | `info` | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | upload_workers | Number of upload workers for the service | `10` | no |
@@ -68,7 +69,7 @@ sites:
 | local_path | Local file system path to be synced with S3, using relative path is known to cause some issues. | n/a | yes |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
-| bucket_region | S3 bucket region | n/a | yes |
+| bucket_region | S3 bucket region | `global.aws_region` | yes |
 | retire_deleted | Remove files from S3 which do not exist locally | `false` | no |
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | Site AWS Access Key | `global.access_key` | no |
@@ -79,7 +80,7 @@ sites:
 ### Gotchas
 
 1. Same bucket can be used for multiple sites (local directories) only in case both use some `bucket_path`, otherwise, site using bucket root will delete the data from the prefix used by another site. Setting `retire_deleted` to `false` for the site using bucket root should fix this issue.
-1. AWS credentials have the following priority:
-  1. Site AWS credentials
-  1. Global AWS credentials
+1. AWS credentials and region have the following priority:
+  1. Site AWS credentials (region)
+  1. Global AWS credentials (region)
   1. Environment variables

@@ -73,6 +73,10 @@ func main() {
 		if site.SecretAccessKey == "" {
 			site.SecretAccessKey = config.SecretAccessKey
 		}
+		// Set site BucketRegion
+		if site.BucketRegion == "" {
+			site.BucketRegion = config.AwsRegion
+		}
 		// Set default value for StorageClass
 		if site.StorageClass == "" {
 			site.StorageClass = "STANDARD"
