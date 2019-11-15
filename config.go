@@ -23,6 +23,8 @@ type Site struct {
 
 // Config structure - contains lst of Site options
 type Config struct {
+	AccessKey         string        `yaml:"access_key"`
+	SecretAccessKey   string        `yaml:"secret_access_key"`
 	LogLevel          string        `yaml:"loglevel"`
 	UploadQueueBuffer int           `yaml:"upload_queue_buffer"`
 	UploadWorkers     int           `yaml:"upload_workers"`
