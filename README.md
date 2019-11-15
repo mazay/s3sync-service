@@ -81,6 +81,6 @@ sites:
 
 1. Same bucket can be used for multiple sites (local directories) only in case both use some `bucket_path`, otherwise, site using bucket root will delete the data from the prefix used by another site. Setting `retire_deleted` to `false` for the site using bucket root should fix this issue.
 1. AWS credentials and region have the following priority:
-  1. Site AWS credentials (region)
-  1. Global AWS credentials (region)
-  1. Environment variables
+    1. Site AWS credentials (region)
+    1. Global AWS credentials (region)
+    1. Environment variables
