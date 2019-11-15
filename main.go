@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -62,6 +63,9 @@ func main() {
 	// Start separate thread for each site
 	wg.Add(len(config.Sites))
 	for _, site := range config.Sites {
+		// Remove leading slash from the BucketPath
+		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
+
 		// Set default value for StorageClass
 		if site.StorageClass == "" {
 			site.StorageClass = "STANDARD"

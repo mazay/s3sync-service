@@ -38,7 +38,10 @@ func getS3Service(site Site) *s3.S3 {
 func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 	var items = make(map[string]string)
 
-	params := &s3.ListObjectsInput{Bucket: aws.String(site.Bucket)}
+	params := &s3.ListObjectsInput{
+		Bucket: aws.String(site.Bucket),
+		Marker: aws.String(site.BucketPath),
+	}
 
 	err := s3Service.ListObjectsPages(params,
 		func(page *s3.ListObjectsOutput, last bool) bool {
