@@ -65,7 +65,18 @@ func main() {
 	for _, site := range config.Sites {
 		// Remove leading slash from the BucketPath
 		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
-
+		// Set site AccessKey
+		if site.AccessKey == "" {
+			site.AccessKey = config.AccessKey
+		}
+		// Set site SecretAccessKey
+		if site.SecretAccessKey == "" {
+			site.SecretAccessKey = config.SecretAccessKey
+		}
+		// Set site BucketRegion
+		if site.BucketRegion == "" {
+			site.BucketRegion = config.AwsRegion
+		}
 		// Set default value for StorageClass
 		if site.StorageClass == "" {
 			site.StorageClass = "STANDARD"
