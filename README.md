@@ -81,7 +81,7 @@ sites:
 | local_path | Local file system path to be synced with S3, using relative path is known to cause some issues. | n/a | yes |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
-| bucket_region | S3 bucket region | `global.aws_region` | yes |
+| bucket_region | S3 bucket region | `global.aws_region` | no |
 | retire_deleted | Remove files from S3 which do not exist locally | `false` | no |
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | Site AWS Access Key | `global.access_key` | no |
