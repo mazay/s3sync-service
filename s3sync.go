@@ -13,6 +13,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
+	objSize := int64(0)
+
+	params := &s3.ListObjectsInput{
+		Bucket: aws.String(site.Bucket),
+		Marker: aws.String(s3Key),
+	}
+
+	// Get object size prior deletion
+	obj, objErr := s3Service.ListObjects(params)
+	if objErr == nil {
+		objSize = *obj.Contents[0].Size
+	}
+
+	return objSize
+}
+
 func generateS3Key(bucketPath string, root string, path string) string {
 	relativePath, _ := filepath.Rel(root, path)
 	return filepath.Join(bucketPath, relativePath)
@@ -76,6 +93,9 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 
 	f, fileErr := os.Open(file)
 
+	// Try to get object size in case we updating already existing
+	objSize := getObjectSize(s3Service, site, s3Key)
+
 	if fileErr != nil {
 		logger.Errorf("failed to open file %q, %v", file, fileErr)
 	} else {
@@ -95,6 +115,10 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 			// Update metrics
 			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Add(float64(fileSize))
 			objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Inc()
+			// Update size counter if updated existing object
+			if objSize > 0 {
+				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Sub(float64(objSize))
+			}
 			logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 		}
 	}
@@ -105,18 +129,6 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(site.Bucket),
 		Key:    aws.String(s3Key),
-	}
-
-	// Get object size prior deletion
-	params := &s3.ListObjectsInput{
-		Bucket: aws.String(site.Bucket),
-		Marker: aws.String(site.BucketPath),
-	}
-
-	objSize := int64(0)
-	obj, objErr := s3Service.ListObjects(params)
-	if objErr == nil {
-		objSize = *obj.Contents[0].Size
 	}
 
 	// Delete the object
@@ -135,8 +147,9 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 		return
 	}
 
-	// Update metrics if managed to get object size
-	if objErr == nil {
+	// Update metrics
+	objSize := getObjectSize(s3Service, site, s3Key)
+	if objSize > 0 {
 		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Sub(float64(objSize))
 		objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Dec()
 	}
