@@ -136,7 +136,7 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 	}
 
 	// Update metrics if managed to get object size
-	if objErr != nil {
+	if objErr == nil {
 		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Sub(float64(objSize))
 		objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Dec()
 	}
