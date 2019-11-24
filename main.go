@@ -2,13 +2,38 @@ package main
 
 import (
 	"flag"
+	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/service/s3"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var wg = sync.WaitGroup{}
+var (
+	wg = sync.WaitGroup{}
+
+	sizeMetric = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "s3sync",
+			Name:      "s3sync_data_total_size",
+			Help:      "Total size of the data in S3",
+		},
+		[]string{"site"},
+	)
+
+	objectsMetric = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "s3sync",
+			Name:      "s3sync_data_objects_count",
+			Help:      "Nember of objects in S3",
+		},
+		[]string{"site"},
+	)
+)
 
 // UploadCFG - structure for the upload queue
 type UploadCFG struct {
@@ -28,9 +53,11 @@ type ChecksumCFG struct {
 func main() {
 	var config Config
 	var configpath string
+	var prometheusport string
 
 	// Read command line args
-	flag.StringVar(&configpath, "c", "config.yml", "Path to the config.yml")
+	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
+	flag.StringVar(&prometheusport, "port", "9200", "Prometheus exporter port")
 	flag.Parse()
 
 	// Read config file
@@ -38,6 +65,10 @@ func main() {
 
 	// init logger
 	initLogger(config)
+
+	// Start prometheus exporter
+	http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":"+prometheusport, nil)
 
 	// Set global WatchInterval
 	if config.WatchInterval == 0 {

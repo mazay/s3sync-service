@@ -19,7 +19,7 @@ docker run --rm -ti \
 -v "/path/to/config:/opt/s3sync-service" \
 -v "/backup/path:/backup" \
 zmazay/s3sync-service \
-./s3sync-service -c /opt/s3sync-service/config.yml
+./s3sync-service -config /opt/s3sync-service/config.yml
 ```
 
 ## Configuration

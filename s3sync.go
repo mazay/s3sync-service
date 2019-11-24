@@ -47,6 +47,9 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 		func(page *s3.ListObjectsOutput, last bool) bool {
 			// Process the objects for each page
 			for _, s3obj := range page.Contents {
+				// Update metrics
+				sizeMetric.WithLabelValues(site.Bucket).Add(float64(*s3obj.Size))
+				objectsMetric.WithLabelValues(site.Bucket).Inc()
 				if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
 					logger.Infof("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
 					items[aws.StringValue(s3obj.Key)] = "none"
@@ -72,6 +75,9 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 	})
 
 	f, fileErr := os.Open(file)
+	// Get file size
+	fs, _ := f.Stat()
+	fileSize := fs.Size()
 
 	if fileErr != nil {
 		logger.Errorf("failed to open file %q, %v", file, fileErr)
@@ -87,6 +93,9 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 			logger.Errorf("failed to upload object, %v", err)
 		}
 
+		// Update metrics
+		sizeMetric.WithLabelValues(site.Bucket).Add(float64(fileSize))
+		objectsMetric.WithLabelValues(site.Bucket).Inc()
 		logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 	}
 	defer f.Close()
@@ -98,6 +107,19 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 		Key:    aws.String(s3Key),
 	}
 
+	// Get object size prior deletion
+	params := &s3.ListObjectsInput{
+		Bucket: aws.String(site.Bucket),
+		Marker: aws.String(site.BucketPath),
+	}
+
+	objSize := int64(0)
+	obj, objErr := s3Service.ListObjects(params)
+	if objErr == nil {
+		objSize = *obj.Contents[0].Size
+	}
+
+	// Delete the object
 	_, err := s3Service.DeleteObject(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -111,6 +133,12 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 			logger.Errorln(err.Error())
 		}
 		return
+	}
+
+	// Update metrics if managed to get object size
+	if objErr != nil {
+		sizeMetric.WithLabelValues(site.Bucket).Sub(float64(objSize))
+		objectsMetric.WithLabelValues(site.Bucket).Dec()
 	}
 
 	logger.Infof("removed s3 object: %s/%s", site.Bucket, s3Key)
