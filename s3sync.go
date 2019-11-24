@@ -18,13 +18,15 @@ func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
 
 	params := &s3.ListObjectsInput{
 		Bucket: aws.String(site.Bucket),
-		Marker: aws.String(s3Key),
+		Prefix: aws.String(s3Key),
 	}
 
 	// Get object size prior deletion
 	obj, objErr := s3Service.ListObjects(params)
 	if objErr == nil {
-		objSize = *obj.Contents[0].Size
+		for _, s3obj := range obj.Contents {
+			objSize = *s3obj.Size
+		}
 	}
 
 	return objSize
@@ -57,7 +59,7 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 
 	params := &s3.ListObjectsInput{
 		Bucket: aws.String(site.Bucket),
-		Marker: aws.String(site.BucketPath),
+		Prefix: aws.String(site.BucketPath),
 	}
 
 	err := s3Service.ListObjectsPages(params,
@@ -114,10 +116,12 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 			fileSize := fs.Size()
 			// Update metrics
 			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Add(float64(fileSize))
-			objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Inc()
-			// Update size counter if updated existing object
 			if objSize > 0 {
+				// Substitute old file size
 				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Sub(float64(objSize))
+			} else {
+				// Only upodate object counter when it's a new object
+				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Inc()
 			}
 			logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 		}
