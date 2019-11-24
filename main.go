@@ -97,12 +97,12 @@ func main() {
 	// Start separate thread for each site
 	wg.Add(len(config.Sites))
 	for _, site := range config.Sites {
-		// Set site name
-		if site.Name == "" {
-			site.Name = site.Bucket + site.BucketPath
-		}
 		// Remove leading slash from the BucketPath
 		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
+		// Set site name
+		if site.Name == "" {
+			site.Name = site.Bucket + "/" + site.BucketPath
+		}
 		// Set site AccessKey
 		if site.AccessKey == "" {
 			site.AccessKey = config.AccessKey
