@@ -50,6 +50,17 @@ sites:
     - "[Tt]humbs.db"
 ```
 
+### Command line args
+
+```bash
+-config string
+    Path to the config.yml (default "config.yml")
+-metrics-path string
+    Prometheus exporter path (default "/metrics")
+-metrics-port string
+    Prometheus exporter port, 0 to disable the exporter (default "9350")
+```
+
 ### Generic configuration options
 
 | Variable | Description | Default | Required |

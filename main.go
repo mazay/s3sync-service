@@ -53,11 +53,13 @@ type ChecksumCFG struct {
 func main() {
 	var config Config
 	var configpath string
-	var prometheusport string
+	var metricsPort string
+	var metricsPath string
 
 	// Read command line args
 	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
-	flag.StringVar(&prometheusport, "port", "9200", "Prometheus exporter port")
+	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
+	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
 
 	// Read config file
@@ -67,7 +69,9 @@ func main() {
 	initLogger(config)
 
 	// Start prometheus exporter
-	go prometheusExporter(prometheusport)
+	if metricsPort != "0" {
+		go prometheusExporter(metricsPort, metricsPath)
+	}
 
 	// Set global WatchInterval
 	if config.WatchInterval == 0 {
@@ -120,9 +124,9 @@ func main() {
 	wg.Wait()
 }
 
-func prometheusExporter(prometheusport string) {
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":"+prometheusport, nil)
+func prometheusExporter(metricsPort string, metricsPath string) {
+	http.Handle(metricsPath, promhttp.Handler())
+	http.ListenAndServe(":"+metricsPort, nil)
 }
 
 func uploadWorker(uploadCh <-chan UploadCFG) {
