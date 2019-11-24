@@ -73,10 +73,11 @@ sites:
 | upload_workers | Number of upload workers for the service | `10` | no |
 | watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
 
-### Sites configuration options
+### Site configuration options
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
+| name | Human friendly site name | `bucket/bucket_path` | no |
 | local_path | Local file system path to be synced with S3, using relative path is known to cause some issues. | n/a | yes |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |

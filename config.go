@@ -9,6 +9,7 @@ import (
 
 // Site is a option for backing up data to S3
 type Site struct {
+	Name            string        `yaml:"name"`
 	LocalPath       string        `yaml:"local_path"`
 	Bucket          string        `yaml:"bucket"`
 	BucketPath      string        `yaml:"bucket_path"`

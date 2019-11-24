@@ -22,7 +22,7 @@ var (
 			Name:      "s3sync_data_total_size",
 			Help:      "Total size of the data in S3",
 		},
-		[]string{"local_path", "bucket", "bucket_path"},
+		[]string{"local_path", "bucket", "bucket_path", "site"},
 	)
 
 	objectsMetric = promauto.NewGaugeVec(
@@ -31,7 +31,7 @@ var (
 			Name:      "s3sync_data_objects_count",
 			Help:      "Nember of objects in S3",
 		},
-		[]string{"local_path", "bucket", "bucket_path"},
+		[]string{"local_path", "bucket", "bucket_path", "site"},
 	)
 )
 
@@ -97,6 +97,10 @@ func main() {
 	// Start separate thread for each site
 	wg.Add(len(config.Sites))
 	for _, site := range config.Sites {
+		// Set site name
+		if site.Name == "" {
+			site.Name = site.Bucket + site.BucketPath
+		}
 		// Remove leading slash from the BucketPath
 		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
 		// Set site AccessKey

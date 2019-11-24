@@ -71,8 +71,8 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 					items[aws.StringValue(s3obj.Key)] = "none"
 				} else {
 					// Update metrics
-					sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Add(float64(*s3obj.Size))
-					objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Inc()
+					sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(*s3obj.Size))
+					objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
 					items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
 				}
 			}
@@ -115,13 +115,13 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 			fs, _ := f.Stat()
 			fileSize := fs.Size()
 			// Update metrics
-			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Add(float64(fileSize))
+			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(fileSize))
 			if objSize > 0 {
 				// Substitute old file size
-				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Sub(float64(objSize))
+				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
 			} else {
 				// Only upodate object counter when it's a new object
-				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Inc()
+				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
 			}
 			logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 		}
@@ -130,6 +130,9 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 }
 
 func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
+	// Get object size
+	objSize := getObjectSize(s3Service, site, s3Key)
+
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(site.Bucket),
 		Key:    aws.String(s3Key),
@@ -152,10 +155,9 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 	}
 
 	// Update metrics
-	objSize := getObjectSize(s3Service, site, s3Key)
 	if objSize > 0 {
-		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Sub(float64(objSize))
-		objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Dec()
+		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
+		objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Dec()
 	}
 
 	logger.Infof("removed s3 object: %s/%s", site.Bucket, s3Key)
