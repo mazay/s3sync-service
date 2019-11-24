@@ -47,13 +47,13 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 		func(page *s3.ListObjectsOutput, last bool) bool {
 			// Process the objects for each page
 			for _, s3obj := range page.Contents {
-				// Update metrics
-				sizeMetric.WithLabelValues(site.Bucket).Add(float64(*s3obj.Size))
-				objectsMetric.WithLabelValues(site.Bucket).Inc()
 				if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
 					logger.Infof("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
 					items[aws.StringValue(s3obj.Key)] = "none"
 				} else {
+					// Update metrics
+					sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Add(float64(*s3obj.Size))
+					objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Inc()
 					items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
 				}
 			}
@@ -75,9 +75,6 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 	})
 
 	f, fileErr := os.Open(file)
-	// Get file size
-	fs, _ := f.Stat()
-	fileSize := fs.Size()
 
 	if fileErr != nil {
 		logger.Errorf("failed to open file %q, %v", file, fileErr)
@@ -91,12 +88,15 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 
 		if err != nil {
 			logger.Errorf("failed to upload object, %v", err)
+		} else {
+			// Get file size
+			fs, _ := f.Stat()
+			fileSize := fs.Size()
+			// Update metrics
+			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Add(float64(fileSize))
+			objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Inc()
+			logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 		}
-
-		// Update metrics
-		sizeMetric.WithLabelValues(site.Bucket).Add(float64(fileSize))
-		objectsMetric.WithLabelValues(site.Bucket).Inc()
-		logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 	}
 	defer f.Close()
 }
@@ -137,8 +137,8 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 
 	// Update metrics if managed to get object size
 	if objErr != nil {
-		sizeMetric.WithLabelValues(site.Bucket).Sub(float64(objSize))
-		objectsMetric.WithLabelValues(site.Bucket).Dec()
+		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Sub(float64(objSize))
+		objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath).Dec()
 	}
 
 	logger.Infof("removed s3 object: %s/%s", site.Bucket, s3Key)

@@ -22,7 +22,7 @@ var (
 			Name:      "s3sync_data_total_size",
 			Help:      "Total size of the data in S3",
 		},
-		[]string{"site"},
+		[]string{"local_path", "bucket", "bucket_path"},
 	)
 
 	objectsMetric = promauto.NewGaugeVec(
@@ -31,7 +31,7 @@ var (
 			Name:      "s3sync_data_objects_count",
 			Help:      "Nember of objects in S3",
 		},
-		[]string{"site"},
+		[]string{"local_path", "bucket", "bucket_path"},
 	)
 )
 
