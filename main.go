@@ -67,8 +67,7 @@ func main() {
 	initLogger(config)
 
 	// Start prometheus exporter
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":"+prometheusport, nil)
+	go prometheusExporter(prometheusport)
 
 	// Set global WatchInterval
 	if config.WatchInterval == 0 {
@@ -119,6 +118,11 @@ func main() {
 		go syncSite(site, uploadCh, checksumCh)
 	}
 	wg.Wait()
+}
+
+func prometheusExporter(prometheusport string) {
+	http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":"+prometheusport, nil)
 }
 
 func uploadWorker(uploadCh <-chan UploadCFG) {
