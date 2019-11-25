@@ -2,13 +2,38 @@ package main
 
 import (
 	"flag"
+	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/service/s3"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var wg = sync.WaitGroup{}
+var (
+	wg = sync.WaitGroup{}
+
+	sizeMetric = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "s3sync",
+			Name:      "s3sync_data_total_size",
+			Help:      "Total size of the data in S3",
+		},
+		[]string{"local_path", "bucket", "bucket_path", "site"},
+	)
+
+	objectsMetric = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "s3sync",
+			Name:      "s3sync_data_objects_count",
+			Help:      "Nember of objects in S3",
+		},
+		[]string{"local_path", "bucket", "bucket_path", "site"},
+	)
+)
 
 // UploadCFG - structure for the upload queue
 type UploadCFG struct {
@@ -28,9 +53,13 @@ type ChecksumCFG struct {
 func main() {
 	var config Config
 	var configpath string
+	var metricsPort string
+	var metricsPath string
 
 	// Read command line args
-	flag.StringVar(&configpath, "c", "config.yml", "Path to the config.yml")
+	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
+	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
+	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
 
 	// Read config file
@@ -38,6 +67,11 @@ func main() {
 
 	// init logger
 	initLogger(config)
+
+	// Start prometheus exporter
+	if metricsPort != "0" {
+		go prometheusExporter(metricsPort, metricsPath)
+	}
 
 	// Set global WatchInterval
 	if config.WatchInterval == 0 {
@@ -65,6 +99,10 @@ func main() {
 	for _, site := range config.Sites {
 		// Remove leading slash from the BucketPath
 		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
+		// Set site name
+		if site.Name == "" {
+			site.Name = site.Bucket + "/" + site.BucketPath
+		}
 		// Set site AccessKey
 		if site.AccessKey == "" {
 			site.AccessKey = config.AccessKey
@@ -88,6 +126,11 @@ func main() {
 		go syncSite(site, uploadCh, checksumCh)
 	}
 	wg.Wait()
+}
+
+func prometheusExporter(metricsPort string, metricsPath string) {
+	http.Handle(metricsPath, promhttp.Handler())
+	http.ListenAndServe(":"+metricsPort, nil)
 }
 
 func uploadWorker(uploadCh <-chan UploadCFG) {

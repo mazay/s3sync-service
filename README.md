@@ -19,7 +19,7 @@ docker run --rm -ti \
 -v "/path/to/config:/opt/s3sync-service" \
 -v "/backup/path:/backup" \
 zmazay/s3sync-service \
-./s3sync-service -c /opt/s3sync-service/config.yml
+./s3sync-service -config /opt/s3sync-service/config.yml
 ```
 
 ## Configuration
@@ -50,6 +50,17 @@ sites:
     - "[Tt]humbs.db"
 ```
 
+### Command line args
+
+```bash
+-config string
+    Path to the config.yml (default "config.yml")
+-metrics-path string
+    Prometheus exporter path (default "/metrics")
+-metrics-port string
+    Prometheus exporter port, 0 to disable the exporter (default "9350")
+```
+
 ### Generic configuration options
 
 | Variable | Description | Default | Required |
@@ -62,14 +73,15 @@ sites:
 | upload_workers | Number of upload workers for the service | `10` | no |
 | watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
 
-### Sites configuration options
+### Site configuration options
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
+| name | Human friendly site name | `bucket/bucket_path` | no |
 | local_path | Local file system path to be synced with S3, using relative path is known to cause some issues. | n/a | yes |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
-| bucket_region | S3 bucket region | `global.aws_region` | yes |
+| bucket_region | S3 bucket region | `global.aws_region` | no |
 | retire_deleted | Remove files from S3 which do not exist locally | `false` | no |
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | Site AWS Access Key | `global.access_key` | no |

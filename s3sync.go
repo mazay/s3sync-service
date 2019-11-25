@@ -13,6 +13,25 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
+	objSize := int64(0)
+
+	params := &s3.ListObjectsInput{
+		Bucket: aws.String(site.Bucket),
+		Prefix: aws.String(s3Key),
+	}
+
+	// Get object size prior deletion
+	obj, objErr := s3Service.ListObjects(params)
+	if objErr == nil {
+		for _, s3obj := range obj.Contents {
+			objSize = *s3obj.Size
+		}
+	}
+
+	return objSize
+}
+
 func generateS3Key(bucketPath string, root string, path string) string {
 	relativePath, _ := filepath.Rel(root, path)
 	return filepath.Join(bucketPath, relativePath)
@@ -40,7 +59,7 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 
 	params := &s3.ListObjectsInput{
 		Bucket: aws.String(site.Bucket),
-		Marker: aws.String(site.BucketPath),
+		Prefix: aws.String(site.BucketPath),
 	}
 
 	err := s3Service.ListObjectsPages(params,
@@ -51,6 +70,9 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 					logger.Infof("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
 					items[aws.StringValue(s3obj.Key)] = "none"
 				} else {
+					// Update metrics
+					sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(*s3obj.Size))
+					objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
 					items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
 				}
 			}
@@ -73,6 +95,9 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 
 	f, fileErr := os.Open(file)
 
+	// Try to get object size in case we updating already existing
+	objSize := getObjectSize(s3Service, site, s3Key)
+
 	if fileErr != nil {
 		logger.Errorf("failed to open file %q, %v", file, fileErr)
 	} else {
@@ -85,19 +110,35 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 
 		if err != nil {
 			logger.Errorf("failed to upload object, %v", err)
+		} else {
+			// Get file size
+			fs, _ := f.Stat()
+			fileSize := fs.Size()
+			// Update metrics
+			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(fileSize))
+			if objSize > 0 {
+				// Substitute old file size
+				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
+			} else {
+				// Only upodate object counter when it's a new object
+				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
+			}
+			logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 		}
-
-		logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 	}
 	defer f.Close()
 }
 
 func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
+	// Get object size
+	objSize := getObjectSize(s3Service, site, s3Key)
+
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(site.Bucket),
 		Key:    aws.String(s3Key),
 	}
 
+	// Delete the object
 	_, err := s3Service.DeleteObject(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -111,6 +152,12 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 			logger.Errorln(err.Error())
 		}
 		return
+	}
+
+	// Update metrics
+	if objSize > 0 {
+		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
+		objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Dec()
 	}
 
 	logger.Infof("removed s3 object: %s/%s", site.Bucket, s3Key)
