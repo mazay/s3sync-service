@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"net/http"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -90,7 +91,9 @@ func main() {
 
 	// Init checksum checker workers
 	checksumCh := make(chan ChecksumCFG)
-	for x := 0; x < 20; x++ {
+	chksumWorkersCount := runtime.NumCPU() * 2
+	logger.Infof("starting %s checksum workers", string(chksumWorkersCount))
+	for x := 0; x < chksumWorkersCount; x++ {
 		go checksumWorker(checksumCh, uploadCh)
 	}
 
