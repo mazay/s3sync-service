@@ -30,6 +30,7 @@ type Config struct {
 	LogLevel          string        `yaml:"loglevel"`
 	UploadQueueBuffer int           `yaml:"upload_queue_buffer"`
 	UploadWorkers     int           `yaml:"upload_workers"`
+	ChecksumWorkers   int           `yaml:"checksum_workers"`
 	WatchInterval     time.Duration `yaml:"watch_interval"`
 	Sites             []Site        `yaml:",flow"`
 }

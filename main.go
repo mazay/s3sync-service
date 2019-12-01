@@ -90,8 +90,12 @@ func main() {
 	}
 
 	// Init checksum checker workers
+	if config.ChecksumWorkers == 0 {
+		config.ChecksumWorkers = 2
+	}
+
 	checksumCh := make(chan ChecksumCFG)
-	chksumWorkersCount := runtime.NumCPU() * 2
+	chksumWorkersCount := runtime.NumCPU() * config.ChecksumWorkers
 	logger.Infof("starting %s checksum workers", string(chksumWorkersCount))
 	for x := 0; x < chksumWorkersCount; x++ {
 		go checksumWorker(checksumCh, uploadCh)
