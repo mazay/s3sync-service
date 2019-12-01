@@ -91,7 +91,7 @@ func main() {
 
 	// Init checksum checker workers
 	if config.ChecksumWorkers == 0 {
-		config.ChecksumWorkers = 2
+		config.ChecksumWorkers = runtime.NumCPU() * 2
 	}
 
 	checksumCh := make(chan ChecksumCFG)
