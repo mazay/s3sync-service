@@ -86,6 +86,7 @@ func main() {
 	}
 
 	uploadCh := make(chan UploadCFG, config.UploadQueueBuffer)
+	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
 	for x := 0; x < config.UploadWorkers; x++ {
 		go uploadWorker(uploadCh)
 	}
