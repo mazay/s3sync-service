@@ -4,6 +4,7 @@ import (
 	"flag"
 	"net/http"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -95,7 +96,7 @@ func main() {
 	}
 
 	checksumCh := make(chan ChecksumCFG)
-	logger.Infof("starting %s checksum workers", string(config.ChecksumWorkers))
+	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
 	for x := 0; x < config.ChecksumWorkers; x++ {
 		go checksumWorker(checksumCh, uploadCh)
 	}
