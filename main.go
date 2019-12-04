@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"net/http"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -84,13 +86,19 @@ func main() {
 	}
 
 	uploadCh := make(chan UploadCFG, config.UploadQueueBuffer)
+	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
 	for x := 0; x < config.UploadWorkers; x++ {
 		go uploadWorker(uploadCh)
 	}
 
 	// Init checksum checker workers
+	if config.ChecksumWorkers == 0 {
+		config.ChecksumWorkers = runtime.NumCPU() * 2
+	}
+
 	checksumCh := make(chan ChecksumCFG)
-	for x := 0; x < 20; x++ {
+	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
+	for x := 0; x < config.ChecksumWorkers; x++ {
 		go checksumWorker(checksumCh, uploadCh)
 	}
 
