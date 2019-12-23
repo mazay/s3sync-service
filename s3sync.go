@@ -32,8 +32,8 @@ func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
 	return objSize
 }
 
-func generateS3Key(bucketPath string, root string, path string) string {
-	relativePath, _ := filepath.Rel(root, path)
+func generateS3Key(bucketPath string, localPath string, filePath string) string {
+	relativePath, _ := filepath.Rel(localPath, filePath)
 	return filepath.Join(bucketPath, relativePath)
 }
 
