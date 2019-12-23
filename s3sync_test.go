@@ -1,42 +1,22 @@
 package main
 
 import (
+	"reflect"
 	"testing"
-	"time"
 )
 
-var siteTestData = []Site{
-	{
-		"test_site",
-		"./test_data",
-		"mock-s3-bucket",
-		"",
-		"",
-		"",
-		"",
-		"",
-		true,
-		[]string{},
-		time.Duration(1000),
-	},
-	{
-		"test_site",
-		"./test_data",
-		"mock-s3-bucket",
-		"",
-		"",
-		"",
-		"AKIAI44QH8DHBEXAMPLE",
-		"je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY",
-		true,
-		[]string{},
-		time.Duration(1000),
-	},
-}
-
 func TestGetS3Session(t *testing.T) {
-	for _, site := range siteTestData {
-		getS3Service(site)
+	for x := 0; x < 10; x++ {
+		config, err := FakeConfig()
+		if err == nil {
+			for _, site := range config.Sites {
+				s3Service := getS3Service(site)
+				responseType := reflect.TypeOf(s3Service).String()
+				if responseType != "*s3.S3" {
+					t.Error("Expected type *s3.S3, got", responseType)
+				}
+			}
+		}
 	}
 }
 
