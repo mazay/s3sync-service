@@ -1,9 +1,10 @@
 FROM golang:1.13.0-alpine AS builder
 WORKDIR /go/src/s3sync-service
-RUN apk add git
+RUN apk add git curl
 COPY *.go ./
-RUN go get -d -v ./...
-RUN go install -v ./...
+COPY Gopkg.toml ./
+RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+RUN dep ensure
 RUN go build
 
 FROM alpine:latest

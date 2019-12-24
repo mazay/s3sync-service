@@ -7,3 +7,7 @@
 
 ### Binary file
 s3sync-service
+
+### dep
+vendor
+Gopkg.lock
