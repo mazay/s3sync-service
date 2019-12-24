@@ -10,4 +10,4 @@ s3sync-service
 
 ### dep
 vendor
-Gopkg.lock
+go.sum
