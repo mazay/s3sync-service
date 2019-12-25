@@ -34,6 +34,8 @@ func TestGetS3Session(t *testing.T) {
 					t.Error("Expected type *s3.S3, got", responseType)
 				}
 			}
+		} else {
+			t.Error(err)
 		}
 	}
 }
