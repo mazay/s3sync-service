@@ -7,6 +7,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var osExit = os.Exit
+
 // Site is a option for backing up data to S3
 type Site struct {
 	Name            string        `yaml:"name"`
@@ -37,10 +39,12 @@ type Config struct {
 
 func configProcessError(err error) {
 	logger.Println(err)
-	os.Exit(2)
+	osExit(2)
 }
 
-func readFile(config *Config, configpath string) {
+func readConfigFile(configpath string) *Config {
+	var config *Config
+
 	f, err := os.Open(configpath)
 	if err != nil {
 		configProcessError(err)
@@ -51,4 +55,6 @@ func readFile(config *Config, configpath string) {
 	if err != nil {
 		configProcessError(err)
 	}
+
+	return config
 }

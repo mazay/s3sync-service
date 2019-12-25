@@ -53,7 +53,6 @@ type ChecksumCFG struct {
 }
 
 func main() {
-	var config Config
 	var configpath string
 	var metricsPort string
 	var metricsPath string
@@ -65,7 +64,7 @@ func main() {
 	flag.Parse()
 
 	// Read config file
-	readFile(&config, configpath)
+	config := readConfigFile(configpath)
 
 	// init logger
 	initLogger(config)
