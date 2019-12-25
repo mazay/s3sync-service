@@ -40,7 +40,7 @@ func configProcessError(err error) {
 	os.Exit(2)
 }
 
-func readFile(config *Config, configpath string) {
+func readConfigFile(config *Config, configpath string) {
 	f, err := os.Open(configpath)
 	if err != nil {
 		configProcessError(err)

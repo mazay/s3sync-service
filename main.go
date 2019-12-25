@@ -65,7 +65,7 @@ func main() {
 	flag.Parse()
 
 	// Read config file
-	readFile(&config, configpath)
+	readConfigFile(&config, configpath)
 
 	// init logger
 	initLogger(config)
