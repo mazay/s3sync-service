@@ -3,7 +3,25 @@ package main
 import (
 	"reflect"
 	"testing"
+
+	"github.com/bxcodec/faker"
 )
+
+type generateS3KeyTest struct {
+	bucketPath string
+	localPath  string
+	filePath   string
+	expected   string
+}
+
+func FakeConfig() (Config, error) {
+	a := Config{}
+	err := faker.FakeData(&a)
+	if err != nil {
+		return a, err
+	}
+	return a, nil
+}
 
 func TestGetS3Session(t *testing.T) {
 	for x := 0; x < 10; x++ {
@@ -20,27 +38,20 @@ func TestGetS3Session(t *testing.T) {
 	}
 }
 
-type generateS3KeyTest struct {
-	bucketPath string
-	localPath  string
-	filePath   string
-	result     string
-}
-
-var generateS3KeyTestData = []generateS3KeyTest{
-	{"", "./", "./test_data/test.file", "test_data/test.file"},
-	{"foo", "./", "./test_data/test.file", "foo/test_data/test.file"},
-}
-
 func TestGenerateS3Key(t *testing.T) {
+	var generateS3KeyTestData = []generateS3KeyTest{
+		{"", "./", "./test_data/test.file", "test_data/test.file"},
+		{"foo", "./", "./test_data/test.file", "foo/test_data/test.file"},
+	}
+
 	for _, testSet := range generateS3KeyTestData {
 		result := generateS3Key(testSet.bucketPath, testSet.localPath, testSet.filePath)
-		if result != testSet.result {
+		if result != testSet.expected {
 			t.Error(
 				"bucketPath:", testSet.bucketPath,
 				"root:", testSet.localPath,
 				"path:", testSet.filePath,
-				"expected", testSet.result,
+				"expected", testSet.expected,
 				"got", result,
 			)
 		}
