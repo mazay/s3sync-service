@@ -70,6 +70,7 @@ sites:
 | aws_region | AWS region | n/a | no |
 | loglevel | Logging level, valid options are - `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. With log level set to `trace` logger will output everything, with `debug` everything apart from `trace` and so on. | `info` | no |
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
+| checksum_workers | Number of checksum workers for the service | `CPU*2` | no |
 | upload_workers | Number of upload workers for the service | `10` | no |
 | watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
 
