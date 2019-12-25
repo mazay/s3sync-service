@@ -1,0 +1,6 @@
+upload_workers: 2
+checksum_workers: 2
+sites:
+- local_path: ./test_data
+  bucket: test-s3sync-service
+  bucket_region: us-east-1
