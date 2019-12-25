@@ -8,7 +8,7 @@ import (
 
 var logger = logrus.New()
 
-func initLogger(config Config) {
+func initLogger(config *Config) {
 	logLevels := map[string]logrus.Level{
 		"trace": logrus.TraceLevel,
 		"debug": logrus.DebugLevel,
