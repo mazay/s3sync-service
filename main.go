@@ -24,7 +24,7 @@ var (
 	sizeMetric = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "s3sync",
-			Name:      "s3sync_data_total_size",
+			Name:      "data_total_size",
 			Help:      "Total size of the data in S3",
 		},
 		[]string{"local_path", "bucket", "bucket_path", "site"},
@@ -33,7 +33,7 @@ var (
 	objectsMetric = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "s3sync",
-			Name:      "s3sync_data_objects_count",
+			Name:      "data_objects_count",
 			Help:      "Nember of objects in S3",
 		},
 		[]string{"local_path", "bucket", "bucket_path", "site"},
