@@ -1,5 +1,9 @@
 # s3sync-service
 
+<a href="https://teamcity.yottacloud.org:30000/viewType.html?buildTypeId=S3syncService_Build&guest=1">
+<img src="https://teamcity.yottacloud.org:30000/app/rest/builds/buildType:(id:S3syncService_Build)/statusIcon"/>
+</a>
+
 ## Description
 
 The `s3sync-service` tool is asynchronously syncing data to S3 storage service for multiple _sites_ (path + bucket combination).

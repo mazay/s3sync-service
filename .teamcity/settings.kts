@@ -66,6 +66,8 @@ project {
 object Build : BuildType({
     name = "Build"
 
+    allowExternalStatus = true
+
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
         param("env.DEBIAN_FRONTEND", "noninteractive")
