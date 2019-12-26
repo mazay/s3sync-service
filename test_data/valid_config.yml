@@ -1,5 +1,6 @@
 upload_workers: 2
 checksum_workers: 2
+loglevel: trace
 sites:
 - local_path: ./test_data
   bucket: test-s3sync-service

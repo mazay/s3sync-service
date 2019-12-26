@@ -172,7 +172,7 @@ func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCF
 	awsItems, err := getAwsS3ItemMap(s3Service, site)
 	if err != nil {
 		logger.Errorln(err)
-		os.Exit(3)
+		osExit(4)
 	} else {
 		// Compare S3 objects with local
 		FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)

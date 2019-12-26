@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -16,6 +17,8 @@ import (
 )
 
 var (
+	osExit = os.Exit
+
 	wg = sync.WaitGroup{}
 
 	sizeMetric = promauto.NewGaugeVec(
