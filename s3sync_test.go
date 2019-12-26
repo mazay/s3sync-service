@@ -14,6 +14,15 @@ type generateS3KeyTest struct {
 	expected   string
 }
 
+type getObjectSizeTest struct {
+	bucket   string
+	expected int64
+}
+
+func (s *Site) SeBucket(bucket string) {
+	s.Bucket = bucket
+}
+
 func FakeConfig() (Config, error) {
 	a := Config{}
 	err := faker.FakeData(&a)
@@ -55,6 +64,26 @@ func TestGenerateS3Key(t *testing.T) {
 				"path:", testSet.filePath,
 				"expected", testSet.expected,
 				"got", result,
+			)
+		}
+	}
+}
+
+func TestGetObjectSize(t *testing.T) {
+	var site Site
+	var getObjectSizeTestData = []getObjectSizeTest{
+		{"fake-s3-bucket", 0},
+	}
+
+	for _, testSet := range getObjectSizeTestData {
+		site.SeBucket(testSet.bucket)
+		site.BucketRegion = "us-east-1"
+		s3Service := getS3Service(site)
+		size := getObjectSize(s3Service, site, "some-key")
+		if size != testSet.expected {
+			t.Error(
+				"Expected", testSet.expected,
+				"got", size,
 			)
 		}
 	}

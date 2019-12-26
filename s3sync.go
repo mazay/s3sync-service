@@ -147,8 +147,6 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 				logger.Errorln(aerr.Error())
 			}
 		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
 			logger.Errorln(err.Error())
 		}
 		return
