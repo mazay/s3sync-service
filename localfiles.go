@@ -26,7 +26,7 @@ func checkIfExcluded(path string, exclusions []string) bool {
 	return excluded
 }
 
-// FilePathWalkDir walks throught the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
+// FilePathWalkDir walks through the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
 func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
 	err := filepath.Walk(site.LocalPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

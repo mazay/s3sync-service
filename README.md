@@ -1,8 +1,6 @@
 # s3sync-service
 
-<a href="https://teamcity.yottacloud.org:30000/viewType.html?buildTypeId=S3syncService_Build&guest=1">
-<img src="https://teamcity.yottacloud.org:30000/app/rest/builds/buildType:(id:S3syncService_Build)/statusIcon"/>
-</a>
+[![Build Status](https://teamcity.yottacloud.org:30000/app/rest/builds/buildType:(id:S3syncService_Build)/statusIcon)](ttps://teamcity.yottacloud.org:30000/viewType.html?buildTypeId=S3syncService_Build&guest=1) [![Go Report Card](https://goreportcard.com/badge/github.com/mazay/s3sync-service)](https://goreportcard.com/report/github.com/mazay/s3sync-service)
 
 ## Description
 
