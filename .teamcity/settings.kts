@@ -110,8 +110,8 @@ object Build : BuildType({
                 do
                 	for arch in "${'$'}{arch_list[@]}"
                   do
-                    GOOS=${'$'}os GOARCH=${'$'}arch go build
-                    if [[ ${'$'}os == "windows" ]]
+                    GOOS=${'$'}{os} GOARCH=${'$'}{arch} go build
+                    if [[ ${'$'}{os} == "windows" ]]
                     then
                       filename="s3sync-service.exe"
                     else
