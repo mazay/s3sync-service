@@ -67,6 +67,7 @@ object Build : BuildType({
     name = "Build"
 
     allowExternalStatus = true
+    artifactRules = "s3sync-service"
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
