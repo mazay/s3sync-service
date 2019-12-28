@@ -67,7 +67,7 @@ object Build : BuildType({
     name = "Build"
 
     allowExternalStatus = true
-    artifactRules = "s3sync-service"
+    artifactRules = "s3sync-service-*"
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
@@ -100,7 +100,28 @@ object Build : BuildType({
         }
         script {
             name = "Go build"
-            scriptContent = "go build"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                os_list=( "darwin" "freebsd" "linux" "windows" )
+                arch_list=( "386" "amd64" )
+
+                for os in "${'$'}{os_list[@]}"
+                do
+                	for arch in "${'$'}{arch_list[@]}"
+                  do
+                    GOOS=${'$'}os GOARCH=${'$'}arch go build
+                    if [[ ${'$'}os == "windows" ]]
+                    then
+                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip s3sync-service.exe
+                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz s3sync-service.exe
+                    else
+                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip s3sync-service
+                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz s3sync-service
+                    fi
+                  done
+                done
+            """.trimIndent()
             formatStderrAsError = true
         }
     }
