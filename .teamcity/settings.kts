@@ -113,12 +113,12 @@ object Build : BuildType({
                     GOOS=${'$'}os GOARCH=${'$'}arch go build
                     if [[ ${'$'}os == "windows" ]]
                     then
-                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip s3sync-service.exe
-                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz s3sync-service.exe
+                      filename="s3sync-service.exe"
                     else
-                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip s3sync-service
-                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz s3sync-service
+                      filename="s3sync-service"
                     fi
+                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip ${'$'}{filename}
+                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz ${'$'}{filename}
                   done
                 done
             """.trimIndent()
