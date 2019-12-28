@@ -1,4 +1,4 @@
-FROM golang:1.13.0-alpine AS builder
+FROM golang:1.13.5-alpine AS builder
 WORKDIR /go/src/s3sync-service
 RUN apk add git curl
 COPY *.go ./
