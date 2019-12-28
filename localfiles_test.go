@@ -13,6 +13,7 @@ type exclusionsTest struct {
 type checksumComparisonTest struct {
 	filename string
 	checksum string
+	site     Site
 	expected string
 }
 
@@ -38,15 +39,15 @@ func TestCheckIfExcluded(t *testing.T) {
 
 func TestCompareChecksum(t *testing.T) {
 	var checksumTestData = []checksumComparisonTest{
-		{"test_data/test.file", "1bc6a9a8be0cc1d8e1f0b734c8911e6c", ""},
-		{"test_data/test.file", "123", "test_data/test.file"},
-		{"test_data/test.file", "", "test_data/test.file"},
-		{"test_data/nonexistent.file", "123", ""},
-		{"", "", ""},
+		{"test_data/test.file", "1bc6a9a8be0cc1d8e1f0b734c8911e6c", Site{}, ""},
+		{"test_data/test.file", "123", Site{}, "test_data/test.file"},
+		{"test_data/test.file", "", Site{}, "test_data/test.file"},
+		{"test_data/nonexistent.file", "123", Site{}, ""},
+		{"", "", Site{}, ""},
 	}
 
 	for _, testSet := range checksumTestData {
-		result := compareChecksum(testSet.filename, testSet.checksum)
+		result := compareChecksum(testSet.filename, testSet.checksum, testSet.site)
 		if result != testSet.expected {
 			t.Error(
 				"For file", testSet.filename,

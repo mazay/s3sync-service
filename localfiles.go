@@ -30,6 +30,8 @@ func checkIfExcluded(path string, exclusions []string) bool {
 func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
 	err := filepath.Walk(site.LocalPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			// Update errors metric
+			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 			logger.Error(err)
 		}
 
@@ -44,7 +46,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 				}
 			} else {
 				checksumRemote, _ := awsItems[s3Key]
-				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, checksumRemote}
+				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, checksumRemote, site}
 			}
 		}
 		return nil
@@ -63,13 +65,15 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 	}
 
 	if err != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 		logger.Error(err)
 	}
 
 	return
 }
 
-func compareChecksum(filename string, checksumRemote string) string {
+func compareChecksum(filename string, checksumRemote string, site Site) string {
 	var sumOfSums []byte
 	var parts int
 	var finalSum []byte
@@ -83,6 +87,8 @@ func compareChecksum(filename string, checksumRemote string) string {
 
 	file, err := os.Open(filename)
 	if err != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 		logger.Error(err)
 		return ""
 	}
@@ -90,6 +96,8 @@ func compareChecksum(filename string, checksumRemote string) string {
 
 	dataSize, err := file.Seek(0, io.SeekEnd)
 	if err != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 		logger.Error(err)
 		return ""
 	}
@@ -101,6 +109,8 @@ func compareChecksum(filename string, checksumRemote string) string {
 		}
 		sum, err := chunkMd5Sum(file, start, length)
 		if err != nil {
+			// Update errors metric
+			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 			logger.Error(err)
 			return ""
 		}
@@ -114,6 +124,8 @@ func compareChecksum(filename string, checksumRemote string) string {
 		h := md5.New()
 		_, err := h.Write(sumOfSums)
 		if err != nil {
+			// Update errors metric
+			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 			logger.Error(err)
 			return ""
 		}

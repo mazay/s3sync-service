@@ -80,6 +80,8 @@ func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
 		},
 	)
 	if err != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
 		logger.Errorf("Error listing %s objects: %s", *params.Bucket, err)
 		return nil, err
 	}
@@ -99,6 +101,8 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 	objSize := getObjectSize(s3Service, site, s3Key)
 
 	if fileErr != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 		logger.Errorf("failed to open file %q, %v", file, fileErr)
 	} else {
 		_, err := uploader.Upload(&s3manager.UploadInput{
@@ -109,6 +113,8 @@ func uploadFile(s3Service *s3.S3, file string, site Site) {
 		})
 
 		if err != nil {
+			// Update errors metric
+			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
 			logger.Errorf("failed to upload object, %v", err)
 		} else {
 			// Get file size
@@ -144,9 +150,13 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
+				// Update errors metric
+				errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
 				logger.Errorln(aerr.Error())
 			}
 		} else {
+			// Update errors metric
+			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
 			logger.Errorln(err.Error())
 		}
 		return
