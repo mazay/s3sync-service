@@ -166,8 +166,10 @@ object Release : BuildType({
         param("env.GOPATH", "/opt/buildagent/work")
         param("env.RELEASE_VERSION", "")
         param("env.RELEASE_CHANGELOG", "")
-        param("env.DRAFT_RELEASE", "true")
-        param("env.PRE_RELEASE", "true")
+        checkbox("env.DRAFT_RELEASE", "true",
+                checked = "true", unchecked = "false")
+        checkbox("env.PRE_RELEASE", "true",
+                checked = "true", unchecked = "false")
         password(
                 "env.GITHUB_TOKEN",
                 "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
