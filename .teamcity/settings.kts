@@ -46,6 +46,7 @@ project {
     vcsRoot(GitGithubComMazayS3syncServiceGit)
 
     buildType(Build)
+    buildType(Release)
 
     features {
         feature {
@@ -228,11 +229,6 @@ object Release : BuildType({
         snapshot(Build){}
         artifacts(Build) {
             artifactRules = "s3sync-service-*"
-        }
-    }
-
-    triggers {
-        vcs {
         }
     }
 
