@@ -197,7 +197,7 @@ object Release : BuildType({
                 ${'$'}{RELEASE_CHANGELOG}
 
                 **image:** \`zmazay/s3sync-service:${'$'}{RELEASE_VERSION}\`
-                EOF"
+                EOF
 
                 if [[ ${'$'}{DRAFT_RELEASE} == true ]]
                 then
