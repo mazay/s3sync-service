@@ -24,7 +24,8 @@ var (
 	sizeMetric = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "s3sync",
-			Name:      "s3sync_data_total_size",
+			Subsystem: "data",
+			Name:      "total_size",
 			Help:      "Total size of the data in S3",
 		},
 		[]string{"local_path", "bucket", "bucket_path", "site"},
@@ -33,10 +34,21 @@ var (
 	objectsMetric = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "s3sync",
-			Name:      "s3sync_data_objects_count",
-			Help:      "Nember of objects in S3",
+			Subsystem: "data",
+			Name:      "objects_count",
+			Help:      "Number of objects in S3",
 		},
 		[]string{"local_path", "bucket", "bucket_path", "site"},
+	)
+
+	errorsMetric = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "s3sync",
+			Subsystem: "errors",
+			Name:      "count",
+			Help:      "Number of errors",
+		},
+		[]string{"local_path", "bucket", "bucket_path", "site", "scope"},
 	)
 )
 
@@ -53,6 +65,7 @@ type ChecksumCFG struct {
 	UploadCFG      UploadCFG
 	filename       string
 	checksumRemote string
+	site           Site
 }
 
 func main() {
@@ -157,7 +170,7 @@ func uploadWorker(uploadCh <-chan UploadCFG) {
 
 func checksumWorker(checksumCh <-chan ChecksumCFG, uploadCh chan<- UploadCFG) {
 	for cfg := range checksumCh {
-		filename := compareChecksum(cfg.filename, cfg.checksumRemote)
+		filename := compareChecksum(cfg.filename, cfg.checksumRemote, cfg.site)
 		if len(filename) > 0 {
 			// Add file to the upload queue
 			uploadCh <- cfg.UploadCFG

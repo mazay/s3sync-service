@@ -99,7 +99,28 @@ object Build : BuildType({
         }
         script {
             name = "Go build"
-            scriptContent = "go build"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                os_list=( "darwin" "freebsd" "linux" "windows" )
+                arch_list=( "386" "amd64" )
+
+                for os in "${'$'}{os_list[@]}"
+                do
+                	for arch in "${'$'}{arch_list[@]}"
+                  do
+                    GOOS=${'$'}{os} GOARCH=${'$'}{arch} go build
+                    if [[ ${'$'}{os} == "windows" ]]
+                    then
+                      filename="s3sync-service.exe"
+                    else
+                      filename="s3sync-service"
+                    fi
+                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip ${'$'}{filename}
+                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz ${'$'}{filename}
+                  done
+                done
+            """.trimIndent()
             formatStderrAsError = true
         }
     }
@@ -130,6 +151,124 @@ object Build : BuildType({
                     token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
                 }
             }
+        }
+    }
+})
+
+object Release : BuildType({
+    name = "Release"
+
+    artifactRules = "s3sync-service-* => artifacts"
+
+    params {
+        param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+        param("env.DEBIAN_FRONTEND", "noninteractive")
+        param("env.GOFLAGS", "-json")
+        param("env.GOPATH", "/opt/buildagent/work")
+        param("env.RELEASE_VERSION", "")
+        param("env.RELEASE_CHANGELOG", "")
+        param("env.DRAFT_RELEASE", "true")
+        param("env.PRE_RELEASE", "true")
+        password(
+                "env.GITHUB_TOKEN",
+                "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
+                label = "Github Token",
+                display = ParameterDisplay.HIDDEN,
+                readOnly = true
+        )
+    }
+
+    vcs {
+        root(DslContext.settingsRoot)
+    }
+
+    steps {
+        script {
+            name = "Go get dependencies"
+            scriptContent = "go mod vendor"
+            formatStderrAsError = true
+        }
+        script {
+            name = "Go test"
+            scriptContent = "go test"
+            formatStderrAsError = true
+        }
+        script {
+            name = "Go build"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                os_list=( "darwin" "freebsd" "linux" "windows" )
+                arch_list=( "386" "amd64" )
+
+                for os in "${'$'}{os_list[@]}"
+                do
+                	for arch in "${'$'}{arch_list[@]}"
+                  do
+                    GOOS=${'$'}{os} GOARCH=${'$'}{arch} go build
+                    if [[ ${'$'}{os} == "windows" ]]
+                    then
+                      filename="s3sync-service.exe"
+                    else
+                      filename="s3sync-service"
+                    fi
+                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip ${'$'}{filename}
+                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz ${'$'}{filename}
+                  done
+                done
+            """.trimIndent()
+            formatStderrAsError = true
+        }
+        script {
+            name = "Release"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                ADDITIONAL_KEYS="-"
+                ATTACHMENTS="
+
+                cat >release.md <<EOF
+                ${'$'}{RELEASE_VERSION}
+
+                ${'$'}{RELEASE_CHANGELOG}
+
+                **image:** \`zmazay/s3sync-service:${'$'}{RELEASE_VERSION}\`
+                EOF"
+
+                if [[ ${'$'}{DRAFT_RELEASE} == true ]]
+                then
+                  ADDITIONAL_KEYS="${'$'}{ADDITIONAL_KEYS}d"
+                fi
+
+                if [[ ${'$'}{PRE_RELEASE} == true ]]
+                then
+                  ADDITIONAL_KEYS="${'$'}{ADDITIONAL_KEYS}p"
+                fi
+
+                if [[ ${'$'}{ADDITIONAL_KEYS} == "-" ]]
+                then
+                  ADDITIONAL_KEYS=""
+                fi
+
+                for artifact in artifacts/*
+                do
+                  ATTACHMENTS="${'$'}{ATTACHMENTS} -a ${'$'}{artifact}"
+                done
+
+                hub release create ${'$'}{ADDITIONAL_KEYS} -F release.md ${'$'}{RELEASE_VERSION} ${'$'}{ATTACHMENTS}
+            """.trimIndent()
+            formatStderrAsError = true
+        }
+    }
+
+    triggers {
+        vcs {
+        }
+    }
+
+    features {
+        golang {
+            testFormat = "json"
         }
     }
 })
