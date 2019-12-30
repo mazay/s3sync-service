@@ -189,7 +189,7 @@ object Release : BuildType({
                 #!/usr/bin/env bash
 
                 ADDITIONAL_KEYS="-"
-                ATTACHMENTS="
+                ATTACHMENTS=""
 
                 cat >release.md <<EOF
                 ${'$'}{RELEASE_VERSION}
