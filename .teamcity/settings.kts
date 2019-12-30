@@ -118,7 +118,6 @@ object Build : BuildType({
                     else
                       filename="s3sync-service"
                     fi
-                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip ${'$'}{filename}
                       tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz ${'$'}{filename}
                   done
                 done
