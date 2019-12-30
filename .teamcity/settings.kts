@@ -31,6 +31,45 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 
 version = "2019.2"
 
+fun BuildSteps.S3SyncMetaRunner() {
+  script {
+      name = "Go get dependencies"
+      scriptContent = "go mod vendor"
+      formatStderrAsError = true
+  }
+  script {
+      name = "Go test"
+      scriptContent = "go test"
+      formatStderrAsError = true
+  }
+  script {
+      name = "Go build"
+      scriptContent = """
+          #!/usr/bin/env bash
+
+          os_list=( "darwin" "freebsd" "linux" "windows" )
+          arch_list=( "386" "amd64" )
+
+          for os in "${'$'}{os_list[@]}"
+          do
+            for arch in "${'$'}{arch_list[@]}"
+            do
+              GOOS=${'$'}{os} GOARCH=${'$'}{arch} go build
+              if [[ ${'$'}{os} == "windows" ]]
+              then
+                filename="s3sync-service.exe"
+              else
+                filename="s3sync-service"
+              fi
+                zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip ${'$'}{filename}
+                tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz ${'$'}{filename}
+            done
+          done
+      """.trimIndent()
+      formatStderrAsError = true
+  }
+}
+
 object GitGithubComMazayS3syncServiceGit : GitVcsRoot({
     name = "git@github.com:mazay/s3sync-service.git"
     url = "git@github.com:mazay/s3sync-service.git"
@@ -67,7 +106,6 @@ object Build : BuildType({
     name = "Build"
 
     allowExternalStatus = true
-    artifactRules = "s3sync-service-*"
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
@@ -88,42 +126,7 @@ object Build : BuildType({
     }
 
     steps {
-        script {
-            name = "Go get dependencies"
-            scriptContent = "go mod vendor"
-            formatStderrAsError = true
-        }
-        script {
-            name = "Go test"
-            scriptContent = "go test"
-            formatStderrAsError = true
-        }
-        script {
-            name = "Go build"
-            scriptContent = """
-                #!/usr/bin/env bash
-
-                os_list=( "darwin" "freebsd" "linux" "windows" )
-                arch_list=( "386" "amd64" )
-
-                for os in "${'$'}{os_list[@]}"
-                do
-                	for arch in "${'$'}{arch_list[@]}"
-                  do
-                    GOOS=${'$'}{os} GOARCH=${'$'}{arch} go build
-                    if [[ ${'$'}{os} == "windows" ]]
-                    then
-                      filename="s3sync-service.exe"
-                    else
-                      filename="s3sync-service"
-                    fi
-                      zip s3sync-service-${'$'}{os}-${'$'}{arch}.zip ${'$'}{filename}
-                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz ${'$'}{filename}
-                  done
-                done
-            """.trimIndent()
-            formatStderrAsError = true
-        }
+      S3SyncMetaRunner {}
     }
 
     triggers {
