@@ -31,7 +31,11 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 
 version = "2019.2"
 
-fun BuildSteps.S3SyncMetaRunner() {
+class S3SyncConfigClass {}
+
+fun BuildSteps.S3SyncMetaRunner(config: S3SyncConfigClass.() -> Unit) {
+  val actualConfig = S3SyncConfigClass()
+  actualConfig.config()
   script {
       name = "Go get dependencies"
       scriptContent = "go mod vendor"
