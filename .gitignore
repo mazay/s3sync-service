@@ -2,8 +2,9 @@
 .DS_Store
 
 ### IntelliJ IDEA
-.idea/*
+.idea
 *.iml
+.teamcity/target
 
 ### Binary file
 s3sync-service
