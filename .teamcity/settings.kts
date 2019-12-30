@@ -214,7 +214,7 @@ object Release : BuildType({
                   ADDITIONAL_KEYS=""
                 fi
 
-                for artifact in artifacts/*
+                for artifact in s3sync-service-*
                 do
                   ATTACHMENTS="${'$'}{ATTACHMENTS} -a ${'$'}{artifact}"
                 done
