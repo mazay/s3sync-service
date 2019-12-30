@@ -22,7 +22,7 @@
     </repository>
     <repository>
       <id>teamcity-server</id>
-      <url>https://teamcity.yottacloud.org/app/dsl-plugins-repository</url>
+      <url>https://teamcity.yottacloud.org:30000/app/dsl-plugins-repository</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -98,6 +98,12 @@
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-script-runtime</artifactId>
       <version>${kotlin.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-script-runtime</artifactId>
+      <version>RELEASE</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>

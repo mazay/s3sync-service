@@ -126,7 +126,7 @@ object Build : BuildType({
     }
 
     steps {
-      S3SyncMetaRunner {}
+        BuildSteps().S3SyncMetaRunner()
     }
 
     triggers {
