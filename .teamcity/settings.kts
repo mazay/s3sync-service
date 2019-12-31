@@ -45,6 +45,7 @@ project {
 
     vcsRoot(GitGithubComMazayS3syncServiceGit)
 
+    buildType(UnitTesting)
     buildType(Build)
     buildType(Release)
 
@@ -64,10 +65,76 @@ project {
     }
 }
 
+object UnitTesting : BuildType({
+    name = "Unit Testing"
+
+    allowExternalStatus = true
+
+    params {
+        param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+        param("env.DEBIAN_FRONTEND", "noninteractive")
+        param("env.GOFLAGS", "-json")
+        param("env.GOPATH", "/opt/buildagent/work")
+        password(
+                "s3sync-service.github.token",
+                "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
+                label = "Github Token",
+                display = ParameterDisplay.HIDDEN,
+                readOnly = true
+        )
+    }
+
+    vcs {
+        root(DslContext.settingsRoot)
+    }
+
+    steps {
+        script {
+            name = "Go get dependencies"
+            scriptContent = "go mod vendor"
+            formatStderrAsError = true
+        }
+        script {
+            name = "Go run unit tests"
+            scriptContent = "go test"
+            formatStderrAsError = true
+        }
+    }
+
+
+    triggers {
+        vcs {
+        }
+    }
+
+    features {
+        pullRequests {
+            vcsRootExtId = "${DslContext.settingsRoot.id}"
+            provider = github {
+                authType = token {
+                    token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
+                }
+                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
+            }
+        }
+        golang {
+            testFormat = "json"
+        }
+        commitStatusPublisher {
+            vcsRootExtId = "${DslContext.settingsRoot.id}"
+            publisher = github {
+                githubUrl = "https://api.github.com"
+                authType = personalToken {
+                    token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
+                }
+            }
+        }
+    }
+})
+
 object Build : BuildType({
     name = "Build"
 
-    allowExternalStatus = true
     artifactRules = "s3sync-service-*"
 
     params {
@@ -92,11 +159,6 @@ object Build : BuildType({
         script {
             name = "Go get dependencies"
             scriptContent = "go mod vendor"
-            formatStderrAsError = true
-        }
-        script {
-            name = "Go test"
-            scriptContent = "go test"
             formatStderrAsError = true
         }
         script {
@@ -126,33 +188,8 @@ object Build : BuildType({
         }
     }
 
-    triggers {
-        vcs {
-        }
-    }
-
-    features {
-        pullRequests {
-            vcsRootExtId = "${DslContext.settingsRoot.id}"
-            provider = github {
-                authType = token {
-                    token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
-                }
-                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
-            }
-        }
-        golang {
-            testFormat = "json"
-        }
-        commitStatusPublisher {
-            vcsRootExtId = "${DslContext.settingsRoot.id}"
-            publisher = github {
-                githubUrl = "https://api.github.com"
-                authType = personalToken {
-                    token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
-                }
-            }
-        }
+    dependencies {
+        snapshot(UnitTesting){}
     }
 })
 
@@ -230,12 +267,6 @@ object Release : BuildType({
         snapshot(Build){}
         artifacts(Build) {
             artifactRules = "s3sync-service-*"
-        }
-    }
-
-    features {
-        golang {
-            testFormat = "json"
         }
     }
 })
