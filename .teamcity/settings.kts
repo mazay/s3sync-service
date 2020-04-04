@@ -172,7 +172,6 @@ object Build : BuildType({
                 for os in "${'$'}{os_list[@]}"
                 do
                 	for arch in "${'$'}{arch_list[@]}"
-                  echo "Building for ${'$'}{os} ${'$'}{arch}"
                   do
                     GOOS=${'$'}{os} GOARCH=${'$'}{arch} go build
                     if [[ ${'$'}{os} == "windows" ]]
