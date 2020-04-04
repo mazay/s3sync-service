@@ -90,11 +90,13 @@ object UnitTesting : BuildType({
 
     steps {
         script {
+            workingDir = "src"
             name = "Go get dependencies"
             scriptContent = "go mod vendor"
             formatStderrAsError = true
         }
         script {
+            workingDir = "src"
             name = "Go run unit tests"
             scriptContent = "go test"
             formatStderrAsError = true
@@ -157,11 +159,13 @@ object Build : BuildType({
 
     steps {
         script {
+            workingDir = "src"
             name = "Go get dependencies"
             scriptContent = "go mod vendor"
             formatStderrAsError = true
         }
         script {
+            workingDir = "src"
             name = "Go build"
             scriptContent = """
                 #!/usr/bin/env bash
