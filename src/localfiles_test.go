@@ -39,10 +39,10 @@ func TestCheckIfExcluded(t *testing.T) {
 
 func TestCompareChecksum(t *testing.T) {
 	var checksumTestData = []checksumComparisonTest{
-		{"test_data/test.file", "1bc6a9a8be0cc1d8e1f0b734c8911e6c", Site{}, ""},
-		{"test_data/test.file", "123", Site{}, "test_data/test.file"},
-		{"test_data/test.file", "", Site{}, "test_data/test.file"},
-		{"test_data/nonexistent.file", "123", Site{}, ""},
+		{"../test_data/test.file", "1bc6a9a8be0cc1d8e1f0b734c8911e6c", Site{}, ""},
+		{"../test_data/test.file", "123", Site{}, "../test_data/test.file"},
+		{"../test_data/test.file", "", Site{}, "../test_data/test.file"},
+		{"../test_data/nonexistent.file", "123", Site{}, ""},
 		{"", "", Site{}, ""},
 	}
 

@@ -1,8 +1,8 @@
 FROM golang:1.14.1-alpine AS builder
 WORKDIR /go/src/s3sync-service
 RUN apk add git curl
-COPY *.go ./
-COPY go.mod ./
+COPY src/*.go ./
+COPY src/go.mod ./
 RUN go mod vendor
 RUN go build
 
