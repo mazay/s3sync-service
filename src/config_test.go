@@ -10,9 +10,9 @@ type ReadConfigTest struct {
 }
 
 func TestReadConfigFile(t *testing.T) {
-	config := readConfigFile("test_data/valid_config.yml")
+	config := readConfigFile("../test_data/valid_config.yml")
 	if config == nil {
-		t.Error("Expected successful config read for test_data/valid_config.yml")
+		t.Error("Expected successful config read for ../test_data/valid_config.yml")
 	}
 }
 
@@ -27,7 +27,7 @@ func TestReadNonexistentConfigFile(t *testing.T) {
 
 	osExit = myExit
 
-	readConfigFile("test_data/nonexistent_config.yml")
+	readConfigFile("../test_data/nonexistent_config.yml")
 
 	if exp := 2; got != exp {
 		t.Errorf("Expected exit code: %d, got: %d", exp, got)
