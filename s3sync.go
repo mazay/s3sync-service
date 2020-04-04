@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -34,7 +35,7 @@ func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
 
 func generateS3Key(bucketPath string, localPath string, filePath string) string {
 	relativePath, _ := filepath.Rel(localPath, filePath)
-	return filepath.Join(bucketPath, relativePath)
+	return path.Join(bucketPath, relativePath)
 }
 
 func getS3Session(site Site) *session.Session {
