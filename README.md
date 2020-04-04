@@ -81,7 +81,7 @@ sites:
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | name | Human friendly site name | `bucket/bucket_path` | no |
-| local_path | Local file system path to be synced with S3, using relative path is known to cause some issues. | n/a | yes |
+| local_path | Local file system path to be synced with S3, **using relative path is known to cause some issues**. | n/a | yes |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
 | bucket_region | S3 bucket region | `global.aws_region` | no |
