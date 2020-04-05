@@ -91,6 +91,18 @@ object UnitTesting : BuildType({
     steps {
         script {
             workingDir = "src"
+            name = "Linter check"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                go get -u golang.org/x/lint/golint
+                
+                ${'$'}{GOBIN}/golint -set_exit_status .
+            """.trimIndent()
+            formatStderrAsError = true
+        }
+        script {
+            workingDir = "src"
             name = "Go get dependencies"
             scriptContent = "go mod vendor"
             formatStderrAsError = true
