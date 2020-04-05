@@ -97,7 +97,7 @@ object UnitTesting : BuildType({
 
                 go get -u golang.org/x/lint/golint
                 
-                ${'$'}{GOPATH}/golint -set_exit_status ...
+                ${'$'}{GOBIN}/golint -set_exit_status ...
             """.trimIndent()
             formatStderrAsError = true
         }
