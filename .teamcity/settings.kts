@@ -95,8 +95,6 @@ object UnitTesting : BuildType({
             scriptContent = """
                 #!/usr/bin/env bash
 
-                go get -u golang.org/x/lint/golint
-                
                 ${'$'}{GOBIN}/golint -set_exit_status .
             """.trimIndent()
             formatStderrAsError = true
