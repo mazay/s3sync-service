@@ -92,6 +92,18 @@ sites:
 | watch_interval | Interval for file system watcher in milliseconds, overrides global setting | `global.watch_interval` | no |
 | exclusions | List of regex filters for exclusions | n/a | no |
 
+### Prometheus metrics
+
+In addition to the default Go metrics, `s3sync-service` exports some custom metrics on default path (`/metrics`) and port (`9350`), check the [command line arguments](#command-line-args) for customisation.
+
+All the custom metrics are exported separately for the configured sites (has `site="my-site"` in labels).
+
+| Metric name | Description | Metric type |
+|-------------|-------------|-------------|
+| s3sync_data_total_size | Total size of the synced objects | Gauge |
+| s3sync_data_objects_count | Total number of the synced objects | Gauge |
+| s3sync_errors_count | Number of errors, could be used for alerting | Counter |
+
 ### Gotchas
 
 1. Same bucket can be used for multiple sites (local directories) only in case both use some `bucket_path`, otherwise, site using bucket root will delete the data from the prefix used by another site. Setting `retire_deleted` to `false` for the site using bucket root should fix this issue.
