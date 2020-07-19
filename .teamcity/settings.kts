@@ -153,6 +153,7 @@ object DockerBuild : BuildType({
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
         param("env.RELEASE_VERSION", "%teamcity.build.branch%")
+        param("reverse.dep.S3syncService_Release.RELEASE_VERSION", "env.RELEASE_VERSION")
         password(
                 "s3sync-service.github.token",
                 "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
@@ -171,8 +172,6 @@ object DockerBuild : BuildType({
             name = "Docker multi-arch"
             scriptContent = """
                 #!/usr/bin/env bash
-                
-                echo ${'$'}{RELEASE_CHANGELOG}
                 
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
                     exit 1
@@ -357,7 +356,7 @@ object Release : BuildType({
             }
 
             artifacts {
-                artifactRules = "s3sync-service*"
+                artifactRules = "s3sync-service-*"
             }
         }
         snapshot(DockerBuild) {
