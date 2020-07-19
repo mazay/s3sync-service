@@ -353,6 +353,7 @@ object Release : BuildType({
     }
 
     dependencies {
+        snapshot(DockerBuild){}
         snapshot(Build){}
         artifacts(Build) {
             artifactRules = "src/s3sync-service-*"
