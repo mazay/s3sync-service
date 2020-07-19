@@ -193,10 +193,7 @@ object DockerBuild : BuildType({
     }
 
     dependencies {
-        snapshot(UnitTesting){
-            onDependencyFailure = FailureAction.CANCEL
-            onDependencyCancel = FailureAction.CANCEL
-        }
+        snapshot(UnitTesting){}
     }
 
     features {
@@ -276,10 +273,7 @@ object Build : BuildType({
     }
 
     dependencies {
-        snapshot(UnitTesting){
-            onDependencyFailure = FailureAction.CANCEL
-            onDependencyCancel = FailureAction.CANCEL
-        }
+        snapshot(UnitTesting){}
     }
 })
 
@@ -359,13 +353,8 @@ object Release : BuildType({
     }
 
     dependencies {
-        snapshot(Build){
-            onDependencyFailure = FailureAction.CANCEL
-            onDependencyCancel = FailureAction.CANCEL
-        }
+        snapshot(Build){}
         artifacts(Build) {
-            onDependencyFailure = FailureAction.CANCEL
-            onDependencyCancel = FailureAction.CANCEL
             artifactRules = "src/s3sync-service-*"
         }
     }
