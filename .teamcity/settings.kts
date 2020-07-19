@@ -67,6 +67,37 @@ project {
     }
 }
 
+open class DockerBuildTemplate : BuildType({
+    steps {
+        script {
+            scriptContent = """
+                #!/usr/bin/env bash
+                
+                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
+                    exit 1
+                else
+                    if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
+                        RELEASE_VERSION="latest"
+                    fi
+                fi
+                
+                make docker-multi-arch
+            """.trimIndent()
+            formatStderrAsError = true
+        }
+    }
+
+    vcs {
+        root(DslContext.settingsRoot)
+    }
+
+    dependencies {
+        snapshot(UnitTesting) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
+    }
+})
+
 object UnitTesting : BuildType({
     name = "Unit Testing"
 
@@ -145,76 +176,75 @@ object UnitTesting : BuildType({
     }
 })
 
-object DockerBuild : BuildType({
-    name = "Docker build"
+object DockerBuild : DockerBuildTemplate() {
+    init {
+        name = "Docker build"
 
-    allowExternalStatus = true
+        allowExternalStatus = true
 
-    params {
-        param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.RELEASE_VERSION", "%teamcity.build.branch%")
-        password(
-                "s3sync-service.github.token",
-                "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
-                label = "Github Token",
-                display = ParameterDisplay.HIDDEN,
-                readOnly = true
-        )
-    }
-
-    vcs {
-        root(DslContext.settingsRoot)
-    }
-
-    steps {
-        script {
-            name = "Docker multi-arch"
-            scriptContent = """
-                #!/usr/bin/env bash
-                
-                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    exit 1
-                else
-                    if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
-                        RELEASE_VERSION="latest"
-                    fi
-                fi
-                
-                make docker-multi-arch
-            """.trimIndent()
-            formatStderrAsError = true
+        params {
+            param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+            param("env.RELEASE_VERSION", "")
+            password(
+                    "s3sync-service.github.token",
+                    "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
+                    label = "Github Token",
+                    display = ParameterDisplay.HIDDEN,
+                    readOnly = true
+            )
         }
-    }
 
-
-    triggers {
-        vcs {
-        }
-    }
-
-    dependencies {
-        snapshot(UnitTesting){
-            onDependencyFailure = FailureAction.FAIL_TO_START
-        }
-    }
-
-    features {
-        dockerSupport {
-            loginToRegistry = on {
-                dockerRegistryId = "PROJECT_EXT_5"
-            }
-        }
-        commitStatusPublisher {
-            vcsRootExtId = "${DslContext.settingsRoot.id}"
-            publisher = github {
-                githubUrl = "https://api.github.com"
-                authType = personalToken {
-                    token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
+        features {
+            dockerSupport {
+                loginToRegistry = on {
+                    dockerRegistryId = "PROJECT_EXT_5"
                 }
             }
         }
     }
-})
+}
+
+object DockerAutoBuild : DockerBuildTemplate() {
+    init {
+        name = "Docker auto-build"
+
+        allowExternalStatus = true
+
+        params {
+            param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+            param("env.RELEASE_VERSION", "%teamcity.build.branch%")
+            password(
+                    "s3sync-service.github.token",
+                    "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
+                    label = "Github Token",
+                    display = ParameterDisplay.HIDDEN,
+                    readOnly = true
+            )
+        }
+
+        triggers {
+            vcs {
+            }
+        }
+
+        features {
+            dockerSupport {
+                loginToRegistry = on {
+                    dockerRegistryId = "PROJECT_EXT_5"
+                }
+            }
+            commitStatusPublisher {
+                vcsRootExtId = "${DslContext.settingsRoot.id}"
+                publisher = github {
+                    githubUrl = "https://api.github.com"
+                    authType = personalToken {
+                        token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
+                    }
+                }
+            }
+        }
+    }
+}
 
 object Build : BuildType({
     name = "Build"
@@ -355,7 +385,7 @@ object Release : BuildType({
             }
 
             artifacts {
-                artifactRules = "s3sync-service*"
+                artifactRules = "s3sync-service-*"
             }
         }
         snapshot(DockerBuild) {
