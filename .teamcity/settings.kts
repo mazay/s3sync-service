@@ -192,6 +192,13 @@ object DockerBuild : BuildType({
         }
     }
 
+    dependencies {
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.CANCEL
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
+
     features {
         dockerSupport {
             loginToRegistry = on {
@@ -269,7 +276,10 @@ object Build : BuildType({
     }
 
     dependencies {
-        snapshot(UnitTesting){}
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.CANCEL
+            onDependencyCancel = FailureAction.CANCEL
+        }
     }
 })
 
@@ -298,11 +308,6 @@ object Release : BuildType({
     }
 
     steps {
-        script {
-            name = "Docker multi-arch"
-            scriptContent = "make docker-multi-arch"
-            formatStderrAsError = true
-        }
         script {
             name = "Release"
             scriptContent = """
@@ -354,8 +359,13 @@ object Release : BuildType({
     }
 
     dependencies {
-        snapshot(Build){}
+        snapshot(Build){
+            onDependencyFailure = FailureAction.CANCEL
+            onDependencyCancel = FailureAction.CANCEL
+        }
         artifacts(Build) {
+            onDependencyFailure = FailureAction.CANCEL
+            onDependencyCancel = FailureAction.CANCEL
             artifactRules = "src/s3sync-service-*"
         }
     }
