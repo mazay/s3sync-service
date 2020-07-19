@@ -146,7 +146,7 @@ object UnitTesting : BuildType({
 })
 
 object DockerBuild : BuildType({
-    name = "Docker autobuild"
+    name = "Docker build"
 
     allowExternalStatus = true
 
@@ -192,6 +192,10 @@ object DockerBuild : BuildType({
         }
     }
 
+    dependencies {
+        snapshot(UnitTesting){}
+    }
+
     features {
         dockerSupport {
             loginToRegistry = on {
@@ -213,7 +217,7 @@ object DockerBuild : BuildType({
 object Build : BuildType({
     name = "Build"
 
-    artifactRules = "s3sync-service*"
+    artifactRules = "src/s3sync-service-*"
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
@@ -299,11 +303,6 @@ object Release : BuildType({
 
     steps {
         script {
-            name = "Docker multi-arch"
-            scriptContent = "make docker-multi-arch"
-            formatStderrAsError = true
-        }
-        script {
             name = "Release"
             scriptContent = """
                 #!/usr/bin/env bash
@@ -345,18 +344,15 @@ object Release : BuildType({
         }
     }
 
-    features {
-        dockerSupport {
-            loginToRegistry = on {
-                dockerRegistryId = "PROJECT_EXT_5"
+    dependencies {
+        dependency(Build) {
+            snapshot {}
+
+            artifacts {
+                artifactRules = "s3sync-service*"
             }
         }
-    }
-
-    dependencies {
-        snapshot(Build){}
-        artifacts(Build) {
-            artifactRules = "s3sync-service*"
+        snapshot(DockerBuild) {
         }
     }
 })
