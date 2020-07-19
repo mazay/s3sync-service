@@ -1,6 +1,7 @@
 import jetbrains.buildServer.configs.kotlin.v2019_2.*
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.PullRequests
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.commitStatusPublisher
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.dockerSupport
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
@@ -167,7 +168,7 @@ object DockerBuild : BuildType({
 
     steps {
         script {
-            name = "Docker multi-arch release"
+            name = "Docker multi-arch"
             scriptContent = """
                 #!/usr/bin/env bash
                 
@@ -298,7 +299,7 @@ object Release : BuildType({
 
     steps {
         script {
-            name = "Docker multi-arch release"
+            name = "Docker multi-arch"
             scriptContent = "make docker-multi-arch"
             formatStderrAsError = true
         }
@@ -341,6 +342,14 @@ object Release : BuildType({
                 hub release create ${'$'}{ADDITIONAL_KEYS} -F release.md ${'$'}{RELEASE_VERSION} ${'$'}{ATTACHMENTS}
             """.trimIndent()
             formatStderrAsError = true
+        }
+    }
+
+    features {
+        dockerSupport {
+            loginToRegistry = on {
+                dockerRegistryId = "PROJECT_EXT_5"
+            }
         }
     }
 
