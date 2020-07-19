@@ -153,7 +153,6 @@ object DockerBuild : BuildType({
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
         param("env.BUILD_BRANCH", "%teamcity.build.branch%")
-        param("env.RELEASE_VERSION", "%reverse.dep.S3syncService_Release.env.RELEASE_VERSION%")
         password(
                 "s3sync-service.github.token",
                 "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
@@ -173,15 +172,12 @@ object DockerBuild : BuildType({
             scriptContent = """
                 #!/usr/bin/env bash
                 
-                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    echo "Environment variable RELEASE_VERSION is not set, using BUILD_BRANCH"
-                    if [ -z "${'$'}{BUILD_BRANCH}" ]; then
-                        echo "Environment variable BUILD_BRANCH is not set, exiting"
-                        exit 1
-                    else
-                        if [ "${'$'}{BUILD_BRANCH}" = "master" ]; then
-                            RELEASE_VERSION="latest"
-                        fi
+                if [ -z "${'$'}{BUILD_BRANCH}" ]; then
+                    echo "Environment variable BUILD_BRANCH is not set, exiting"
+                    exit 1
+                else
+                    if [ "${'$'}{BUILD_BRANCH}" = "master" ]; then
+                        RELEASE_VERSION="latest"
                     fi
                 fi
                 
@@ -314,6 +310,17 @@ object Release : BuildType({
 
     steps {
         script {
+            name = "Docker multi-arch"
+            scriptContent = """
+                #!/usr/bin/env bash
+                
+                echo "Building docker images for ${'$'}{RELEASE_VERSION}"
+                
+                make docker-multi-arch
+            """.trimIndent()
+            formatStderrAsError = true
+        }
+        script {
             name = "Release"
             scriptContent = """
                 #!/usr/bin/env bash
@@ -355,6 +362,14 @@ object Release : BuildType({
         }
     }
 
+    features {
+        dockerSupport {
+            loginToRegistry = on {
+                dockerRegistryId = "PROJECT_EXT_5"
+            }
+        }
+    }
+
     dependencies {
         dependency(Build) {
             snapshot {
@@ -364,9 +379,6 @@ object Release : BuildType({
             artifacts {
                 artifactRules = "s3sync-service-*"
             }
-        }
-        snapshot(DockerBuild) {
-            onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
 })
