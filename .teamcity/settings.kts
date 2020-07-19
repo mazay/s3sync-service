@@ -46,6 +46,7 @@ project {
     vcsRoot(GitGithubComMazayS3syncServiceGit)
 
     buildType(UnitTesting)
+    buildType(DockerBuild)
     buildType(Build)
     buildType(Release)
 
@@ -72,7 +73,6 @@ object UnitTesting : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.DEBIAN_FRONTEND", "noninteractive")
         param("env.GOFLAGS", "-json")
         param("env.GOPATH", "/opt/buildagent/work")
         password(
@@ -132,6 +132,54 @@ object UnitTesting : BuildType({
         golang {
             testFormat = "json"
         }
+        commitStatusPublisher {
+            vcsRootExtId = "${DslContext.settingsRoot.id}"
+            publisher = github {
+                githubUrl = "https://api.github.com"
+                authType = personalToken {
+                    token = "credentialsJSON:8c15f79d-8a9d-4ab0-9057-7f7bc00883c3"
+                }
+            }
+        }
+    }
+})
+
+object DockerBuild : BuildType({
+    name = "Docker autobuild"
+
+    allowExternalStatus = true
+
+    params {
+        param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+        param("env.RELEASE_VERSION", "%vcsroot.branch%")
+        password(
+                "s3sync-service.github.token",
+                "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
+                label = "Github Token",
+                display = ParameterDisplay.HIDDEN,
+                readOnly = true
+        )
+    }
+
+    vcs {
+        root(DslContext.settingsRoot)
+    }
+
+    steps {
+        script {
+            name = "Docker multi-arch release"
+            scriptContent = "make docker-multi-arch"
+            formatStderrAsError = true
+        }
+    }
+
+
+    triggers {
+        vcs {
+        }
+    }
+
+    features {
         commitStatusPublisher {
             vcsRootExtId = "${DslContext.settingsRoot.id}"
             publisher = github {
@@ -212,9 +260,6 @@ object Release : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.DEBIAN_FRONTEND", "noninteractive")
-        param("env.GOFLAGS", "-json")
-        param("env.GOPATH", "/opt/buildagent/work")
         param("env.RELEASE_VERSION", "")
         param("env.RELEASE_CHANGELOG", "")
         checkbox("env.DRAFT_RELEASE", "true",
@@ -235,6 +280,11 @@ object Release : BuildType({
     }
 
     steps {
+        script {
+            name = "Docker multi-arch release"
+            scriptContent = "make docker-multi-arch"
+            formatStderrAsError = true
+        }
         script {
             name = "Release"
             scriptContent = """
