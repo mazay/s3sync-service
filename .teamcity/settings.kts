@@ -151,7 +151,7 @@ object DockerBuild : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.RELEASE_VERSION", "%vcsroot.branch%")
+        param("env.RELEASE_VERSION", "%teamcity.build.branch%")
         password(
                 "s3sync-service.github.token",
                 "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
@@ -168,7 +168,12 @@ object DockerBuild : BuildType({
     steps {
         script {
             name = "Docker multi-arch release"
-            scriptContent = "make docker-multi-arch"
+            scriptContent = """
+                #!/usr/bin/env bash
+                
+                branch=${'$'}{RELEASE_VERSION##*/}
+                make docker-multi-arch"
+            """.trimIndent()
             formatStderrAsError = true
         }
     }
