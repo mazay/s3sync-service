@@ -167,7 +167,7 @@ object DockerBuild : BuildType({
 
     steps {
         script {
-            name = "Docker multi-arch release"
+            name = "Docker multi-arch"
             scriptContent = """
                 #!/usr/bin/env bash
                 
@@ -298,7 +298,7 @@ object Release : BuildType({
 
     steps {
         script {
-            name = "Docker multi-arch release"
+            name = "Docker multi-arch"
             scriptContent = "make docker-multi-arch"
             formatStderrAsError = true
         }
