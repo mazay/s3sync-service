@@ -171,10 +171,10 @@ object DockerBuild : BuildType({
             scriptContent = """
                 #!/usr/bin/env bash
                 
-                if [ -z "${'$'}RELEASE_VERSION" ]; then
+                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
                     exit 1
                 else
-                    if [ "${'$'}"RELEASE_VERSION" = "master" ]; then
+                    if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
                         RELEASE_VERSION="latest"
                     fi
                 fi
