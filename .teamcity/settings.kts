@@ -173,12 +173,15 @@ object DockerBuild : BuildType({
                 #!/usr/bin/env bash
                 
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
+                    echo "Environment variable RELEASE_VERSION is not set, exiting"
                     exit 1
                 else
                     if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
                         RELEASE_VERSION="latest"
                     fi
                 fi
+                
+                echo "Building docker images for ${'$'}{RELEASE_VERSION}"
                 
                 make docker-multi-arch
             """.trimIndent()
@@ -193,7 +196,9 @@ object DockerBuild : BuildType({
     }
 
     dependencies {
-        snapshot(UnitTesting){}
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
     }
 
     features {
@@ -273,7 +278,9 @@ object Build : BuildType({
     }
 
     dependencies {
-        snapshot(UnitTesting){}
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
     }
 })
 
@@ -302,6 +309,17 @@ object Release : BuildType({
     }
 
     steps {
+        script {
+            name = "Docker multi-arch"
+            scriptContent = """
+                #!/usr/bin/env bash
+                
+                echo "Building docker images for ${'$'}{RELEASE_VERSION}"
+                
+                make docker-multi-arch
+            """.trimIndent()
+            formatStderrAsError = true
+        }
         script {
             name = "Release"
             scriptContent = """
@@ -344,15 +362,23 @@ object Release : BuildType({
         }
     }
 
-    dependencies {
-        dependency(Build) {
-            snapshot {}
-
-            artifacts {
-                artifactRules = "s3sync-service*"
+    features {
+        dockerSupport {
+            loginToRegistry = on {
+                dockerRegistryId = "PROJECT_EXT_5"
             }
         }
-        snapshot(DockerBuild) {
+    }
+
+    dependencies {
+        dependency(Build) {
+            snapshot {
+                onDependencyFailure = FailureAction.FAIL_TO_START
+            }
+
+            artifacts {
+                artifactRules = "s3sync-service-*"
+            }
         }
     }
 })
