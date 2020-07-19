@@ -172,6 +172,8 @@ object DockerBuild : BuildType({
             scriptContent = """
                 #!/usr/bin/env bash
                 
+                echo ${'$'}{RELEASE_CHANGELOG}
+                
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
                     exit 1
                 else
