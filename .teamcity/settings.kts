@@ -193,7 +193,9 @@ object DockerBuild : BuildType({
     }
 
     dependencies {
-        snapshot(UnitTesting){}
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
     }
 
     features {
@@ -273,7 +275,9 @@ object Build : BuildType({
     }
 
     dependencies {
-        snapshot(UnitTesting){}
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
     }
 })
 
@@ -346,13 +350,16 @@ object Release : BuildType({
 
     dependencies {
         dependency(Build) {
-            snapshot {}
+            snapshot {
+                onDependencyFailure = FailureAction.FAIL_TO_START
+            }
 
             artifacts {
                 artifactRules = "s3sync-service*"
             }
         }
         snapshot(DockerBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
 })
