@@ -171,7 +171,14 @@ object DockerBuild : BuildType({
             scriptContent = """
                 #!/usr/bin/env bash
                 
-                branch=${'$'}{RELEASE_VERSION##*/}
+                if [ -z "${'$'}RELEASE_VERSION" ]; then
+                    exit 1
+                else
+                    if [ "${'$'}"RELEASE_VERSION" = "master" ]; then
+                        RELEASE_VERSION="latest"
+                    fi
+                fi
+                
                 make docker-multi-arch
             """.trimIndent()
             formatStderrAsError = true
