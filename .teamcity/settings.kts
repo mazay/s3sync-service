@@ -152,7 +152,7 @@ object DockerBuild : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.BUILD_BRANCH", "%teamcity.build.branch%")
+        param("env.RELEASE_VERSION", "%teamcity.build.branch%")
         password(
                 "s3sync-service.github.token",
                 "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
@@ -172,11 +172,11 @@ object DockerBuild : BuildType({
             scriptContent = """
                 #!/usr/bin/env bash
                 
-                if [ -z "${'$'}{BUILD_BRANCH}" ]; then
-                    echo "Environment variable BUILD_BRANCH is not set, exiting"
+                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
+                    echo "Environment variable RELEASE_VERSION is not set, exiting"
                     exit 1
                 else
-                    if [ "${'$'}{BUILD_BRANCH}" = "master" ]; then
+                    if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
                         RELEASE_VERSION="latest"
                     fi
                 fi
