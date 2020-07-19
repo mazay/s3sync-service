@@ -1,6 +1,7 @@
 import jetbrains.buildServer.configs.kotlin.v2019_2.*
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.PullRequests
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.commitStatusPublisher
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.dockerSupport
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
@@ -29,7 +30,7 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 'Debug' option is available in the context menu for the task.
 */
 
-version = "2019.2"
+version = "2020.1"
 
 object GitGithubComMazayS3syncServiceGit : GitVcsRoot({
     name = "git@github.com:mazay/s3sync-service.git"
@@ -341,6 +342,14 @@ object Release : BuildType({
                 hub release create ${'$'}{ADDITIONAL_KEYS} -F release.md ${'$'}{RELEASE_VERSION} ${'$'}{ATTACHMENTS}
             """.trimIndent()
             formatStderrAsError = true
+        }
+    }
+
+    features {
+        dockerSupport {
+            loginToRegistry = on {
+                dockerRegistryId = "PROJECT_EXT_5"
+            }
         }
     }
 
