@@ -172,7 +172,7 @@ object DockerBuild : BuildType({
                 #!/usr/bin/env bash
                 
                 branch=${'$'}{RELEASE_VERSION##*/}
-                make docker-multi-arch"
+                make docker-multi-arch
             """.trimIndent()
             formatStderrAsError = true
         }
