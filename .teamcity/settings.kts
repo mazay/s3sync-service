@@ -146,7 +146,7 @@ object UnitTesting : BuildType({
 })
 
 object DockerBuild : BuildType({
-    name = "Docker autobuild"
+    name = "Docker build"
 
     allowExternalStatus = true
 
@@ -341,14 +341,6 @@ object Release : BuildType({
                 hub release create ${'$'}{ADDITIONAL_KEYS} -F release.md ${'$'}{RELEASE_VERSION} ${'$'}{ATTACHMENTS}
             """.trimIndent()
             formatStderrAsError = true
-        }
-    }
-
-    features {
-        dockerSupport {
-            loginToRegistry = on {
-                dockerRegistryId = "PROJECT_EXT_5"
-            }
         }
     }
 
