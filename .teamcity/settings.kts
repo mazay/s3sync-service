@@ -213,7 +213,7 @@ object DockerBuild : BuildType({
 object Build : BuildType({
     name = "Build"
 
-    artifactRules = "s3sync-service*"
+    artifactRules = "src/s3sync-service-*"
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
@@ -356,7 +356,7 @@ object Release : BuildType({
     dependencies {
         snapshot(Build){}
         artifacts(Build) {
-            artifactRules = "s3sync-service*"
+            artifactRules = "src/s3sync-service-*"
         }
     }
 })
