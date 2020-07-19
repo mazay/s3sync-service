@@ -15,7 +15,8 @@ $(error RELEASE_VERSION value is not set)
 endif
 
 docker-multi-arch:
-	DOCKER_CLI_EXPERIMENTAL=enabled \
+	DOCKER_CLI_EXPERIMENTAL=enabled
+	docker buildx create --use
 	docker buildx build \
 	--push \
 	--platform $(DOCKER_PLATFORMS) \
