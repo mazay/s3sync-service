@@ -1,4 +1,8 @@
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.14.1-alpine AS builder
+ARG TARGETOS
+ARG TARGETARCH
+ENV GOOS=${TARGETOS}
+ENV GOARCH=${TARGETARCH}
 WORKDIR /go/src/s3sync-service
 RUN apk add git curl
 COPY src/*.go ./
