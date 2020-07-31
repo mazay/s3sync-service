@@ -17,6 +17,8 @@ import (
 )
 
 var (
+	version string
+
 	osExit = os.Exit
 
 	wg = sync.WaitGroup{}
