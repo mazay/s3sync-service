@@ -171,7 +171,7 @@ object DockerBuild : BuildType({
             name = "Docker multi-arch"
             scriptContent = """
                 #!/usr/bin/env bash
-                
+
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
                     echo "Environment variable RELEASE_VERSION is not set, exiting"
                     exit 1
@@ -180,9 +180,9 @@ object DockerBuild : BuildType({
                         RELEASE_VERSION="latest"
                     fi
                 fi
-                
+
                 echo "Building docker images for ${'$'}{RELEASE_VERSION}"
-                
+
                 make docker-multi-arch
             """.trimIndent()
             formatStderrAsError = true
@@ -256,7 +256,7 @@ object Build : BuildType({
                 #!/usr/bin/env bash
 
                 os_list=( "darwin" "freebsd" "linux" "windows" )
-                arch_list=( "386" "amd64" )
+                arch_list=( "386" "amd64" "arm" )
 
                 for os in "${'$'}{os_list[@]}"
                 do
@@ -313,9 +313,9 @@ object Release : BuildType({
             name = "Docker multi-arch"
             scriptContent = """
                 #!/usr/bin/env bash
-                
+
                 echo "Building docker images for ${'$'}{RELEASE_VERSION}"
-                
+
                 make docker-multi-arch
             """.trimIndent()
             formatStderrAsError = true
