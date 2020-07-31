@@ -17,12 +17,13 @@ import (
 func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
 	objSize := int64(0)
 
+	// Generate S3 parameters
 	params := &s3.ListObjectsInput{
 		Bucket: aws.String(site.Bucket),
 		Prefix: aws.String(s3Key),
 	}
 
-	// Get object size prior deletion
+	// Get object size
 	obj, objErr := s3Service.ListObjects(params)
 	if objErr == nil {
 		for _, s3obj := range obj.Contents {
@@ -41,7 +42,7 @@ func generateS3Key(bucketPath string, localPath string, filePath string) string 
 func getS3Session(site Site) *session.Session {
 	config := aws.Config{
 		Region:     aws.String(site.BucketRegion),
-		MaxRetries: aws.Int(-1),
+		MaxRetries: aws.Int(site.S3OpsRetries),
 	}
 
 	if site.AccessKey != "" && site.SecretAccessKey != "" {

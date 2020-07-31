@@ -75,6 +75,7 @@ sites:
 | checksum_workers | Number of checksum workers for the service | `CPU*2` | no |
 | upload_workers | Number of upload workers for the service | `10` | no |
 | watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
+| s3_ops_retries | Number of retries for upload and delete operations | `5` | no |
 
 ### Site configuration options
 
@@ -91,6 +92,7 @@ sites:
 | secret_access_key | Site AWS Secret Access Key | `global.secret_access_key` | no |
 | watch_interval | Interval for file system watcher in milliseconds, overrides global setting | `global.watch_interval` | no |
 | exclusions | List of regex filters for exclusions | n/a | no |
+| s3_ops_retries | Number of retries for upload and delete operations | `global.s3_ops_retries` | no |
 
 ### Prometheus metrics
 

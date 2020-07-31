@@ -95,6 +95,11 @@ func main() {
 		config.WatchInterval = 1000
 	}
 
+	// Set global S3OpsRetries
+	if config.S3OpsRetries == 0 {
+		config.S3OpsRetries = 5
+	}
+
 	// Init upload worker
 	if config.UploadWorkers == 0 {
 		config.UploadWorkers = 10
@@ -145,6 +150,10 @@ func main() {
 		// Set site WatchInterval
 		if site.WatchInterval == 0 {
 			site.WatchInterval = config.WatchInterval
+		}
+		// Set site S3OpsRetries
+		if site.S3OpsRetries == 0 {
+			site.S3OpsRetries = config.S3OpsRetries
 		}
 		go syncSite(site, uploadCh, checksumCh)
 	}

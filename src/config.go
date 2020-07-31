@@ -20,6 +20,7 @@ type Site struct {
 	RetireDeleted   bool          `yaml:"retire_deleted"`
 	Exclusions      []string      `yaml:",flow"`
 	WatchInterval   time.Duration `yaml:"watch_interval"`
+	S3OpsRetries    int           `yaml:"s3_ops_retries"`
 }
 
 // Config structure - contains lst of Site options
@@ -32,6 +33,7 @@ type Config struct {
 	UploadWorkers     int           `yaml:"upload_workers"`
 	ChecksumWorkers   int           `yaml:"checksum_workers"`
 	WatchInterval     time.Duration `yaml:"watch_interval"`
+	S3OpsRetries      int           `yaml:"s3_ops_retries"`
 	Sites             []Site        `yaml:",flow"`
 }
 
