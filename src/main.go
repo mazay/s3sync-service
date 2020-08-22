@@ -121,17 +121,12 @@ func main() {
 		go uploadWorker(uploadCh)
 	}
 
-	logger.Debugf("I have %s CPU cores", strconv.Itoa(runtime.NumCPU()))
 	// Init checksum checker workers
 	if config.ChecksumWorkers == 0 {
-		// If in k8s and have at least one CPU core then run 2 workers per core
-		// otherwise run 2 workers
+		// If in k8s then run 2 workers
+		// otherwise run 2 workers per core
 		if inK8s {
-			if runtime.NumCPU() >= 1 {
-				config.ChecksumWorkers = runtime.NumCPU() * 2
-			} else {
-				config.ChecksumWorkers = 2
-			}
+			config.ChecksumWorkers = 2
 		} else {
 			config.ChecksumWorkers = runtime.NumCPU() * 2
 		}
