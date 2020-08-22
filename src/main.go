@@ -23,6 +23,8 @@ var (
 
 	wg = sync.WaitGroup{}
 
+	inK8s = isInK8s()
+
 	sizeMetric = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "s3sync",
@@ -70,6 +72,12 @@ type ChecksumCFG struct {
 	site           Site
 }
 
+func isInK8s() bool {
+	_, present := os.LookupEnv("KUBERNETES_SERVICE_HOST")
+
+	return present
+}
+
 func main() {
 	var configpath string
 	var metricsPort string
@@ -113,9 +121,20 @@ func main() {
 		go uploadWorker(uploadCh)
 	}
 
+	logger.Debugf("I have %s CPU cores", strconv.Itoa(runtime.NumCPU()))
 	// Init checksum checker workers
 	if config.ChecksumWorkers == 0 {
-		config.ChecksumWorkers = runtime.NumCPU() * 2
+		// If in k8s and have at least one CPU core then run 2 workers per core
+		// otherwise run 2 workers
+		if inK8s {
+			if runtime.NumCPU() >= 1 {
+				config.ChecksumWorkers = runtime.NumCPU() * 2
+			} else {
+				config.ChecksumWorkers = 2
+			}
+		} else {
+			config.ChecksumWorkers = runtime.NumCPU() * 2
+		}
 	}
 
 	checksumCh := make(chan ChecksumCFG)
