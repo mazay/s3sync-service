@@ -48,6 +48,7 @@ docker-multi-arch:
 	DOCKER_CLI_EXPERIMENTAL=enabled
 	docker buildx create --use
 	docker buildx build \
+	--build-arg RELEASE_VERSION=${RELEASE_VERSION} \
 	--push \
 	--platform $(DOCKER_PLATFORMS) \
 	--tag $(DOCKER_IMAGE_NAME) -f ./Dockerfile .
