@@ -152,7 +152,8 @@ object DockerBuild : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.RELEASE_VERSION", "%reverse.dep.S3syncService_Release.RELEASE_VERSION%")
+        param("reverse.dep.S3syncService_Release.RELEASE_VERSION", "")
+        param("env.RELEASE_VERSION", "${Release.reverseDepParamRefs["RELEASE_VERSION"]}")
         param("env.CURRENT_BRANCH", "%teamcity.build.branch%")
         password(
                 "s3sync-service.github.token",
@@ -227,7 +228,8 @@ object Build : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.RELEASE_VERSION", "%reverse.dep.S3syncService_Release.RELEASE_VERSION%")
+        param("reverse.dep.S3syncService_Release.RELEASE_VERSION", "")
+        param("env.RELEASE_VERSION", "${Release.reverseDepParamRefs["RELEASE_VERSION"]}")
         param("env.CURRENT_BRANCH", "%teamcity.build.branch%")
         param("env.DEBIAN_FRONTEND", "noninteractive")
         param("env.GOFLAGS", "-json")
