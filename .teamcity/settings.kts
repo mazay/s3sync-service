@@ -46,6 +46,7 @@ project {
 
     vcsRoot(GitGithubComMazayS3syncServiceGit)
 
+    buildType(GoDeps)
     buildType(UnitTesting)
     buildType(DockerBuild)
     buildType(Build)
@@ -66,6 +67,35 @@ project {
         }
     }
 }
+
+object GoDeps : BuildType({
+    name = "Go dependencies"
+
+    params {
+        param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+        param("env.GOPATH", "/opt/buildagent/work")
+        password(
+                "s3sync-service.github.token",
+                "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
+                label = "Github Token",
+                display = ParameterDisplay.HIDDEN,
+                readOnly = true
+        )
+    }
+
+    vcs {
+        root(DslContext.settingsRoot)
+    }
+
+    steps {
+        script {
+            workingDir = "src"
+            name = "Go get dependencies"
+            scriptContent = "go mod vendor"
+            formatStderrAsError = true
+        }
+    }
+})
 
 object UnitTesting : BuildType({
     name = "Unit Testing"
@@ -102,12 +132,6 @@ object UnitTesting : BuildType({
         }
         script {
             workingDir = "src"
-            name = "Go get dependencies"
-            scriptContent = "go mod vendor"
-            formatStderrAsError = true
-        }
-        script {
-            workingDir = "src"
             name = "Go run unit tests"
             scriptContent = "go test"
             formatStderrAsError = true
@@ -117,6 +141,12 @@ object UnitTesting : BuildType({
 
     triggers {
         vcs {
+        }
+    }
+
+    dependencies {
+        snapshot(GoDeps){
+            onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
 
@@ -172,13 +202,8 @@ object DockerBuild : BuildType({
             scriptContent = """
                 #!/usr/bin/env bash
 
-                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    echo "Environment variable RELEASE_VERSION is not set, exiting"
-                    exit 1
-                else
-                    if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
-                        RELEASE_VERSION="latest"
-                    fi
+                if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
+                    RELEASE_VERSION="latest"
                 fi
 
                 echo "Building docker images for ${'$'}{RELEASE_VERSION}"
@@ -228,7 +253,6 @@ object Build : BuildType({
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
         param("env.RELEASE_VERSION", "%teamcity.build.branch%")
         param("env.DEBIAN_FRONTEND", "noninteractive")
-        param("env.GOFLAGS", "-json")
         param("env.GOPATH", "/opt/buildagent/work")
         password(
           "s3sync-service.github.token",
@@ -245,20 +269,11 @@ object Build : BuildType({
 
     steps {
         script {
-            workingDir = "src"
-            name = "Go get dependencies"
-            scriptContent = "go mod vendor"
-            formatStderrAsError = true
-        }
-        script {
             name = "Go build"
             scriptContent = """
                 #!/usr/bin/env bash
 
-                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    echo "The RELEASE_VERSION is not set, exiting"
-                    exit 1
-                fi
+                echo "Building binaries for ${'$'}{RELEASE_VERSION}"
 
                 make build-all
             """.trimIndent()
@@ -268,6 +283,9 @@ object Build : BuildType({
 
     dependencies {
         snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
+        snapshot(GoDeps){
             onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
@@ -298,12 +316,6 @@ object Release : BuildType({
     }
 
     steps {
-        script {
-            workingDir = "src"
-            name = "Go get dependencies"
-            scriptContent = "go mod vendor"
-            formatStderrAsError = true
-        }
         script {
             name = "Go build"
             scriptContent = """
@@ -368,6 +380,12 @@ object Release : BuildType({
                 hub release create ${'$'}{ADDITIONAL_KEYS} -F release.md ${'$'}{RELEASE_VERSION} ${'$'}{ATTACHMENTS}
             """.trimIndent()
             formatStderrAsError = true
+        }
+    }
+
+    dependencies {
+        snapshot(GoDeps){
+            onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
 
