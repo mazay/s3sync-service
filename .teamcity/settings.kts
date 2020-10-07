@@ -152,9 +152,7 @@ object DockerBuild : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("reverse.dep.S3syncService_Release.RELEASE_VERSION", "")
-        param("env.RELEASE_VERSION", "${Release.reverseDepParamRefs["RELEASE_VERSION"]}")
-        param("env.CURRENT_BRANCH", "%teamcity.build.branch%")
+        param("env.RELEASE_VERSION", "%teamcity.build.branch%")
         password(
                 "s3sync-service.github.token",
                 "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
@@ -175,8 +173,8 @@ object DockerBuild : BuildType({
                 #!/usr/bin/env bash
 
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    echo "The RELEASE_VERSION is not set, using CURRENT_BRANCH instead"
-                    RELEASE_VERSION=${'$'}{CURRENT_BRANCH}
+                    echo "Environment variable RELEASE_VERSION is not set, exiting"
+                    exit 1
                 else
                     if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
                         RELEASE_VERSION="latest"
@@ -228,9 +226,7 @@ object Build : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("reverse.dep.S3syncService_Release.RELEASE_VERSION", "")
-        param("env.RELEASE_VERSION", "${Release.reverseDepParamRefs["RELEASE_VERSION"]}")
-        param("env.CURRENT_BRANCH", "%teamcity.build.branch%")
+        param("env.RELEASE_VERSION", "%teamcity.build.branch%")
         param("env.DEBIAN_FRONTEND", "noninteractive")
         param("env.GOFLAGS", "-json")
         param("env.GOPATH", "/opt/buildagent/work")
@@ -260,8 +256,8 @@ object Build : BuildType({
                 #!/usr/bin/env bash
 
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    echo "The RELEASE_VERSION is not set, using CURRENT_BRANCH instead"
-                    RELEASE_VERSION=${'$'}{CURRENT_BRANCH}
+                    echo "The RELEASE_VERSION is not set, exiting"
+                    exit 1
                 fi
 
                 make build-all
@@ -302,6 +298,37 @@ object Release : BuildType({
     }
 
     steps {
+        script {
+            workingDir = "src"
+            name = "Go get dependencies"
+            scriptContent = "go mod vendor"
+            formatStderrAsError = true
+        }
+        script {
+            name = "Go build"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
+                    echo "The RELEASE_VERSION is not set, exiting"
+                    exit 1
+                fi
+
+                make build-all
+            """.trimIndent()
+            formatStderrAsError = true
+        }
+        script {
+            name = "Docker multi-arch"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                echo "Building docker images for ${'$'}{RELEASE_VERSION}"
+
+                make docker-multi-arch
+            """.trimIndent()
+            formatStderrAsError = true
+        }
         script {
             name = "Release"
             scriptContent = """
@@ -349,21 +376,6 @@ object Release : BuildType({
             loginToRegistry = on {
                 dockerRegistryId = "PROJECT_EXT_5"
             }
-        }
-    }
-
-    dependencies {
-        dependency(Build) {
-            snapshot {
-                onDependencyFailure = FailureAction.FAIL_TO_START
-            }
-
-            artifacts {
-                artifactRules = "s3sync-service-*"
-            }
-        }
-        snapshot(DockerBuild){
-            onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
 })
