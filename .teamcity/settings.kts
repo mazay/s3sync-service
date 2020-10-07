@@ -152,7 +152,8 @@ object DockerBuild : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.RELEASE_VERSION", "%teamcity.build.branch%")
+        param("env.RELEASE_VERSION", "reverse.dep.S3syncService_Release.RELEASE_VERSION")
+        param("env.CURRENT_BRANCH", "%teamcity.build.branch%")
         password(
                 "s3sync-service.github.token",
                 "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
@@ -173,8 +174,8 @@ object DockerBuild : BuildType({
                 #!/usr/bin/env bash
 
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    echo "Environment variable RELEASE_VERSION is not set, exiting"
-                    exit 1
+                    echo "The RELEASE_VERSION is not set, using CURRENT_BRANCH instead"
+                    RELEASE_VERSION=${'$'}{CURRENT_BRANCH}
                 else
                     if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
                         RELEASE_VERSION="latest"
@@ -222,11 +223,11 @@ object DockerBuild : BuildType({
 object Build : BuildType({
     name = "Build"
 
-    artifactRules = "src/s3sync-service-*"
+    artifactRules = "s3sync-service-*"
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.RELEASE_VERSION", "")
+        param("env.RELEASE_VERSION", "reverse.dep.S3syncService_Release.RELEASE_VERSION")
         param("env.CURRENT_BRANCH", "%teamcity.build.branch%")
         param("env.DEBIAN_FRONTEND", "noninteractive")
         param("env.GOFLAGS", "-json")
@@ -300,17 +301,6 @@ object Release : BuildType({
 
     steps {
         script {
-            name = "Docker multi-arch"
-            scriptContent = """
-                #!/usr/bin/env bash
-
-                echo "Building docker images for ${'$'}{RELEASE_VERSION}"
-
-                make docker-multi-arch
-            """.trimIndent()
-            formatStderrAsError = true
-        }
-        script {
             name = "Release"
             scriptContent = """
                 #!/usr/bin/env bash
@@ -369,6 +359,9 @@ object Release : BuildType({
             artifacts {
                 artifactRules = "s3sync-service-*"
             }
+        }
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
 })
