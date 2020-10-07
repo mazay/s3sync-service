@@ -46,6 +46,7 @@ project {
 
     vcsRoot(GitGithubComMazayS3syncServiceGit)
 
+    buildType(GoDeps)
     buildType(UnitTesting)
     buildType(DockerBuild)
     buildType(Build)
