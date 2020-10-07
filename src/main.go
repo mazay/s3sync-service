@@ -17,9 +17,13 @@ import (
 )
 
 var (
+	version string
+
 	osExit = os.Exit
 
 	wg = sync.WaitGroup{}
+
+	inK8s = isInK8s()
 
 	sizeMetric = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -68,6 +72,12 @@ type ChecksumCFG struct {
 	site           Site
 }
 
+func isInK8s() bool {
+	_, present := os.LookupEnv("KUBERNETES_SERVICE_HOST")
+
+	return present
+}
+
 func main() {
 	var configpath string
 	var metricsPort string
@@ -95,6 +105,11 @@ func main() {
 		config.WatchInterval = 1000
 	}
 
+	// Set global S3OpsRetries
+	if config.S3OpsRetries == 0 {
+		config.S3OpsRetries = 5
+	}
+
 	// Init upload worker
 	if config.UploadWorkers == 0 {
 		config.UploadWorkers = 10
@@ -108,7 +123,13 @@ func main() {
 
 	// Init checksum checker workers
 	if config.ChecksumWorkers == 0 {
-		config.ChecksumWorkers = runtime.NumCPU() * 2
+		// If in k8s then run 2 workers
+		// otherwise run 2 workers per core
+		if inK8s {
+			config.ChecksumWorkers = 2
+		} else {
+			config.ChecksumWorkers = runtime.NumCPU() * 2
+		}
 	}
 
 	checksumCh := make(chan ChecksumCFG)
@@ -145,6 +166,10 @@ func main() {
 		// Set site WatchInterval
 		if site.WatchInterval == 0 {
 			site.WatchInterval = config.WatchInterval
+		}
+		// Set site S3OpsRetries
+		if site.S3OpsRetries == 0 {
+			site.S3OpsRetries = config.S3OpsRetries
 		}
 		go syncSite(site, uploadCh, checksumCh)
 	}

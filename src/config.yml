@@ -1,4 +1,5 @@
 upload_workers: 10
+loglevel: debug
 sites:
 - local_path: /some/local/path
   bucket: test-s3sync-service

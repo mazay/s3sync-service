@@ -7,11 +7,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var logger = logrus.New()
+var (
+	log    = logrus.New()
+	logger = log.WithFields(logrus.Fields{"app": "s3sync-service", "version": version})
+)
 
 // LoggerInitError is a custom error representation
 func LoggerInitError(err error) {
-	logger.Error(err)
+	log.Error(err)
 	osExit(3)
 }
 
@@ -32,13 +35,19 @@ func initLogger(config *Config) {
 	}
 
 	if LogLevel, ok := logLevels[config.LogLevel]; ok {
-		logger.SetFormatter(&logrus.JSONFormatter{})
-		logger.SetOutput(os.Stdout)
+		log.SetFormatter(&logrus.JSONFormatter{
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime: "@timestamp",
+				logrus.FieldKeyMsg:  "message",
+			},
+		})
 
-		logger.SetLevel(LogLevel)
+		log.SetOutput(os.Stdout)
+
+		log.SetLevel(LogLevel)
 
 		if config.LogLevel == "trace" || config.LogLevel == "debug" {
-			logger.SetReportCaller(true)
+			log.SetReportCaller(true)
 		}
 	} else {
 		LoggerInitError(fmt.Errorf("Log level definition not found for '%s'", config.LogLevel))

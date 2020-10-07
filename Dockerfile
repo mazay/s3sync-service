@@ -1,4 +1,5 @@
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.14.1-alpine AS builder
+ARG RELEASE_VERSION=devel
 ARG TARGETOS
 ARG TARGETARCH
 ENV GOOS=${TARGETOS}
@@ -8,7 +9,7 @@ RUN apk add git curl
 COPY src/*.go ./
 COPY src/go.mod ./
 RUN go mod vendor
-RUN go build
+RUN go build -ldflags "-X main.version=${RELEASE_VERSION}"
 
 FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:latest
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"

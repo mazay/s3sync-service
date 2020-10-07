@@ -20,7 +20,7 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG) {
 			select {
 			case event := <-w.Event:
 				if !event.IsDir() {
-					logger.Infoln(event)
+					logger.Debugln(event)
 					// Convert filepath to string
 					filepath := fmt.Sprint(event.Path)
 					excluded := checkIfExcluded(filepath, site.Exclusions)

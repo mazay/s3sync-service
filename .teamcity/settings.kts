@@ -171,7 +171,7 @@ object DockerBuild : BuildType({
             name = "Docker multi-arch"
             scriptContent = """
                 #!/usr/bin/env bash
-                
+
                 if [ -z "${'$'}{RELEASE_VERSION}" ]; then
                     echo "Environment variable RELEASE_VERSION is not set, exiting"
                     exit 1
@@ -180,9 +180,9 @@ object DockerBuild : BuildType({
                         RELEASE_VERSION="latest"
                     fi
                 fi
-                
+
                 echo "Building docker images for ${'$'}{RELEASE_VERSION}"
-                
+
                 make docker-multi-arch
             """.trimIndent()
             formatStderrAsError = true
@@ -226,6 +226,8 @@ object Build : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+        param("env.RELEASE_VERSION", "")
+        param("env.CURRENT_BRANCH", "%teamcity.build.branch%")
         param("env.DEBIAN_FRONTEND", "noninteractive")
         param("env.GOFLAGS", "-json")
         param("env.GOPATH", "/opt/buildagent/work")
@@ -250,28 +252,16 @@ object Build : BuildType({
             formatStderrAsError = true
         }
         script {
-            workingDir = "src"
             name = "Go build"
             scriptContent = """
                 #!/usr/bin/env bash
 
-                os_list=( "darwin" "freebsd" "linux" "windows" )
-                arch_list=( "386" "amd64" )
+                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
+                    echo "The RELEASE_VERSION is not set, using CURRENT_BRANCH instead"
+                    RELEASE_VERSION=${'$'}{CURRENT_BRANCH}
+                fi
 
-                for os in "${'$'}{os_list[@]}"
-                do
-                	for arch in "${'$'}{arch_list[@]}"
-                  do
-                    GOOS=${'$'}{os} GOARCH=${'$'}{arch} go build
-                    if [[ ${'$'}{os} == "windows" ]]
-                    then
-                      filename="s3sync-service.exe"
-                    else
-                      filename="s3sync-service"
-                    fi
-                      tar -czvf  s3sync-service-${'$'}{os}-${'$'}{arch}.tar.gz ${'$'}{filename}
-                  done
-                done
+                make build-all
             """.trimIndent()
             formatStderrAsError = true
         }
@@ -313,9 +303,9 @@ object Release : BuildType({
             name = "Docker multi-arch"
             scriptContent = """
                 #!/usr/bin/env bash
-                
+
                 echo "Building docker images for ${'$'}{RELEASE_VERSION}"
-                
+
                 make docker-multi-arch
             """.trimIndent()
             formatStderrAsError = true
