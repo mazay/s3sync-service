@@ -387,6 +387,9 @@ object Release : BuildType({
         snapshot(GoDeps){
             onDependencyFailure = FailureAction.FAIL_TO_START
         }
+        snapshot(UnitTesting){
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
     }
 
     features {
