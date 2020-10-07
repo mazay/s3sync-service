@@ -169,7 +169,15 @@ object DockerBuild : BuildType({
     steps {
         script {
             name = "Docker multi-arch"
-            scriptContent = "make docker-multi-arch"
+            scriptContent = """
+                #!/usr/bin/env bash
+
+                if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
+                    RELEASE_VERSION="latest"
+                fi
+
+                make docker-multi-arch
+            """.trimIndent()
             formatStderrAsError = true
         }
     }
