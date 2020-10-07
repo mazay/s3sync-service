@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/common v0.7.0 // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/radovskyb/watcher v1.0.7
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.7.0
 	golang.org/x/sys v0.0.0-20191223224216-5a3cf8467b4e // indirect
 	gopkg.in/yaml.v2 v2.2.7
 )
