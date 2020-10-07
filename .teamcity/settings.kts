@@ -169,17 +169,7 @@ object DockerBuild : BuildType({
     steps {
         script {
             name = "Docker multi-arch"
-            scriptContent = """
-                #!/usr/bin/env bash
-
-                if [ "${'$'}{RELEASE_VERSION}" = "master" ]; then
-                    RELEASE_VERSION="latest"
-                fi
-
-                echo "Building docker images for ${'$'}{RELEASE_VERSION}"
-
-                make docker-multi-arch
-            """.trimIndent()
+            scriptContent = "make docker-multi-arch"
             formatStderrAsError = true
         }
     }
@@ -265,6 +255,7 @@ object Release : BuildType({
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
         param("env.RELEASE_VERSION", "")
         param("env.RELEASE_CHANGELOG", "")
+        param("env.GOPATH", "/opt/buildagent/work")
         checkbox("env.DRAFT_RELEASE", "true",
                 checked = "true", unchecked = "false")
         checkbox("env.PRE_RELEASE", "true",
@@ -296,13 +287,7 @@ object Release : BuildType({
         }
         script {
             name = "Docker multi-arch"
-            scriptContent = """
-                #!/usr/bin/env bash
-
-                echo "Building docker images for ${'$'}{RELEASE_VERSION}"
-
-                make docker-multi-arch
-            """.trimIndent()
+            scriptContent = "make docker-multi-arch"
             formatStderrAsError = true
         }
         script {
