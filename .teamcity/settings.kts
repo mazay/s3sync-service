@@ -46,7 +46,6 @@ project {
 
     vcsRoot(GitGithubComMazayS3syncServiceGit)
 
-    buildType(GoDeps)
     buildType(UnitTesting)
     buildType(DockerBuild)
     buildType(Build)
@@ -67,35 +66,6 @@ project {
         }
     }
 }
-
-object GoDeps : BuildType({
-    name = "Go dependencies"
-
-    params {
-        param("teamcity.build.default.checkoutDir", "src/s3sync-service")
-        param("env.GOPATH", "/opt/buildagent/work")
-        password(
-                "s3sync-service.github.token",
-                "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
-                label = "Github Token",
-                display = ParameterDisplay.HIDDEN,
-                readOnly = true
-        )
-    }
-
-    vcs {
-        root(DslContext.settingsRoot)
-    }
-
-    steps {
-        script {
-            workingDir = "src"
-            name = "Go get dependencies"
-            scriptContent = "go mod vendor"
-            formatStderrAsError = true
-        }
-    }
-})
 
 object UnitTesting : BuildType({
     name = "Unit Testing"
@@ -122,6 +92,12 @@ object UnitTesting : BuildType({
     steps {
         script {
             workingDir = "src"
+            name = "Go get dependencies"
+            scriptContent = "go mod vendor"
+            formatStderrAsError = true
+        }
+        script {
+            workingDir = "src"
             name = "Linter check"
             scriptContent = """
                 #!/usr/bin/env bash
@@ -141,12 +117,6 @@ object UnitTesting : BuildType({
 
     triggers {
         vcs {
-        }
-    }
-
-    dependencies {
-        snapshot(GoDeps){
-            onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
 
@@ -269,23 +239,20 @@ object Build : BuildType({
 
     steps {
         script {
+            workingDir = "src"
+            name = "Go get dependencies"
+            scriptContent = "go mod vendor"
+            formatStderrAsError = true
+        }
+        script {
             name = "Go build"
-            scriptContent = """
-                #!/usr/bin/env bash
-
-                echo "Building binaries for ${'$'}{RELEASE_VERSION}"
-
-                make build-all
-            """.trimIndent()
+            scriptContent = "make build-all"
             formatStderrAsError = true
         }
     }
 
     dependencies {
         snapshot(UnitTesting){
-            onDependencyFailure = FailureAction.FAIL_TO_START
-        }
-        snapshot(GoDeps){
             onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
@@ -317,17 +284,14 @@ object Release : BuildType({
 
     steps {
         script {
+            workingDir = "src"
+            name = "Go get dependencies"
+            scriptContent = "go mod vendor"
+            formatStderrAsError = true
+        }
+        script {
             name = "Go build"
-            scriptContent = """
-                #!/usr/bin/env bash
-
-                if [ -z "${'$'}{RELEASE_VERSION}" ]; then
-                    echo "The RELEASE_VERSION is not set, exiting"
-                    exit 1
-                fi
-
-                make build-all
-            """.trimIndent()
+            scriptContent = "make build-all"
             formatStderrAsError = true
         }
         script {
@@ -384,7 +348,7 @@ object Release : BuildType({
     }
 
     dependencies {
-        snapshot(GoDeps){
+        snapshot(UnitTesting){
             onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
