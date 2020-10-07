@@ -72,6 +72,14 @@ object GoDeps : BuildType({
 
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
+        param("env.GOPATH", "/opt/buildagent/work")
+        password(
+                "s3sync-service.github.token",
+                "credentialsJSON:38d0338a-0796-4eaa-a625-d9b720d9af17",
+                label = "Github Token",
+                display = ParameterDisplay.HIDDEN,
+                readOnly = true
+        )
     }
 
     vcs {
@@ -244,7 +252,6 @@ object Build : BuildType({
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
         param("env.RELEASE_VERSION", "%teamcity.build.branch%")
         param("env.DEBIAN_FRONTEND", "noninteractive")
-        param("env.GOFLAGS", "-json")
         param("env.GOPATH", "/opt/buildagent/work")
         password(
           "s3sync-service.github.token",
