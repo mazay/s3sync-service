@@ -360,7 +360,7 @@ object Release : BuildType({
                 artifactRules = "s3sync-service-*"
             }
         }
-        snapshot(UnitTesting){
+        snapshot(DockerBuild){
             onDependencyFailure = FailureAction.FAIL_TO_START
         }
     }
