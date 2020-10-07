@@ -35,7 +35,13 @@ func initLogger(config *Config) {
 	}
 
 	if LogLevel, ok := logLevels[config.LogLevel]; ok {
-		log.SetFormatter(&logrus.JSONFormatter{})
+		log.SetFormatter(&logrus.JSONFormatter{
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime: "@timestamp",
+				logrus.FieldKeyMsg:  "message",
+			},
+		})
+
 		log.SetOutput(os.Stdout)
 
 		log.SetLevel(LogLevel)
