@@ -1,3 +1,21 @@
+<!--
+s3sync-service - Realtime S3 synchronisation tool
+Copyright (c) 2020  Yevgeniy Valeyev
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -->
+
 # s3sync-service
 
 [![Build Status](https://teamcity.yottacloud.org:30000/app/rest/builds/buildType:(id:S3syncService_UnitTesting)/statusIcon)](https://teamcity.yottacloud.org:30000/viewType.html?buildTypeId=S3syncService_UnitTesting&guest=1) [![Go Report Card](https://goreportcard.com/badge/github.com/mazay/s3sync-service)](https://goreportcard.com/report/github.com/mazay/s3sync-service) ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zmazay/s3sync-service)
