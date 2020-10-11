@@ -74,7 +74,9 @@ type ChecksumCFG struct {
 
 func isInK8s() bool {
 	_, present := os.LookupEnv("KUBERNETES_SERVICE_HOST")
-
+	if present {
+		logger.Debugln("Look mom, I'm in k8s!")
+	}
 	return present
 }
 
