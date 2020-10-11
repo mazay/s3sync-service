@@ -258,8 +258,10 @@ object Release : BuildType({
     params {
         param("teamcity.build.default.checkoutDir", "src/s3sync-service")
         param("env.RELEASE_VERSION", "")
-        param("reverse.dep.S3syncService_Build.RELEASE_VERSION", "")
-        param("reverse.dep.S3syncService_DockerBuild.RELEASE_VERSION", "")
+        /* override RELEASE_VERSION in Build and DockerBuild */
+        param("reverse.dep.S3syncService_Build.env.RELEASE_VERSION", "")
+        param("reverse.dep.S3syncService_DockerBuild.env.RELEASE_VERSION", "")
+        /* end override */
         param("env.RELEASE_CHANGELOG", "")
         param("env.GOPATH", "/opt/buildagent/work")
         checkbox("env.DRAFT_RELEASE", "true",
