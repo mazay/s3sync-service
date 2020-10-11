@@ -1,9 +1,16 @@
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus condimentum rutrum neque, in ornare turpis tristique non. Nunc non nibh dui. Nunc nec arcu neque. Donec sagittis molestie urna, ut ullamcorper augue condimentum in. Etiam ipsum massa, mattis quis tortor vitae, luctus imperdiet odio. Nulla vel enim consectetur, ultricies tortor non, ultricies nisl. Praesent finibus lorem tellus, sit amet lobortis leo tempus eget. Fusce est lacus, imperdiet at congue mattis, euismod vel leo. Integer semper nisi non rutrum pulvinar. Sed pretium in diam ac fringilla. Pellentesque eu dui hendrerit, viverra magna et, feugiat tortor. Pellentesque id lacus sapien.
 
-Ut lectus ipsum, ornare ut nulla id, vestibulum vulputate ex. Integer vitae massa et nulla tincidunt euismod ut a quam. Mauris pharetra risus tellus, a faucibus leo efficitur imperdiet. Cras condimentum lorem nibh, eget accumsan nisi tempus eget. Cras dapibus, sem suscipit rhoncus luctus, lectus elit sollicitudin ipsum, quis posuere nunc felis et nulla. Duis ut sapien vel orci convallis sodales quis vitae magna. Nullam ornare, nibh ac convallis ullamcorper, magna dui semper elit, fringilla malesuada quam magna nec magna. Pellentesque bibendum nunc risus, eu tincidunt ipsum finibus eget. Morbi hendrerit tellus vel lectus blandit, quis dignissim ipsum vestibulum. Vivamus vel dolor iaculis, lacinia diam at, dignissim erat. Morbi rhoncus ex et augue mollis, id bibendum sapien ultricies. Quisque accumsan nec libero sed euismod. Nam consequat tellus eu risus pharetra, sed vestibulum sapien interdum. Nunc et nisi tristique, tincidunt eros in, ullamcorper orci.
+s3sync-service - Realtime S3 synchronisation tool
+Copyright (c) 2020  Yevgeniy Valeyev
 
-Fusce sagittis laoreet mi et dictum. Donec finibus magna in ligula lobortis, id euismod sapien facilisis. Duis lacinia tempor elit, ac condimentum purus luctus non. In euismod sit amet velit ac molestie. Vestibulum mollis sed leo in accumsan. Etiam aliquet sagittis interdum. Nulla at magna laoreet, pulvinar est vitae, volutpat libero.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-Nulla convallis ex sit amet lacus finibus, a auctor nisi ornare. Nulla congue metus non consequat molestie. Donec eget molestie neque. Nullam id ante at sem malesuada eleifend. Donec interdum et erat eu facilisis. Morbi vulputate ante nec hendrerit bibendum. Nullam fringilla aliquet vestibulum. Sed consequat magna vel eleifend vestibulum. Suspendisse potenti. Aliquam id felis aliquet, placerat enim ac, sollicitudin tellus. Vivamus dapibus mattis orci, id ultricies neque consequat eget.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-Ut facilisis fringilla eros et accumsan. Suspendisse potenti. Nullam vel egestas orci. Nullam fermentum sem ut interdum scelerisque. In sodales commodo semper. Donec consectetur ante leo, tempus hendrerit nulla laoreet ac. Aenean commodo tempor metus, ut varius libero aliquam ac. Pellentesque metus mi, tincidunt vel venenatis id, vestibulum eget urna. Sed dolor ipsum, hendrerit at sapien id, lobortis pharetra mi. Fusce lorem massa, volutpat efficitur magna quis, scelerisque tristique metus. Ut aliquam mauris magna, ullamcorper porttitor tortor gravida ut. Morbi maximus, neque eu dignissim tristique, leo orci dignissim dolor, sed facilisis urna magna ac urna. Donec luctus odio vel ligula scelerisque, in pretium orci sollicitudin. Curabitur urna justo, imperdiet in nulla sit amet, lacinia viverra ligula. Pellentesque porttitor venenatis quam. Vestibulum condimentum bibendum venenatis.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
