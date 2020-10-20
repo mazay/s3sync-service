@@ -20,7 +20,7 @@ DOCKER_PLATFORMS=linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,
 DOCKER_BASE_REPO=zmazay/s3sync-service
 DOCKER_IMAGE_NAME=${DOCKER_BASE_REPO}:${RELEASE_VERSION}
 
-GOLANG_OS_LIST=freebsd linux windows
+GOLANG_OS_LIST=freebsd linux windows darwin
 GOLANG_ARCH_LIST=386 amd64 arm
 
 # Validate build arguments
@@ -29,16 +29,15 @@ $(error RELEASE_VERSION value is not set)
 endif
 
 # Generate OS specific filename
-ifeq ($(OS), "windows")
-	filename=s3sync-service.exe
-else
-	filename=s3sync-service
-endif
+define get-filename
+	$(if $(filter $(1),windows),s3sync-service.exe,s3sync-service)
+endef
 
 # Generates a set of build args
 go-build-args := $(foreach OS,$(GOLANG_OS_LIST), \
- $(foreach ARCH,$(GOLANG_ARCH_LIST), \
- 	$(OS)-$(ARCH) ) )
+	$(foreach ARCH,$(if $(filter $(OS),darwin), \
+		$(filter-out 386 arm,$(GOLANG_ARCH_LIST)),$(GOLANG_ARCH_LIST)), \
+		$(OS)-$(ARCH)))
 
 build:
 	go build -o $(filename) -ldflags \
@@ -48,10 +47,11 @@ build-all: $(go-build-args)
 $(go-build-args):
 	$(eval OS := $(word 1,$(subst -, ,$@)))
 	$(eval ARCH := $(word 2,$(subst -, ,$@)))
-	GOOS=$(OS) GOARCH=$(ARCH) go build -o $(filename) -ldflags \
+	$(eval FILENAME := $(call get-filename,$(OS)))
+	GOOS=$(OS) GOARCH=$(ARCH) go build -o $(FILENAME) -ldflags \
 	"-X main.version=${RELEASE_VERSION}" ./src/ && \
-	tar -czvf s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz $(filename) && \
-	rm $(filename)
+	tar -czvf s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz $(FILENAME) && \
+	rm $(FILENAME)
 
 clean:
 	rm -rf s3sync-service-*.tar.gz
