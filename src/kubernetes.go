@@ -16,18 +16,26 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-module github.com/mazay/s3sync-service
+package main
 
-go 1.15
-
-require (
-	github.com/aws/aws-sdk-go v1.35.5
-	github.com/bxcodec/faker v2.0.1+incompatible
-	github.com/prometheus/client_golang v1.7.1
-	github.com/prometheus/common v0.14.0 // indirect
-	github.com/prometheus/procfs v0.2.0 // indirect
-	github.com/radovskyb/watcher v1.0.7
-	github.com/sirupsen/logrus v1.7.0
-	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/client-go v0.19.0
+import (
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
+
+func k8sAuth() *kubernetes.Clientset {
+	// creates the in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return clientset
+}
+
+// TODO: add watcher for PVCs in certain NS or clusterwide, depending on settings
