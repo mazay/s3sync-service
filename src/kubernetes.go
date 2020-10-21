@@ -19,7 +19,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -29,39 +28,44 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func k8sAuth() *kubernetes.Clientset {
+func k8sClientset() *kubernetes.Clientset {
 	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		logger.Panic(err.Error())
 	}
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		logger.Panic(err.Error())
 	}
 
 	return clientset
 }
 
 func k8sWatchPVCs() {
-	clientset := k8sAuth()
+	clientset := k8sClientset()
 
-	watchlist := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pvcs", v1.NamespaceDefault,
-		fields.Everything())
+	watchlist := cache.NewListWatchFromClient(
+		clientset.CoreV1().RESTClient(),
+		"pvc",
+		v1.NamespaceDefault,
+		fields.Everything(),
+	)
+
 	_, controller := cache.NewInformer(
 		watchlist,
 		&v1.Service{},
 		time.Second*0,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				fmt.Printf("pvc added: %s \n", obj)
+				logger.Printf("pvc added: %s \n", obj)
 			},
 			DeleteFunc: func(obj interface{}) {
-				fmt.Printf("pvc deleted: %s \n", obj)
+				logger.Printf("pvc deleted: %s \n", obj)
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				fmt.Printf("pvc changed \n")
+				logger.Printf("pvc changed \n")
 			},
 		},
 	)
