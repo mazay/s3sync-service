@@ -19,8 +19,14 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 )
 
 func k8sAuth() *kubernetes.Clientset {
@@ -38,4 +44,31 @@ func k8sAuth() *kubernetes.Clientset {
 	return clientset
 }
 
-// TODO: add watcher for PVCs in certain NS or clusterwide, depending on settings
+func k8sWatchPVCs() {
+	clientset := k8sAuth()
+
+	watchlist := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pvcs", v1.NamespaceDefault,
+		fields.Everything())
+	_, controller := cache.NewInformer(
+		watchlist,
+		&v1.Service{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				fmt.Printf("pvc added: %s \n", obj)
+			},
+			DeleteFunc: func(obj interface{}) {
+				fmt.Printf("pvc deleted: %s \n", obj)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				fmt.Printf("pvc changed \n")
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	go controller.Run(stop)
+	for {
+		time.Sleep(time.Second)
+	}
+}
