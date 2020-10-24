@@ -228,3 +228,20 @@ func checksumWorker(checksumCh <-chan ChecksumCFG, uploadCh chan<- UploadCFG) {
 		}
 	}
 }
+
+func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
+	// Initi S3 session
+	s3Service := s3.New(getS3Session(site))
+	// Watch directory for realtime sync
+	go watch(s3Service, site, uploadCh)
+	// Fetch S3 objects
+	awsItems, err := getAwsS3ItemMap(s3Service, site)
+	if err != nil {
+		logger.Errorln(err)
+		osExit(4)
+	} else {
+		// Compare S3 objects with local
+		FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)
+		logger.Infof("finished initial sync for site %s", site.Name)
+	}
+}
