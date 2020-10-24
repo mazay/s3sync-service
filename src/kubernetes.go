@@ -26,6 +26,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+
+	mv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func k8sClientset() *kubernetes.Clientset {
@@ -43,29 +45,38 @@ func k8sClientset() *kubernetes.Clientset {
 	return clientset
 }
 
-func k8sWatchPVCs() {
+func k8sWatchPVCs(namespace string) {
 	clientset := k8sClientset()
+
+	if namespace == "" {
+		namespace = v1.NamespaceAll
+	}
+
+	logger.Infoln("starting to watch for PVCs")
 
 	watchlist := cache.NewListWatchFromClient(
 		clientset.CoreV1().RESTClient(),
-		"pvc",
-		v1.NamespaceDefault,
+		"persistentvolumeclaims",
+		namespace,
 		fields.Everything(),
 	)
 
 	_, controller := cache.NewInformer(
 		watchlist,
-		&v1.Service{},
+		&v1.PersistentVolumeClaim{},
 		time.Second*0,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				logger.Printf("pvc added: %s \n", obj)
+				mObj := obj.(mv1.Object)
+				logger.Infof("pvc added: %s/%s", mObj.GetNamespace(), mObj.GetName())
 			},
 			DeleteFunc: func(obj interface{}) {
-				logger.Printf("pvc deleted: %s \n", obj)
+				mObj := obj.(mv1.Object)
+				logger.Infof("pvc deleted: %s/%s", mObj.GetNamespace(), mObj.GetName())
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				logger.Printf("pvc changed \n")
+				mObj := newObj.(mv1.Object)
+				logger.Infof("pvc changed: %s/%s", mObj.GetNamespace(), mObj.GetName())
 			},
 		},
 	)
