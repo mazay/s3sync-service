@@ -40,7 +40,8 @@ go-build-args := $(foreach OS,$(GOLANG_OS_LIST), \
 		$(OS)-$(ARCH)))
 
 build:
-	go build -o $(filename) -ldflags \
+	$(eval FILENAME := $(call get-filename,$(OS)))
+	go build -o $(FILENAME) -ldflags \
 	"-X main.version=${RELEASE_VERSION}" ./src/
 
 build-all: $(go-build-args)
