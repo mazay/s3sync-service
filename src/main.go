@@ -102,13 +102,11 @@ func main() {
 	var configpath string
 	var metricsPort string
 	var metricsPath string
-	var namespace string
 
 	// Read command line args
 	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
 	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
 	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
-	flag.StringVar(&namespace, "namespace", "", "k8s namespace to be watched for PVC, omit for matching all namespaces")
 	flag.Parse()
 
 	// Read config file
