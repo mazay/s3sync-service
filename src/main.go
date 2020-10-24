@@ -160,10 +160,6 @@ func main() {
 		go checksumWorker(checksumCh, uploadCh)
 	}
 
-	if inK8s {
-		k8sWatchPVCs(namespace)
-	}
-
 	// Start separate thread for each site
 	wg.Add(len(config.Sites))
 	for _, site := range config.Sites {
