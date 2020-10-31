@@ -133,10 +133,10 @@ func main() {
 		go checksumWorker(checksumCh, uploadCh)
 	}
 
-	// Start separate thread for each site
-	wg.Add(len(config.Sites))
+	// Start separate goroutine for each site
 	for _, site := range config.Sites {
 		site.setDefaults(config)
+		wg.Add(1)
 		go syncSite(site, uploadCh, checksumCh)
 	}
 	wg.Wait()
