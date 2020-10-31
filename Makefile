@@ -59,7 +59,7 @@ clean:
 
 docker-multi-arch:
 	DOCKER_CLI_EXPERIMENTAL=enabled
-	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes i
+	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	docker buildx create --use
 	docker buildx build \
 	--build-arg RELEASE_VERSION=${RELEASE_VERSION} \
