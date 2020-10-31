@@ -23,7 +23,7 @@ import (
 	"testing"
 )
 
-type ConfigSetDefaultsTest struct {
+type SetDefaultsTest struct {
 	cfgData  string
 	expected bool
 }
@@ -53,8 +53,8 @@ func TestReadNonexistentConfigFile(t *testing.T) {
 	}
 }
 
-func TestConfigSetDefaults(t *testing.T) {
-	var ConfigSetDefaultsData = []ConfigSetDefaultsTest{
+func TestSetDefaults(t *testing.T) {
+	var SetDefaultsData = []SetDefaultsTest{
 		{
 			`
 aws_region: us-east-1
@@ -63,8 +63,16 @@ checksum_workers: 2
 watch_interval: 60000ms
 s3_ops_retries: 3
 sites:
-- local_path: /some/local/path
+- name: test-s3sync-service
+  local_path: /some/local/path
   bucket: test-s3sync-service
+  bucket_path: some_path
+  bucket_region: eu-central-1
+  storage_class: STANDARD_IA
+  access_key: AKIAI44QH8DHBEXAMPLE
+  secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+  watch_interval: 5m
+  s3_ops_retries: 5
 `,
 			true,
 		},
@@ -79,7 +87,7 @@ sites:
 		},
 	}
 
-	for _, testSet := range ConfigSetDefaultsData {
+	for _, testSet := range SetDefaultsData {
 		configOrig := readConfigString(testSet.cfgData)
 		config := readConfigString(testSet.cfgData)
 		config.setDefaults()
@@ -90,6 +98,18 @@ sites:
 				"expected", testSet.expected,
 				"got", result,
 			)
+		}
+		for _, site := range config.Sites {
+			siteOrig := site
+			site.setDefaults(config)
+			result := reflect.DeepEqual(site, siteOrig)
+			if result != testSet.expected {
+				t.Error(
+					"For cfgData", testSet.cfgData,
+					"expected", testSet.expected,
+					"got", result,
+				)
+			}
 		}
 	}
 }
