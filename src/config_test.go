@@ -55,6 +55,7 @@ func TestReadNonexistentConfigFile(t *testing.T) {
 
 func TestSetDefaults(t *testing.T) {
 	var SetDefaultsData = []SetDefaultsTest{
+		// Valied set with all fields set - no overrides with defaults
 		{
 			`
 aws_region: us-east-1
@@ -76,6 +77,7 @@ sites:
 `,
 			true,
 		},
+		// Valied set with not all fields set - some fields are overriden by default values
 		{
 			`
 aws_region: us-east-1
