@@ -19,12 +19,13 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
 
-type ReadConfigTest struct {
-	filePath string
-	expected string
+type ConfigSetDefaultsTest struct {
+	cfgData  string
+	expected bool
 }
 
 func TestReadConfigFile(t *testing.T) {
@@ -49,5 +50,46 @@ func TestReadNonexistentConfigFile(t *testing.T) {
 
 	if exp := 2; got != exp {
 		t.Errorf("Expected exit code: %d, got: %d", exp, got)
+	}
+}
+
+func TestConfigSetDefaults(t *testing.T) {
+	var ConfigSetDefaultsData = []ConfigSetDefaultsTest{
+		{
+			`
+aws_region: us-east-1
+upload_workers: 1
+checksum_workers: 2
+watch_interval: 60000ms
+s3_ops_retries: 3
+sites:
+- local_path: /some/local/path
+  bucket: test-s3sync-service
+`,
+			true,
+		},
+		{
+			`
+aws_region: us-east-1
+sites:
+- local_path: /some/local/path
+  bucket: test-s3sync-service
+`,
+			false,
+		},
+	}
+
+	for _, testSet := range ConfigSetDefaultsData {
+		configOrig := readConfigString(testSet.cfgData)
+		config := readConfigString(testSet.cfgData)
+		config.setDefaults()
+		result := reflect.DeepEqual(config, configOrig)
+		if result != testSet.expected {
+			t.Error(
+				"For cfgData", testSet.cfgData,
+				"expected", testSet.expected,
+				"got", result,
+			)
+		}
 	}
 }
