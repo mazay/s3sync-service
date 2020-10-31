@@ -59,7 +59,7 @@ type Site struct {
 
 func (config *Config) setDefaults() {
 	if config.WatchInterval == 0 {
-		config.WatchInterval = 1000
+		config.WatchInterval = time.Millisecond * 1000
 	}
 
 	if config.S3OpsRetries == 0 {
@@ -129,6 +129,18 @@ func readConfigFile(configpath string) *Config {
 
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&config)
+	f.Close()
+	if err != nil {
+		configProcessError(err)
+	}
+
+	return config
+}
+
+func readConfigString(cfgData string) *Config {
+	var config *Config
+
+	err := yaml.Unmarshal([]byte(cfgData), &config)
 	if err != nil {
 		configProcessError(err)
 	}

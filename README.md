@@ -92,7 +92,7 @@ sites:
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | checksum_workers | Number of checksum workers for the service | `CPU*2` | no |
 | upload_workers | Number of upload workers for the service | `10` | no |
-| watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
+| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `1000ms` | no |
 | s3_ops_retries | Number of retries for upload and delete operations | `2 in k8s, CPU cores * 2 otherwise` | no |
 
 ### Site configuration options
@@ -108,7 +108,7 @@ sites:
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | Site AWS Access Key | `global.access_key` | no |
 | secret_access_key | Site AWS Secret Access Key | `global.secret_access_key` | no |
-| watch_interval | Interval for file system watcher in milliseconds, overrides global setting | `global.watch_interval` | no |
+| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `global.watch_interval` | no |
 | exclusions | List of regex filters for exclusions | n/a | no |
 | s3_ops_retries | Number of retries for upload and delete operations | `global.s3_ops_retries` | no |
 
