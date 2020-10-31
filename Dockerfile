@@ -29,7 +29,7 @@ COPY src/go.mod ./
 RUN go mod vendor
 RUN go build -ldflags "-X main.version=${RELEASE_VERSION}"
 
-FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:latest
+FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:3.12.1
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
