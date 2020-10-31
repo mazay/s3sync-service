@@ -22,7 +22,9 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -109,7 +111,6 @@ func main() {
 
 	// Read config file
 	config := readConfigFile(configpath)
-	config.setDefaults()
 
 	// init logger
 	initLogger(config)
@@ -119,7 +120,21 @@ func main() {
 		go prometheusExporter(metricsPort, metricsPath)
 	}
 
+	// Set global WatchInterval
+	if config.WatchInterval == 0 {
+		config.WatchInterval = 1000
+	}
+
+	// Set global S3OpsRetries
+	if config.S3OpsRetries == 0 {
+		config.S3OpsRetries = 5
+	}
+
 	// Init upload worker
+	if config.UploadWorkers == 0 {
+		config.UploadWorkers = 10
+	}
+
 	uploadCh := make(chan UploadCFG, config.UploadQueueBuffer)
 	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
 	for x := 0; x < config.UploadWorkers; x++ {
@@ -127,6 +142,16 @@ func main() {
 	}
 
 	// Init checksum checker workers
+	if config.ChecksumWorkers == 0 {
+		// If in k8s then run 2 workers
+		// otherwise run 2 workers per core
+		if inK8s {
+			config.ChecksumWorkers = 2
+		} else {
+			config.ChecksumWorkers = runtime.NumCPU() * 2
+		}
+	}
+
 	checksumCh := make(chan ChecksumCFG)
 	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
 	for x := 0; x < config.ChecksumWorkers; x++ {
@@ -136,6 +161,36 @@ func main() {
 	// Start separate thread for each site
 	wg.Add(len(config.Sites))
 	for _, site := range config.Sites {
+		// Remove leading slash from the BucketPath
+		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
+		// Set site name
+		if site.Name == "" {
+			site.Name = site.Bucket + "/" + site.BucketPath
+		}
+		// Set site AccessKey
+		if site.AccessKey == "" {
+			site.AccessKey = config.AccessKey
+		}
+		// Set site SecretAccessKey
+		if site.SecretAccessKey == "" {
+			site.SecretAccessKey = config.SecretAccessKey
+		}
+		// Set site BucketRegion
+		if site.BucketRegion == "" {
+			site.BucketRegion = config.AwsRegion
+		}
+		// Set default value for StorageClass
+		if site.StorageClass == "" {
+			site.StorageClass = "STANDARD"
+		}
+		// Set site WatchInterval
+		if site.WatchInterval == 0 {
+			site.WatchInterval = config.WatchInterval
+		}
+		// Set site S3OpsRetries
+		if site.S3OpsRetries == 0 {
+			site.S3OpsRetries = config.S3OpsRetries
+		}
 		go syncSite(site, uploadCh, checksumCh)
 	}
 	wg.Wait()

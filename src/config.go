@@ -20,8 +20,6 @@ package main
 
 import (
 	"os"
-	"runtime"
-	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -55,63 +53,6 @@ type Config struct {
 	WatchInterval     time.Duration `yaml:"watch_interval"`
 	S3OpsRetries      int           `yaml:"s3_ops_retries"`
 	Sites             []Site        `yaml:",flow"`
-}
-
-func (config *Config) setDefaults() {
-	if config.WatchInterval == 0 {
-		config.WatchInterval = 1000
-	}
-
-	if config.S3OpsRetries == 0 {
-		config.S3OpsRetries = 5
-	}
-
-	if config.UploadWorkers == 0 {
-		config.UploadWorkers = 10
-	}
-
-	if config.ChecksumWorkers == 0 {
-		// If in k8s then run 2 workers
-		// otherwise run 2 workers per core
-		if inK8s {
-			config.ChecksumWorkers = 2
-		} else {
-			config.ChecksumWorkers = runtime.NumCPU() * 2
-		}
-	}
-
-	for _, site := range config.Sites {
-		// Remove leading slash from the BucketPath
-		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
-		// Set site name
-		if site.Name == "" {
-			site.Name = site.Bucket + "/" + site.BucketPath
-		}
-		// Set site AccessKey
-		if site.AccessKey == "" {
-			site.AccessKey = config.AccessKey
-		}
-		// Set site SecretAccessKey
-		if site.SecretAccessKey == "" {
-			site.SecretAccessKey = config.SecretAccessKey
-		}
-		// Set site BucketRegion
-		if site.BucketRegion == "" {
-			site.BucketRegion = config.AwsRegion
-		}
-		// Set default value for StorageClass
-		if site.StorageClass == "" {
-			site.StorageClass = "STANDARD"
-		}
-		// Set site WatchInterval
-		if site.WatchInterval == 0 {
-			site.WatchInterval = config.WatchInterval
-		}
-		// Set site S3OpsRetries
-		if site.S3OpsRetries == 0 {
-			site.S3OpsRetries = config.S3OpsRetries
-		}
-	}
 }
 
 func configProcessError(err error) {
