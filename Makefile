@@ -65,3 +65,4 @@ docker-multi-arch:
 	--push \
 	--platform $(DOCKER_PLATFORMS) \
 	--tag $(DOCKER_IMAGE_NAME) -f ./Dockerfile .
+	docker buildx rm
