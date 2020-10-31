@@ -93,14 +93,14 @@ sites:
 | checksum_workers | Number of checksum workers for the service | `CPU*2` | no |
 | upload_workers | Number of upload workers for the service | `10` | no |
 | watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
-| s3_ops_retries | Number of retries for upload and delete operations | `5` | no |
+| s3_ops_retries | Number of retries for upload and delete operations | `2 in k8s, CPU cores * 2 otherwise` | no |
 
 ### Site configuration options
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | name | Human friendly site name | `bucket/bucket_path` | no |
-| local_path | Local file system path to be synced with S3, **using relative path is known to cause some issues**. | n/a | yes |
+| local_path | **Absolute** path on local file system to be synced with S3 | n/a | yes |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
 | bucket_region | S3 bucket region | `global.aws_region` | no |
