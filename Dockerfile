@@ -16,11 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.15.2-alpine AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.15.2-alpine3.12 AS builder
 ARG RELEASE_VERSION=devel
 ARG TARGETOS
 ARG TARGETARCH
-ARG TARGETPLATFORM
 ENV GOOS=${TARGETOS}
 ENV GOARCH=${TARGETARCH}
 WORKDIR /go/src/s3sync-service
@@ -31,8 +30,9 @@ RUN go mod vendor
 RUN go build -ldflags "-X main.version=${RELEASE_VERSION}"
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.12.1
+ARG TARGETPLATFORM
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 RUN apk --no-cache add ca-certificates
-WORKDIR /root/
+WORKDIR /app/
 COPY --from=builder /go/src/s3sync-service/s3sync-service .
 CMD ["./s3sync-service"]
