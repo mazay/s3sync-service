@@ -59,6 +59,7 @@ func TestSetDefaults(t *testing.T) {
 		{
 			`
 aws_region: us-east-1
+loglevel: error
 upload_workers: 1
 checksum_workers: 2
 watch_interval: 60000ms
@@ -90,17 +91,7 @@ sites:
 	}
 
 	for _, testSet := range SetDefaultsData {
-		configOrig := readConfigString(testSet.cfgData)
 		config := readConfigString(testSet.cfgData)
-		config.setDefaults()
-		result := reflect.DeepEqual(config, configOrig)
-		if result != testSet.expected {
-			t.Error(
-				"For cfgData", testSet.cfgData,
-				"expected", testSet.expected,
-				"got", result,
-			)
-		}
 		for _, site := range config.Sites {
 			siteOrig := site
 			site.setDefaults(config)

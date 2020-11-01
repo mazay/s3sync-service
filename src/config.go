@@ -58,12 +58,8 @@ type Site struct {
 }
 
 func (config *Config) setDefaults() {
-	if config.WatchInterval == 0 {
-		config.WatchInterval = time.Millisecond * 1000
-	}
-
-	if config.S3OpsRetries == 0 {
-		config.S3OpsRetries = 5
+	if config.LogLevel == "" {
+		config.LogLevel = "info"
 	}
 
 	if config.UploadWorkers == 0 {
@@ -79,6 +75,14 @@ func (config *Config) setDefaults() {
 			config.ChecksumWorkers = runtime.NumCPU() * 2
 		}
 	}
+
+	if config.WatchInterval == 0 {
+		config.WatchInterval = time.Millisecond * 1000
+	}
+
+	if config.S3OpsRetries == 0 {
+		config.S3OpsRetries = 5
+	}
 }
 
 func (site *Site) setDefaults(config *Config) {
@@ -87,6 +91,7 @@ func (site *Site) setDefaults(config *Config) {
 	// Set site name
 	if site.Name == "" {
 		site.Name = site.Bucket + "/" + site.BucketPath
+		// site.Name = strings.TrimLeft(site.Name, "/")
 	}
 	// Set site AccessKey
 	if site.AccessKey == "" {
@@ -132,6 +137,8 @@ func readConfigFile(configpath string) *Config {
 	f.Close()
 	if err != nil {
 		configProcessError(err)
+	} else {
+		config.setDefaults()
 	}
 
 	return config
@@ -143,6 +150,8 @@ func readConfigString(cfgData string) *Config {
 	err := yaml.Unmarshal([]byte(cfgData), &config)
 	if err != nil {
 		configProcessError(err)
+	} else {
+		config.setDefaults()
 	}
 
 	return config

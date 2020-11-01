@@ -20,9 +20,9 @@ package main
 
 import (
 	"flag"
-	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"strconv"
 	"sync"
 	"syscall"
@@ -31,7 +31,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -99,26 +98,22 @@ func isInK8s() bool {
 
 func main() {
 	var configpath string
+	var httpPort string
 	var metricsPort string
 	var metricsPath string
 
 	// Read command line args
 	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
+	flag.StringVar(&httpPort, "http-port", "8090", "Port for internal HTTP server")
 	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
 	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
 
 	// Read config file
 	config := readConfigFile(configpath)
-	config.setDefaults()
 
 	// init logger
 	initLogger(config)
-
-	// Start prometheus exporter
-	if metricsPort != "0" {
-		go prometheusExporter(metricsPort, metricsPath)
-	}
 
 	// Init channels
 	mainStopperChan := make(chan os.Signal)
@@ -128,6 +123,14 @@ func main() {
 	reloaderChan := make(chan bool)
 	uploadCh := make(chan UploadCFG, config.UploadQueueBuffer)
 	checksumCh := make(chan ChecksumCFG)
+
+	// Start http server
+	go httpServer(httpPort, reloaderChan)
+
+	// Start prometheus exporter
+	if metricsPort != "0" {
+		go prometheusExporter(metricsPort, metricsPath)
+	}
 
 	signal.Notify(mainStopperChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -147,36 +150,25 @@ func main() {
 			select {
 			case <-mainStopperChan:
 				logger.Infoln("shutting down gracefully")
-				logger.Debugln("sending stop signal to all site watchers")
-				for range config.Sites {
-					siteStopperChan <- true
-				}
-				logger.Debugln("closing all channels")
-				close(mainStopperChan)
-				close(siteStopperChan)
-				close(checksumStopperChan)
-				close(uploadStopperChan)
-				close(reloaderChan)
-				close(uploadCh)
-				close(checksumCh)
-				logger.Infoln("exiting")
+				stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
 				wg.Done()
 				return
 			case <-reloaderChan:
-				logger.Infoln("reloading configuration")
-				logger.Debugln("sending stop signal to all site watchers")
-				for range config.Sites {
-					siteStopperChan <- true
+				newConfig := readConfigFile(configpath)
+				if reflect.DeepEqual(config, newConfig) {
+					logger.Infoln("no config changes detected, reload cancelled")
+				} else {
+					logger.Infoln("reloading configuration")
+					stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
+					logger.Debugln("reading config file")
+					config = readConfigFile(configpath)
+					// Start upload workers
+					uploadWorker(config, uploadCh, uploadStopperChan)
+					// Start checksum checker workers
+					checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
+					// Start syncing sites
+					syncSites(config, uploadCh, checksumCh, siteStopperChan)
 				}
-				logger.Debugln("reading config file")
-				config = readConfigFile(configpath)
-				config.setDefaults()
-				// Start upload workers
-				uploadWorker(config, uploadCh, uploadStopperChan)
-				// Start checksum checker workers
-				checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
-				// Start syncing sites
-				syncSites(config, uploadCh, checksumCh, siteStopperChan)
 			}
 		}
 	}()
@@ -184,15 +176,28 @@ func main() {
 	wg.Wait()
 }
 
-func prometheusExporter(metricsPort string, metricsPath string) {
-	http.Handle(metricsPath, promhttp.Handler())
-	http.ListenAndServe(":"+metricsPort, nil)
+func stopWorkers(config *Config, siteStopperChan chan<- bool,
+	uploadStopperChan chan<- bool, checksumStopperChan chan<- bool) {
+	logger.Debugln("sending stop signal to all site watchers")
+	for range config.Sites {
+		siteStopperChan <- true
+	}
+	logger.Debugln("sending stop signal to all upload workers")
+	for x := 0; x < config.UploadWorkers; x++ {
+		uploadStopperChan <- true
+	}
+	logger.Debugln("sending stop signal to all checksum workers")
+	for x := 0; x < config.ChecksumWorkers; x++ {
+		checksumStopperChan <- true
+	}
+	return
 }
 
 func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
 	uploadStopperChan <-chan bool) {
 	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
 	for x := 0; x < config.UploadWorkers; x++ {
+		wg.Add(1)
 		go func() {
 			for {
 				select {
@@ -217,6 +222,7 @@ func checksumWorker(config *Config, checksumCh <-chan ChecksumCFG,
 	uploadCh chan<- UploadCFG, checksumStopperChan <-chan bool) {
 	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
 	for x := 0; x < config.ChecksumWorkers; x++ {
+		wg.Add(1)
 		go func() {
 			for {
 				select {
