@@ -104,7 +104,7 @@ func main() {
 
 	// Read command line args
 	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
-	flag.StringVar(&httpPort, "http-port", "8090", "Port for internal HTTP server")
+	flag.StringVar(&httpPort, "http-port", "8090", "Port for internal HTTP server, 0 to disable")
 	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
 	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
@@ -125,7 +125,9 @@ func main() {
 	checksumCh := make(chan ChecksumCFG)
 
 	// Start http server
-	go httpServer(httpPort, reloaderChan)
+	if httpPort != "0" {
+		go httpServer(httpPort, reloaderChan)
+	}
 
 	// Start prometheus exporter
 	if metricsPort != "0" {

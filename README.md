@@ -77,7 +77,7 @@ Usage of ./s3sync-service:
   -config string
     	Path to the config.yml (default "config.yml")
   -http-port string
-    	Port for internal HTTP server (default "8090")
+    	Port for internal HTTP server, 0 to disable (default "8090")
   -metrics-path string
     	Prometheus exporter path (default "/metrics")
   -metrics-port string
