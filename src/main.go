@@ -161,9 +161,11 @@ func main() {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					logger.Infoln("reloading configuration")
+					config = readConfigFile(configpath)
+					// Switch logging level (if needed), can't be switched to lower verbosity
+					setLogLevel(config.LogLevel)
 					stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
 					logger.Debugln("reading config file")
-					config = readConfigFile(configpath)
 					// Start upload workers
 					uploadWorker(config, uploadCh, uploadStopperChan)
 					// Start checksum checker workers

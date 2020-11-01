@@ -36,7 +36,7 @@ func LoggerInitError(err error) {
 	osExit(3)
 }
 
-func initLogger(config *Config) {
+func setLogLevel(level string) {
 	logLevels := map[string]logrus.Level{
 		"trace": logrus.TraceLevel,
 		"debug": logrus.DebugLevel,
@@ -47,27 +47,30 @@ func initLogger(config *Config) {
 		"panic": logrus.PanicLevel,
 	}
 
-	// set default loglevel
-	if config.LogLevel == "" {
-		config.LogLevel = "info"
+	if level == "" {
+		level = "info"
 	}
 
-	if LogLevel, ok := logLevels[config.LogLevel]; ok {
-		log.SetFormatter(&logrus.JSONFormatter{
-			FieldMap: logrus.FieldMap{
-				logrus.FieldKeyTime: "@timestamp",
-				logrus.FieldKeyMsg:  "message",
-			},
-		})
-
-		log.SetOutput(os.Stdout)
-
+	if LogLevel, ok := logLevels[level]; ok {
 		log.SetLevel(LogLevel)
 
-		if config.LogLevel == "trace" || config.LogLevel == "debug" {
+		if level == "trace" || level == "debug" {
 			log.SetReportCaller(true)
 		}
 	} else {
-		LoggerInitError(fmt.Errorf("Log level definition not found for '%s'", config.LogLevel))
+		LoggerInitError(fmt.Errorf("Log level definition not found for '%s'", level))
 	}
+}
+
+func initLogger(config *Config) {
+	log.SetFormatter(&logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime: "@timestamp",
+			logrus.FieldKeyMsg:  "message",
+		},
+	})
+
+	log.SetOutput(os.Stdout)
+
+	setLogLevel(config.LogLevel)
 }
