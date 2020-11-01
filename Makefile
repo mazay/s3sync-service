@@ -67,3 +67,6 @@ docker-multi-arch:
 	--platform $(DOCKER_PLATFORMS) \
 	--tag $(DOCKER_IMAGE_NAME) -f ./Dockerfile .
 	docker buildx rm
+
+test:
+	GOFLAGS="-json" go test ./src/
