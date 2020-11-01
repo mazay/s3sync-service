@@ -24,8 +24,11 @@
 *.iml
 .teamcity/target
 
-### Binary file
-s3sync-service
+### Test config
+config.yml
+
+### Binary files
+s3sync-service*
 
 ### dep
 vendor

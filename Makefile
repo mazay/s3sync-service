@@ -55,7 +55,7 @@ $(go-build-args):
 	rm $(FILENAME)
 
 clean:
-	rm -rf s3sync-service-*.tar.gz
+	rm -rf ./s3sync-service*
 
 docker-multi-arch:
 	DOCKER_CLI_EXPERIMENTAL=enabled
