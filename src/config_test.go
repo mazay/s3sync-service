@@ -77,7 +77,7 @@ sites:
 `,
 			true,
 		},
-		// Valied set with not all fields set - some fields are overriden by default values
+		// Valied set with not all fields set - some fields are filled in by default values
 		{
 			`
 aws_region: us-east-1
