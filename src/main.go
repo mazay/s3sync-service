@@ -22,8 +22,10 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"sync"
+	"syscall"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 
@@ -36,8 +38,7 @@ var (
 	version string
 
 	osExit = os.Exit
-
-	wg = sync.WaitGroup{}
+	wg     = sync.WaitGroup{}
 
 	inK8s = isInK8s()
 
@@ -119,26 +120,67 @@ func main() {
 		go prometheusExporter(metricsPort, metricsPath)
 	}
 
-	// Init upload worker
+	// Init channels
+	mainStopperChan := make(chan os.Signal)
+	siteStopperChan := make(chan bool)
+	checksumStopperChan := make(chan bool)
+	uploadStopperChan := make(chan bool)
+	reloaderChan := make(chan bool)
 	uploadCh := make(chan UploadCFG, config.UploadQueueBuffer)
-	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
-	for x := 0; x < config.UploadWorkers; x++ {
-		go uploadWorker(uploadCh)
-	}
-
-	// Init checksum checker workers
 	checksumCh := make(chan ChecksumCFG)
-	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
-	for x := 0; x < config.ChecksumWorkers; x++ {
-		go checksumWorker(checksumCh, uploadCh)
-	}
 
-	// Start separate goroutine for each site
-	for _, site := range config.Sites {
-		site.setDefaults(config)
-		wg.Add(1)
-		go syncSite(site, uploadCh, checksumCh)
-	}
+	signal.Notify(mainStopperChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start main worker
+	wg.Add(1)
+	go func() {
+		logger.Infoln("starting up")
+		// Start upload workers
+		uploadWorker(config, uploadCh, uploadStopperChan)
+		// Start checksum checker workers
+		checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
+		// Start syncing sites
+		syncSites(config, uploadCh, checksumCh, siteStopperChan)
+		logger.Infoln("all systems go")
+		// Wait for events
+		for {
+			select {
+			case <-mainStopperChan:
+				logger.Infoln("shutting down gracefully")
+				logger.Debugln("sending stop signal to all site watchers")
+				for range config.Sites {
+					siteStopperChan <- true
+				}
+				logger.Debugln("closing all channels")
+				close(mainStopperChan)
+				close(siteStopperChan)
+				close(checksumStopperChan)
+				close(uploadStopperChan)
+				close(reloaderChan)
+				close(uploadCh)
+				close(checksumCh)
+				logger.Infoln("exiting")
+				wg.Done()
+				return
+			case <-reloaderChan:
+				logger.Infoln("reloading configuration")
+				logger.Debugln("sending stop signal to all site watchers")
+				for range config.Sites {
+					siteStopperChan <- true
+				}
+				logger.Debugln("reading config file")
+				config = readConfigFile(configpath)
+				config.setDefaults()
+				// Start upload workers
+				uploadWorker(config, uploadCh, uploadStopperChan)
+				// Start checksum checker workers
+				checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
+				// Start syncing sites
+				syncSites(config, uploadCh, checksumCh, siteStopperChan)
+			}
+		}
+	}()
+
 	wg.Wait()
 }
 
@@ -147,41 +189,75 @@ func prometheusExporter(metricsPort string, metricsPath string) {
 	http.ListenAndServe(":"+metricsPort, nil)
 }
 
-func uploadWorker(uploadCh <-chan UploadCFG) {
-	for cfg := range uploadCh {
-		if cfg.action == "upload" {
-			uploadFile(cfg.s3Service, cfg.file, cfg.site)
-		} else if cfg.action == "delete" {
-			deleteFile(cfg.s3Service, cfg.file, cfg.site)
-		} else {
-			logger.Errorf("programming error, unknown action: %s", cfg.action)
-		}
+func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
+	uploadStopperChan <-chan bool) {
+	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
+	for x := 0; x < config.UploadWorkers; x++ {
+		go func() {
+			for {
+				select {
+				case cfg := <-uploadCh:
+					if cfg.action == "upload" {
+						uploadFile(cfg.s3Service, cfg.file, cfg.site)
+					} else if cfg.action == "delete" {
+						deleteFile(cfg.s3Service, cfg.file, cfg.site)
+					} else {
+						logger.Errorf("programming error, unknown action: %s", cfg.action)
+					}
+				case <-uploadStopperChan:
+					wg.Done()
+					return
+				}
+			}
+		}()
 	}
 }
 
-func checksumWorker(checksumCh <-chan ChecksumCFG, uploadCh chan<- UploadCFG) {
-	for cfg := range checksumCh {
-		filename := compareChecksum(cfg.filename, cfg.checksumRemote, cfg.site)
-		if len(filename) > 0 {
-			// Add file to the upload queue
-			uploadCh <- cfg.UploadCFG
-		}
+func checksumWorker(config *Config, checksumCh <-chan ChecksumCFG,
+	uploadCh chan<- UploadCFG, checksumStopperChan <-chan bool) {
+	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
+	for x := 0; x < config.ChecksumWorkers; x++ {
+		go func() {
+			for {
+				select {
+				case cfg := <-checksumCh:
+					filename := compareChecksum(cfg.filename, cfg.checksumRemote, cfg.site)
+					if len(filename) > 0 {
+						// Add file to the upload queue
+						uploadCh <- cfg.UploadCFG
+					}
+				case <-checksumStopperChan:
+					wg.Done()
+					return
+				}
+			}
+		}()
 	}
 }
 
-func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
-	// Initi S3 session
-	s3Service := s3.New(getS3Session(site))
-	// Watch directory for realtime sync
-	go watch(s3Service, site, uploadCh)
-	// Fetch S3 objects
-	awsItems, err := getAwsS3ItemMap(s3Service, site)
-	if err != nil {
-		logger.Errorln(err)
-		osExit(4)
-	} else {
-		// Compare S3 objects with local
-		FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)
-		logger.Infof("finished initial sync for site %s", site.Name)
+func syncSites(config *Config, uploadCh chan<- UploadCFG,
+	checksumCh chan<- ChecksumCFG, siteStopperChan <-chan bool) {
+	// Start separate goroutine for each site
+	for _, site := range config.Sites {
+		go func(site Site) {
+			site.setDefaults(config)
+			wg.Add(1)
+			// Initi S3 session
+			s3Service := s3.New(getS3Session(site))
+			// Watch directory for realtime sync
+			go watch(s3Service, site, uploadCh, siteStopperChan)
+			// Fetch S3 objects
+			awsItems, err := getAwsS3ItemMap(s3Service, site)
+			if err != nil {
+				logger.Errorln(err)
+				wg.Done()
+				osExit(4)
+			} else {
+				// Compare S3 objects with local
+				FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)
+				logger.Infof("finished initial sync for site %s", site.Name)
+			}
+		}(site)
 	}
+	return
 }
