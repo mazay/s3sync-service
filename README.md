@@ -44,7 +44,7 @@ zmazay/s3sync-service \
 
 ## Configuration
 
-Example configuration:
+Example configuration, check [this](src/example_config.yml) for more details:
 
 ```yaml
 upload_workers: 10
