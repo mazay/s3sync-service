@@ -87,11 +87,11 @@ func (config *Config) setDefaults() {
 
 func (site *Site) setDefaults(config *Config) {
 	// Remove leading slash from the BucketPath
-	site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
+	site.BucketPath = strings.TrimPrefix(site.BucketPath, "/")
 	// Set site name
 	if site.Name == "" {
 		site.Name = site.Bucket + "/" + site.BucketPath
-		// site.Name = strings.TrimLeft(site.Name, "/")
+		site.Name = strings.TrimSuffix(site.Name, "/")
 	}
 	// Set site AccessKey
 	if site.AccessKey == "" {
