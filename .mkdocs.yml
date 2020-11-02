@@ -35,8 +35,8 @@ nav:
     - Prometheus exporter: prometheus-exporter.md
     - HTTP server: http-server.md
 
-docs_dir: .
-site_dir: ../site
+docs_dir: docs
+site_dir: site
 
 theme:
   name: readthedocs
