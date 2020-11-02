@@ -22,7 +22,6 @@ repo_url: https://github.com/mazay/s3sync-service
 
 google_analytics: ['G-1S751L8XGK', 'docs.s3sync-service.org']
 
-
 nav:
   - Home: ../
   - Getting started:
@@ -37,6 +36,7 @@ nav:
     - HTTP server: http-server.md
 
 docs_dir: .
+site_dir: ../
 
 theme:
   name: readthedocs
