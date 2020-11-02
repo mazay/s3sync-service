@@ -66,7 +66,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: s3sync-service
-  namespace: tools
 spec:
   replicas: 1
   selector:
