@@ -45,3 +45,7 @@ theme:
   hljs_languages:
     - yaml
     - bash
+
+# Build PDF
+formats:
+  - pdf
