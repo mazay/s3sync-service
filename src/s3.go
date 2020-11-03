@@ -33,21 +33,21 @@ import (
 )
 
 func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
-	objSize := int64(0)
-
-	// Generate S3 parameters
-	params := &s3.HeadObjectInput{
-		Bucket: aws.String(site.Bucket),
-		Key:    aws.String(s3Key),
-	}
+	size := int64(0)
 
 	// Get object size
-	obj, objErr := s3Service.HeadObject(params)
-	if objErr == nil {
-		objSize = *obj.ContentLength
+	obj, err := s3Service.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(site.Bucket),
+		Key:    aws.String(s3Key),
+	})
+
+	if err == nil {
+		size = *obj.ContentLength
+	} else {
+		logger.Errorln(err)
 	}
 
-	return objSize
+	return size
 }
 
 func generateS3Key(bucketPath string, localPath string, filePath string) string {
