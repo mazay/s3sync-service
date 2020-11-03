@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Prometheus exporter
 
-The application has built in [Prometheus](https://prometheus.io/) exporter, which exposes a set of [Golang](https://golang.org/) metrics as well as some application related metrics. The exporter is listening for port `9350` by default and exposes metrics under `/metrics` subpath, both option could be changed via [the command line arguments](configuration.md#command-line-args).
+The application has built in [Prometheus](https://prometheus.io/) exporter, which exposes a set of [Golang](https://golang.org/) metrics as well as some application related metrics. The exporter is listening for port `9350` by default and exposes metrics under `/metrics` subpath, both options could be changed via [the command line arguments](configuration.md#command-line-args).
 
 ## Custom metrics
 
