@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # s3sync-service
 
-The `s3sync-service` is a lightweight application designed to sync multiple local path with configured [S3](https://aws.amazon.com/s3/) locations (known as _sites_) in realtime - your data getting synced upon change!
+The `s3sync-service` is a lightweight application designed to sync multiple local paths with configured [S3](https://aws.amazon.com/s3/) locations (known as _sites_) in realtime - your data getting synced upon change!
 
 You can either use one [S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html) and multiple bucket paths to store your data, or different S3 buckets under one AWS account or even different S3 buckets under different AWS accounts hosted in different [AWS regions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
 
