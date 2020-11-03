@@ -48,4 +48,6 @@ At the moment reload can be triggered manually with the following command:
 
 Reload uses the following logic. Most of the configuration options can be changed using the reload apart from those that are set via [the command line arguments](configuration.md#command-line-args), logging level can be increased but not decreased.
 
+In k8s environments reload is triggered by configmap changes, check [the k8s recipe for more details](running-on-k8s.md)
+
 ![S3 sync Service reload process flow](img/reload-process-flow.png)

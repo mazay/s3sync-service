@@ -33,4 +33,9 @@ require (
 	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+	k8s.io/api v0.19.3
+	k8s.io/apimachinery v0.19.3
+	k8s.io/client-go v0.19.3
+	k8s.io/klog v1.0.0 // indirect
+	k8s.io/utils v0.0.0-20201027101359-01387209bb0d // indirect
 )

@@ -34,7 +34,9 @@ import (
 )
 
 var (
-	version string
+	version    string
+	configpath string
+	configmap  string
 
 	osExit = os.Exit
 	wg     = sync.WaitGroup{}
@@ -90,27 +92,25 @@ type ChecksumCFG struct {
 
 func isInK8s() bool {
 	_, present := os.LookupEnv("KUBERNETES_SERVICE_HOST")
-	if present {
-		logger.Debugln("Look mom, I'm in k8s!")
-	}
 	return present
 }
 
 func main() {
-	var configpath string
+	var config *Config
 	var httpPort string
 	var metricsPort string
 	var metricsPath string
 
 	// Read command line args
 	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
+	flag.StringVar(&configmap, "configmap", "", "K8s configmap in the format namespace/configmap, if set config is ignored and s3sync-service will read and watch for changes in the specified configmap")
 	flag.StringVar(&httpPort, "http-port", "8090", "Port for internal HTTP server, 0 to disable")
 	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
 	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
 
-	// Read config file
-	config := readConfigFile(configpath)
+	// Read the config
+	config = getConfig()
 
 	// init logger
 	initLogger(config)
@@ -140,6 +140,9 @@ func main() {
 	wg.Add(1)
 	go func() {
 		logger.Infoln("starting up")
+		if inK8s && configmap != "" {
+			go k8sWatchCm(configmap, reloaderChan)
+		}
 		// Start upload workers
 		uploadWorker(config, uploadCh, uploadStopperChan)
 		// Start checksum checker workers
@@ -156,12 +159,12 @@ func main() {
 				wg.Done()
 				return
 			case <-reloaderChan:
-				newConfig := readConfigFile(configpath)
+				newConfig := getConfig()
 				if reflect.DeepEqual(config, newConfig) {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					logger.Infoln("reloading configuration")
-					config = readConfigFile(configpath)
+					config = getConfig()
 					// Switch logging level (if needed), can't be switched to lower verbosity
 					setLogLevel(config.LogLevel)
 					stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)

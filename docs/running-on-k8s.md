@@ -20,13 +20,81 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Please check an example deployment manifest below.
 
-Pay attention to the image tag - it's not recommended to use neither `devel` nor `latest` as those are not providing any stability and rebuilt upon changes in `devel` or `master` branches respectively.
+- Pay attention to the image tag - it's not recommended to use neither `devel` nor `latest` as those are not providing any stability and rebuilt upon changes in `devel` or `master` branches respectively.
+- Please note that you have to take care of creation of `persistentVolume`'s and `persistentVolumeClaim`'s.
 
-Also note that you have to take care of creation of `persistentVolume`'s and `persistentVolumeClaim`'s.
+It is advised to use `configmap` argument when run on k8s, with this set up `s3sync-service` will ignore the `config` setting and read directly from the specified configmap. If the configmap gets changed during the runtime - `s3sync-service` will perform reload in order to apply the changes.
+
+---
 
 The `resources` allocation is the tricky part and you should play around with your setup in order to figure out the right values, the provided example works fine with syncing 5 sites, with total about 25000 of files in size of around 200GB.
 
+---
+
 ```yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: s3sync-service
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: s3sync-service
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: s3sync-service
+  namespace: kube-system
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    resourceNames:
+      - "s3sync-service"
+    verbs:
+      - get
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: s3sync-service
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: s3sync-service
+subjects:
+  - kind: ServiceAccount
+    name: s3sync-service
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: s3sync-service
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: s3sync-service
+subjects:
+  - kind: ServiceAccount
+    name: s3sync-service
+    namespace: kube-system
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -34,6 +102,7 @@ metadata:
   labels:
     app: s3sync-service
   name: s3sync-service
+  namespace: kube-system
 data:
   config.yml: |-
     aws_region: eu-central-1
@@ -58,6 +127,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: s3sync-service
+  namespace: kube-system
 data:
   AWS_ACCESS_KEY_ID: QUtJQUk0NFFIOERIQkVYQU1QTEUK
   AWS_SECRET_ACCESS_KEY: amU3TXRHYkNsd0JGLzJacDlVdGsvaDN5Q284bnZiRVhBTVBMRUtFWQo=
@@ -66,6 +136,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: s3sync-service
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -80,12 +151,13 @@ spec:
         prometheus.io/port: "9350"
         prometheus.io/scrape: "true"
     spec:
+      serviceAccountName: s3sync-service
       containers:
       - image: zmazay/s3sync-service:devel
         name: s3sync-service
         command:
         - "./s3sync-service"
-        - "-config=/opt/s3sync-service/config.yml"
+        - "-configmap=kube-system/s3sync-service"
         env:
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
@@ -119,10 +191,6 @@ spec:
           readOnly: true
       terminationGracePeriodSeconds: 300
       volumes:
-      - name: config-volume
-        configMap:
-          defaultMode: 420
-          name: s3sync-service
       - name: local-path1
         persistentVolumeClaim:
           claimName: local-path1
