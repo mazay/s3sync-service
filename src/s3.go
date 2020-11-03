@@ -36,17 +36,15 @@ func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
 	objSize := int64(0)
 
 	// Generate S3 parameters
-	params := &s3.ListObjectsInput{
+	params := &s3.HeadObjectInput{
 		Bucket: aws.String(site.Bucket),
-		Prefix: aws.String(s3Key),
+		Key:    aws.String(s3Key),
 	}
 
 	// Get object size
-	obj, objErr := s3Service.ListObjects(params)
+	obj, objErr := s3Service.HeadObject(params)
 	if objErr == nil {
-		for _, s3obj := range obj.Contents {
-			objSize = *s3obj.Size
-		}
+		objSize = *obj.ContentLength
 	}
 
 	return objSize
