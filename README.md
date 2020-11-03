@@ -78,6 +78,8 @@ sites:
 Usage of ./s3sync-service:
   -config string
     	Path to the config.yml (default "config.yml")
+  -configmap string
+    	K8s configmap in the format namespace/configmap, if set config is ignored and s3sync-service will read and watch for changes in the specified configmap
   -http-port string
     	Port for internal HTTP server, 0 to disable (default "8090")
   -metrics-path string
