@@ -1,0 +1,55 @@
+#
+# s3sync-service - Realtime S3 synchronisation tool
+# Copyright (c) 2020  Yevgeniy Valeyev
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+access_key: AKIAI44QH8DHBEXAMPLE
+secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+aws_region: us-east-1
+loglevel: info
+upload_workers: 5
+checksum_workers: 5
+watch_interval: 30s
+s3_ops_retries: 3
+sites:
+- name: my-precious-data
+  local_path: /some/local/path
+  bucket: my-s3-backups
+  bucket_path: precious-data
+  storage_class: STANDARD_IA
+  retire_deleted: true
+  exclusions:
+  - .[Dd][Ss]_[Ss]tore
+# Another site, uses the same S3 bucket but different bucket_path and STANDARD storage_class
+- local_path: /some/other/local/path
+  bucket: my-s3-backups
+  bucket_path: less-precious-data
+  exclusions:
+  - .[Dd][Ss]_[Ss]tore
+  - .[Aa]pple[Dd]ouble
+  - "[Tt]humbs.db"
+# Third site, uses different S3 bucket, region, dedicated access key
+# and overrides global watch_interval and s3_ops_retries
+- local_path: /some/other/local/path
+  bucket: my-synced-data
+  bucket_region: eu-central-1
+  access_key: BKIAI44QH8DHBEXAMPLE
+  secret_access_key: fe7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+  retire_deleted: true
+  watch_interval: 1s
+  s3_ops_retries: 10
+  exclusions:
+  - logs

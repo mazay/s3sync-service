@@ -20,26 +20,26 @@ package main
 
 import (
 	"flag"
-	"net/http"
 	"os"
-	"runtime"
+	"os/signal"
+	"reflect"
 	"strconv"
-	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
-	version string
+	version    string
+	configpath string
+	configmap  string
 
 	osExit = os.Exit
-
-	wg = sync.WaitGroup{}
+	wg     = sync.WaitGroup{}
 
 	inK8s = isInK8s()
 
@@ -92,133 +92,185 @@ type ChecksumCFG struct {
 
 func isInK8s() bool {
 	_, present := os.LookupEnv("KUBERNETES_SERVICE_HOST")
-	if present {
-		logger.Debugln("Look mom, I'm in k8s!")
-	}
 	return present
 }
 
 func main() {
-	var configpath string
+	var config *Config
+	var httpPort string
 	var metricsPort string
 	var metricsPath string
 
 	// Read command line args
 	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
+	flag.StringVar(&configmap, "configmap", "", "K8s configmap in the format namespace/configmap, if set config is ignored and s3sync-service will read and watch for changes in the specified configmap")
+	flag.StringVar(&httpPort, "http-port", "8090", "Port for internal HTTP server, 0 to disable")
 	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
 	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
 
-	// Read config file
-	config := readConfigFile(configpath)
+	// Read the config
+	config = getConfig()
 
 	// init logger
 	initLogger(config)
+
+	// Init channels
+	mainStopperChan := make(chan os.Signal)
+	siteStopperChan := make(chan bool)
+	checksumStopperChan := make(chan bool)
+	uploadStopperChan := make(chan bool)
+	reloaderChan := make(chan bool)
+	uploadCh := make(chan UploadCFG, config.UploadQueueBuffer)
+	checksumCh := make(chan ChecksumCFG)
+
+	// Start http server
+	if httpPort != "0" {
+		go httpServer(httpPort, reloaderChan)
+	}
 
 	// Start prometheus exporter
 	if metricsPort != "0" {
 		go prometheusExporter(metricsPort, metricsPath)
 	}
 
-	// Set global WatchInterval
-	if config.WatchInterval == 0 {
-		config.WatchInterval = 1000
-	}
+	signal.Notify(mainStopperChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Set global S3OpsRetries
-	if config.S3OpsRetries == 0 {
-		config.S3OpsRetries = 5
-	}
+	// Start main worker
+	wg.Add(1)
+	go func() {
+		logger.Infoln("starting up")
+		if inK8s && configmap != "" {
+			go k8sWatchCm(configmap, reloaderChan)
+		}
+		// Start upload workers
+		uploadWorker(config, uploadCh, uploadStopperChan)
+		// Start checksum checker workers
+		checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
+		// Start syncing sites
+		syncSites(config, uploadCh, checksumCh, siteStopperChan)
+		logger.Infoln("all systems go")
+		// Wait for events
+		for {
+			select {
+			case <-mainStopperChan:
+				logger.Infoln("shutting down gracefully")
+				stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
+				wg.Done()
+				return
+			case <-reloaderChan:
+				newConfig := getConfig()
+				if reflect.DeepEqual(config, newConfig) {
+					logger.Infoln("no config changes detected, reload cancelled")
+				} else {
+					logger.Infoln("reloading configuration")
+					config = getConfig()
+					// Switch logging level (if needed), can't be switched to lower verbosity
+					setLogLevel(config.LogLevel)
+					stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
+					logger.Debugln("reading config file")
+					// Start upload workers
+					uploadWorker(config, uploadCh, uploadStopperChan)
+					// Start checksum checker workers
+					checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
+					// Start syncing sites
+					syncSites(config, uploadCh, checksumCh, siteStopperChan)
+				}
+			}
+		}
+	}()
 
-	// Init upload worker
-	if config.UploadWorkers == 0 {
-		config.UploadWorkers = 10
-	}
-
-	uploadCh := make(chan UploadCFG, config.UploadQueueBuffer)
-	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
-	for x := 0; x < config.UploadWorkers; x++ {
-		go uploadWorker(uploadCh)
-	}
-
-	// Init checksum checker workers
-	if config.ChecksumWorkers == 0 {
-		// If in k8s then run 2 workers
-		// otherwise run 2 workers per core
-		if inK8s {
-			config.ChecksumWorkers = 2
-		} else {
-			config.ChecksumWorkers = runtime.NumCPU() * 2
-		}
-	}
-
-	checksumCh := make(chan ChecksumCFG)
-	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
-	for x := 0; x < config.ChecksumWorkers; x++ {
-		go checksumWorker(checksumCh, uploadCh)
-	}
-
-	// Start separate thread for each site
-	wg.Add(len(config.Sites))
-	for _, site := range config.Sites {
-		// Remove leading slash from the BucketPath
-		site.BucketPath = strings.TrimLeft(site.BucketPath, "/")
-		// Set site name
-		if site.Name == "" {
-			site.Name = site.Bucket + "/" + site.BucketPath
-		}
-		// Set site AccessKey
-		if site.AccessKey == "" {
-			site.AccessKey = config.AccessKey
-		}
-		// Set site SecretAccessKey
-		if site.SecretAccessKey == "" {
-			site.SecretAccessKey = config.SecretAccessKey
-		}
-		// Set site BucketRegion
-		if site.BucketRegion == "" {
-			site.BucketRegion = config.AwsRegion
-		}
-		// Set default value for StorageClass
-		if site.StorageClass == "" {
-			site.StorageClass = "STANDARD"
-		}
-		// Set site WatchInterval
-		if site.WatchInterval == 0 {
-			site.WatchInterval = config.WatchInterval
-		}
-		// Set site S3OpsRetries
-		if site.S3OpsRetries == 0 {
-			site.S3OpsRetries = config.S3OpsRetries
-		}
-		go syncSite(site, uploadCh, checksumCh)
-	}
 	wg.Wait()
 }
 
-func prometheusExporter(metricsPort string, metricsPath string) {
-	http.Handle(metricsPath, promhttp.Handler())
-	http.ListenAndServe(":"+metricsPort, nil)
+func stopWorkers(config *Config, siteStopperChan chan<- bool,
+	uploadStopperChan chan<- bool, checksumStopperChan chan<- bool) {
+	logger.Debugln("sending stop signal to all site watchers")
+	for range config.Sites {
+		siteStopperChan <- true
+	}
+	logger.Debugln("sending stop signal to all upload workers")
+	for x := 0; x < config.UploadWorkers; x++ {
+		uploadStopperChan <- true
+	}
+	logger.Debugln("sending stop signal to all checksum workers")
+	for x := 0; x < config.ChecksumWorkers; x++ {
+		checksumStopperChan <- true
+	}
+	return
 }
 
-func uploadWorker(uploadCh <-chan UploadCFG) {
-	for cfg := range uploadCh {
-		if cfg.action == "upload" {
-			uploadFile(cfg.s3Service, cfg.file, cfg.site)
-		} else if cfg.action == "delete" {
-			deleteFile(cfg.s3Service, cfg.file, cfg.site)
-		} else {
-			logger.Errorf("programming error, unknown action: %s", cfg.action)
-		}
+func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
+	uploadStopperChan <-chan bool) {
+	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
+	for x := 0; x < config.UploadWorkers; x++ {
+		wg.Add(1)
+		go func() {
+			for {
+				select {
+				case cfg := <-uploadCh:
+					if cfg.action == "upload" {
+						uploadFile(cfg.s3Service, cfg.file, cfg.site)
+					} else if cfg.action == "delete" {
+						deleteFile(cfg.s3Service, cfg.file, cfg.site)
+					} else {
+						logger.Errorf("programming error, unknown action: %s", cfg.action)
+					}
+				case <-uploadStopperChan:
+					wg.Done()
+					return
+				}
+			}
+		}()
 	}
 }
 
-func checksumWorker(checksumCh <-chan ChecksumCFG, uploadCh chan<- UploadCFG) {
-	for cfg := range checksumCh {
-		filename := compareChecksum(cfg.filename, cfg.checksumRemote, cfg.site)
-		if len(filename) > 0 {
-			// Add file to the upload queue
-			uploadCh <- cfg.UploadCFG
-		}
+func checksumWorker(config *Config, checksumCh <-chan ChecksumCFG,
+	uploadCh chan<- UploadCFG, checksumStopperChan <-chan bool) {
+	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
+	for x := 0; x < config.ChecksumWorkers; x++ {
+		wg.Add(1)
+		go func() {
+			for {
+				select {
+				case cfg := <-checksumCh:
+					filename := compareChecksum(cfg.filename, cfg.checksumRemote, cfg.site)
+					if len(filename) > 0 {
+						// Add file to the upload queue
+						uploadCh <- cfg.UploadCFG
+					}
+				case <-checksumStopperChan:
+					wg.Done()
+					return
+				}
+			}
+		}()
 	}
+}
+
+func syncSites(config *Config, uploadCh chan<- UploadCFG,
+	checksumCh chan<- ChecksumCFG, siteStopperChan <-chan bool) {
+	// Start separate goroutine for each site
+	for _, site := range config.Sites {
+		go func(site Site) {
+			site.setDefaults(config)
+			wg.Add(1)
+			// Initi S3 session
+			s3Service := s3.New(getS3Session(site))
+			// Watch directory for realtime sync
+			go watch(s3Service, site, uploadCh, siteStopperChan)
+			// Fetch S3 objects
+			awsItems, err := getAwsS3ItemMap(s3Service, site)
+			if err != nil {
+				logger.Errorln(err)
+				wg.Done()
+				osExit(4)
+			} else {
+				// Compare S3 objects with local
+				FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)
+				logger.Infof("finished initial sync for site %s", site.Name)
+			}
+		}(site)
+	}
+	return
 }

@@ -40,7 +40,8 @@ go-build-args := $(foreach OS,$(GOLANG_OS_LIST), \
 		$(OS)-$(ARCH)))
 
 build:
-	go build -o $(filename) -ldflags \
+	$(eval FILENAME := $(call get-filename,$(OS)))
+	go build -o $(FILENAME) -ldflags \
 	"-X main.version=${RELEASE_VERSION}" ./src/
 
 build-all: $(go-build-args)
@@ -54,13 +55,18 @@ $(go-build-args):
 	rm $(FILENAME)
 
 clean:
-	rm -rf s3sync-service-*.tar.gz
+	rm -rf ./s3sync-service*
 
 docker-multi-arch:
 	DOCKER_CLI_EXPERIMENTAL=enabled
+	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	docker buildx create --use
 	docker buildx build \
 	--build-arg RELEASE_VERSION=${RELEASE_VERSION} \
 	--push \
 	--platform $(DOCKER_PLATFORMS) \
 	--tag $(DOCKER_IMAGE_NAME) -f ./Dockerfile .
+	docker buildx rm
+
+test:
+	GOFLAGS="-json" go test ./src/

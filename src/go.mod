@@ -23,11 +23,19 @@ go 1.15
 require (
 	github.com/aws/aws-sdk-go v1.35.5
 	github.com/bxcodec/faker v2.0.1+incompatible
+	github.com/kr/pretty v0.2.0 // indirect
 	github.com/prometheus/client_golang v1.7.1
-	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.14.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/radovskyb/watcher v1.0.7
 	github.com/sirupsen/logrus v1.7.0
-	gopkg.in/yaml.v2 v2.3.0
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
+	golang.org/x/text v0.3.3 // indirect
+	google.golang.org/protobuf v1.24.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+	k8s.io/api v0.19.3
+	k8s.io/apimachinery v0.19.3
+	k8s.io/client-go v0.19.3
+	k8s.io/klog v1.0.0 // indirect
+	k8s.io/utils v0.0.0-20201027101359-01387209bb0d // indirect
 )

@@ -33,23 +33,21 @@ import (
 )
 
 func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
-	objSize := int64(0)
-
-	// Generate S3 parameters
-	params := &s3.ListObjectsInput{
-		Bucket: aws.String(site.Bucket),
-		Prefix: aws.String(s3Key),
-	}
+	size := int64(0)
 
 	// Get object size
-	obj, objErr := s3Service.ListObjects(params)
-	if objErr == nil {
-		for _, s3obj := range obj.Contents {
-			objSize = *s3obj.Size
-		}
+	obj, err := s3Service.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(site.Bucket),
+		Key:    aws.String(s3Key),
+	})
+
+	if err == nil {
+		size = *obj.ContentLength
+	} else {
+		logger.Errorln(err)
 	}
 
-	return objSize
+	return size
 }
 
 func generateS3Key(bucketPath string, localPath string, filePath string) string {
@@ -189,21 +187,4 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 	}
 
 	logger.Infof("removed s3 object: %s/%s", site.Bucket, s3Key)
-}
-
-func syncSite(site Site, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
-	// Initi S3 session
-	s3Service := s3.New(getS3Session(site))
-	// Watch directory for realtime sync
-	go watch(s3Service, site, uploadCh)
-	// Fetch S3 objects
-	awsItems, err := getAwsS3ItemMap(s3Service, site)
-	if err != nil {
-		logger.Errorln(err)
-		osExit(4)
-	} else {
-		// Compare S3 objects with local
-		FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)
-		logger.Infof("finished initial sync for site %s", site.Name)
-	}
 }

@@ -26,6 +26,8 @@ The `s3sync-service` tool is asynchronously syncing data to S3 storage service f
 
 On start, the `s3sync-service` launches pool of generic upload workers, checksum workers and an FS watcher for each _site_. Once all of the above launched it starts comparing local directory contents with S3 (using checksums<->ETag and also validates StorageClass) which might take quite a while depending on the size of your data directory, disk speed, and available CPU resources.  All the new files or removed files  (if `retire_deleted` is set to `true`) are put into the upload queue for processing. The FS watchers, upload and checksum workers remain running while the main process is working, which makes sure that your data is synced to S3 upon change.
 
+![S3 sync Service process flow](docs/img/process-flow.png)
+
 ## Running the s3sync-service
 
 1. Create directory with [configuration file](#Configuration), eg. - `/path/to/config/config.yml`.
@@ -44,7 +46,7 @@ zmazay/s3sync-service \
 
 ## Configuration
 
-Example configuration:
+Example configuration, check [this](src/example_config.yml) for more details:
 
 ```yaml
 upload_workers: 10
@@ -73,12 +75,17 @@ sites:
 ### Command line args
 
 ```bash
--config string
-    Path to the config.yml (default "config.yml")
--metrics-path string
-    Prometheus exporter path (default "/metrics")
--metrics-port string
-    Prometheus exporter port, 0 to disable the exporter (default "9350")
+Usage of ./s3sync-service:
+  -config string
+    	Path to the config.yml (default "config.yml")
+  -configmap string
+    	K8s configmap in the format namespace/configmap, if set config is ignored and s3sync-service will read and watch for changes in the specified configmap
+  -http-port string
+    	Port for internal HTTP server, 0 to disable (default "8090")
+  -metrics-path string
+    	Prometheus exporter path (default "/metrics")
+  -metrics-port string
+    	Prometheus exporter port, 0 to disable the exporter (default "9350")
 ```
 
 ### Generic configuration options
@@ -92,15 +99,15 @@ sites:
 | upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
 | checksum_workers | Number of checksum workers for the service | `CPU*2` | no |
 | upload_workers | Number of upload workers for the service | `10` | no |
-| watch_interval | Interval for file system watcher in milliseconds | `1000` | no |
-| s3_ops_retries | Number of retries for upload and delete operations | `5` | no |
+| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `1000ms` | no |
+| s3_ops_retries | Number of retries for upload and delete operations | `2 in k8s, CPU cores * 2 otherwise` | no |
 
 ### Site configuration options
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | name | Human friendly site name | `bucket/bucket_path` | no |
-| local_path | Local file system path to be synced with S3, **using relative path is known to cause some issues**. | n/a | yes |
+| local_path | **Absolute** path on local file system to be synced with S3 | n/a | yes |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
 | bucket_region | S3 bucket region | `global.aws_region` | no |
@@ -108,7 +115,7 @@ sites:
 | storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
 | access_key | Site AWS Access Key | `global.access_key` | no |
 | secret_access_key | Site AWS Secret Access Key | `global.secret_access_key` | no |
-| watch_interval | Interval for file system watcher in milliseconds, overrides global setting | `global.watch_interval` | no |
+| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `global.watch_interval` | no |
 | exclusions | List of regex filters for exclusions | n/a | no |
 | s3_ops_retries | Number of retries for upload and delete operations | `global.s3_ops_retries` | no |
 

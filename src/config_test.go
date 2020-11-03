@@ -19,12 +19,13 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
 
-type ReadConfigTest struct {
-	filePath string
-	expected string
+type SetDefaultsTest struct {
+	cfgData  string
+	expected bool
 }
 
 func TestReadConfigFile(t *testing.T) {
@@ -49,5 +50,59 @@ func TestReadNonexistentConfigFile(t *testing.T) {
 
 	if exp := 2; got != exp {
 		t.Errorf("Expected exit code: %d, got: %d", exp, got)
+	}
+}
+
+func TestSetDefaults(t *testing.T) {
+	var SetDefaultsData = []SetDefaultsTest{
+		// Valid set with all fields set - no overrides with defaults
+		{
+			`
+aws_region: us-east-1
+loglevel: error
+upload_workers: 1
+checksum_workers: 2
+watch_interval: 60000ms
+s3_ops_retries: 3
+sites:
+- name: test-s3sync-service
+  local_path: /some/local/path
+  bucket: test-s3sync-service
+  bucket_path: some_path
+  bucket_region: eu-central-1
+  storage_class: STANDARD_IA
+  access_key: AKIAI44QH8DHBEXAMPLE
+  secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+  watch_interval: 5m
+  s3_ops_retries: 5
+`,
+			true,
+		},
+		// Valid set with not all fields set - some fields are filled in by default values
+		{
+			`
+aws_region: us-east-1
+sites:
+- local_path: /some/local/path
+  bucket: test-s3sync-service
+`,
+			false,
+		},
+	}
+
+	for _, testSet := range SetDefaultsData {
+		config := readConfigString(testSet.cfgData)
+		for _, site := range config.Sites {
+			siteOrig := site
+			site.setDefaults(config)
+			result := reflect.DeepEqual(site, siteOrig)
+			if result != testSet.expected {
+				t.Error(
+					"For cfgData", testSet.cfgData,
+					"expected", testSet.expected,
+					"got", result,
+				)
+			}
+		}
 	}
 }
