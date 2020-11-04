@@ -51,6 +51,9 @@ type ReloadHandler struct {
 
 // Reload handler method
 func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
+	var err error
+	var js []byte
+
 	res.Header().Set("Server", "s3sync-service")
 	res.Header().Set("Content-Type", "application/json")
 
@@ -60,22 +63,23 @@ func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
 		status,
 	}
 
-	js, err := json.Marshal(info)
+	js, err = json.Marshal(info)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	rh.Chan <- true
-
 	res.WriteHeader(http.StatusOK)
-	res.Write(js)
+	_, err = res.Write(js)
+	if err != nil {
+		logger.Errorln(err)
+	}
 }
 
 // Prometheus exporter http server
 func prometheusExporter(metricsPort string, metricsPath string) {
 	http.Handle(metricsPath, promhttp.Handler())
-	http.ListenAndServe(":"+metricsPort, nil)
+	logger.Fatalln(http.ListenAndServe(":"+metricsPort, nil))
 }
 
 // API http server
@@ -83,11 +87,14 @@ func httpServer(httpPort string, reloaderChan chan<- bool) {
 	reloadHandler := ReloadHandler{Chan: reloaderChan}
 	http.HandleFunc("/info", info)
 	http.HandleFunc("/reload", reloadHandler.handler)
-	http.ListenAndServe(":"+httpPort, nil)
+	logger.Fatalln(http.ListenAndServe(":"+httpPort, nil))
 }
 
 // Info resource
 func info(res http.ResponseWriter, req *http.Request) {
+	var err error
+	var js []byte
+
 	res.Header().Set("Server", "s3sync-service")
 	res.Header().Set("Content-Type", "application/json")
 
@@ -101,12 +108,14 @@ func info(res http.ResponseWriter, req *http.Request) {
 		config.LogLevel,
 	}
 
-	js, err := json.Marshal(info)
+	js, err = json.Marshal(info)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	res.WriteHeader(http.StatusOK)
-	res.Write(js)
+	_, err = res.Write(js)
+	if err != nil {
+		logger.Errorln(err)
+	}
 }

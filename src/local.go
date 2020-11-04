@@ -63,8 +63,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 					uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
 				}
 			} else {
-				checksumRemote, _ := awsItems[s3Key]
-				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, checksumRemote, site}
+				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, awsItems[s3Key], site}
 			}
 		}
 		return nil
@@ -87,8 +86,6 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 		logger.Error(err)
 	}
-
-	return
 }
 
 func compareChecksum(filename string, checksumRemote string, site Site) string {
@@ -165,7 +162,10 @@ func compareChecksum(filename string, checksumRemote string, site Site) string {
 }
 
 func chunkMd5Sum(file io.ReadSeeker, start int64, length int64) ([]byte, error) {
-	file.Seek(start, io.SeekStart)
+	if _, err := file.Seek(start, io.SeekStart); err != nil {
+		return nil, err
+	}
+
 	h := md5.New()
 	if _, err := io.CopyN(h, file, length); err != nil {
 		return nil, err

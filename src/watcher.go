@@ -94,15 +94,15 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG,
 // Workaround for - https://github.com/radovskyb/watcher/issues/66
 func fileWatcher(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG, event watcher.Event, filepath string) {
 	for {
-		select {
-		case <-time.After(time.Second):
-			file, _ := os.Stat(filepath)
-			mtime := file.ModTime()
-			if time.Now().Sub(mtime).Seconds() >= 30 {
-				logger.Debugf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
-				uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
-				return
-			}
+		file, _ := os.Stat(filepath)
+		mtime := file.ModTime()
+		if time.Since(mtime).Seconds() >= 30 {
+			logger.Debugf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
+			uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
+			return
 		}
+
+		logger.Debugf("looks like the file %s is still being written into, waiting", filepath)
+		time.Sleep(time.Second * 10)
 	}
 }
