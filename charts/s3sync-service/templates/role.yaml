@@ -1,0 +1,17 @@
+{{- if .Values.createRbac }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-{{ .Release.Namespace }}-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    resourceNames:
+      - "{{ .Release.Name }}-{{ .Release.Namespace }}-configmap"
+    verbs:
+      - get
+      - watch
+{{- end }}
