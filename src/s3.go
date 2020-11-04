@@ -43,8 +43,6 @@ func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
 
 	if err == nil {
 		size = *obj.ContentLength
-	} else {
-		logger.Errorln(err)
 	}
 
 	return size

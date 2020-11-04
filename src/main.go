@@ -207,7 +207,6 @@ func stopWorkers(config *Config, siteStopperChan chan<- bool,
 	for x := 0; x < config.ChecksumWorkers; x++ {
 		checksumStopperChan <- true
 	}
-	return
 }
 
 func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
@@ -282,5 +281,4 @@ func syncSites(config *Config, uploadCh chan<- UploadCFG,
 			}
 		}(site)
 	}
-	return
 }
