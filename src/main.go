@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 
@@ -35,8 +36,12 @@ import (
 
 var (
 	version    string
+	status     string
 	configpath string
 	configmap  string
+	config     *Config
+
+	startupTime = time.Now()
 
 	osExit = os.Exit
 	wg     = sync.WaitGroup{}
@@ -96,7 +101,6 @@ func isInK8s() bool {
 }
 
 func main() {
-	var config *Config
 	var httpPort string
 	var metricsPort string
 	var metricsPath string
@@ -108,6 +112,8 @@ func main() {
 	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
 	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
+
+	status = "STARTING"
 
 	// Read the config
 	config = getConfig()
@@ -149,12 +155,14 @@ func main() {
 		checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
 		// Start syncing sites
 		syncSites(config, uploadCh, checksumCh, siteStopperChan)
+		status = "RUNNING"
 		logger.Infoln("all systems go")
 		// Wait for events
 		for {
 			select {
 			case <-mainStopperChan:
 				logger.Infoln("shutting down gracefully")
+				status = "STOPPING"
 				stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
 				wg.Done()
 				return
@@ -163,6 +171,7 @@ func main() {
 				if reflect.DeepEqual(config, newConfig) {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
+					status = "RELOADING"
 					logger.Infoln("reloading configuration")
 					config = getConfig()
 					// Switch logging level (if needed), can't be switched to lower verbosity
@@ -175,6 +184,7 @@ func main() {
 					checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
 					// Start syncing sites
 					syncSites(config, uploadCh, checksumCh, siteStopperChan)
+					status = "RUNNING"
 				}
 			}
 		}

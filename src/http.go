@@ -19,24 +19,94 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// InfoResponse defines info response data
+type InfoResponse struct {
+	VERSION         string
+	STARTUPTIME     time.Time
+	STATUS          string
+	SITES           int
+	UPLOADWORKERS   int
+	CHECKSUMWORKERS int
+	LOGLEVEL        string
+}
+
+// ReloadResponse defines info response data
+type ReloadResponse struct {
+	VERSION     string
+	STARTUPTIME time.Time
+	STATUS      string
+}
+
+// ReloadHandler defines reload handler
+type ReloadHandler struct {
+	Chan chan<- bool
+}
+
+// Reload handler method
+func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Server", "s3sync-service")
+	res.Header().Set("Content-Type", "application/json")
+
+	info := ReloadResponse{
+		version,
+		startupTime,
+		status,
+	}
+
+	js, err := json.Marshal(info)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rh.Chan <- true
+
+	res.WriteHeader(http.StatusOK)
+	res.Write(js)
+}
+
+// Prometheus exporter http server
 func prometheusExporter(metricsPort string, metricsPath string) {
 	http.Handle(metricsPath, promhttp.Handler())
 	http.ListenAndServe(":"+metricsPort, nil)
 }
 
+// API http server
 func httpServer(httpPort string, reloaderChan chan<- bool) {
-	http.HandleFunc("/reload", func(res http.ResponseWriter, req *http.Request) {
-		// Trigger config reload
-		reloaderChan <- true
-		// Response with confirmation
-		res.WriteHeader(http.StatusOK)
-		fmt.Fprint(res, `{"status":"SUCCESS","message":"check logs for details"}`)
-	})
+	reloadHandler := ReloadHandler{Chan: reloaderChan}
+	http.HandleFunc("/info", info)
+	http.HandleFunc("/reload", reloadHandler.handler)
 	http.ListenAndServe(":"+httpPort, nil)
+}
+
+// Info resource
+func info(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Server", "s3sync-service")
+	res.Header().Set("Content-Type", "application/json")
+
+	info := InfoResponse{
+		version,
+		startupTime,
+		status,
+		len(config.Sites),
+		config.UploadWorkers,
+		config.ChecksumWorkers,
+		config.LogLevel,
+	}
+
+	js, err := json.Marshal(info)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res.WriteHeader(http.StatusOK)
+	res.Write(js)
 }

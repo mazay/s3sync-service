@@ -28,7 +28,7 @@ On start, the `s3sync-service` launches pool of generic upload workers, checksum
 
 At the moment reload can be triggered manually with the following command:
 ```bash
-> curl http://127.0.0.1:8090/reload -vvv
+> curl http://127.0.0.1:8090/reload -v
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
 * Connected to 127.0.0.1 (127.0.0.1) port 8090 (#0)
@@ -38,12 +38,13 @@ At the moment reload can be triggered manually with the following command:
 > Accept: */*
 >
 < HTTP/1.1 200 OK
-< Date: Sun, 01 Nov 2020 20:09:41 GMT
-< Content-Length: 55
-< Content-Type: text/plain; charset=utf-8
+< Content-Type: application/json
+< Server: s3sync-service
+< Date: Wed, 04 Nov 2020 00:26:55 GMT
+< Content-Length: 87
 <
 * Connection #0 to host 127.0.0.1 left intact
-{"status":"SUCCESS","message":"check logs for details"}* Closing connection 0
+{"VERSION":"devel","STARTUPTIME":"2020-11-04T01:23:22.335032+01:00","STATUS":"RUNNING"}* Closing connection 0
 ```
 
 Reload uses the following logic. Most of the configuration options can be changed using the reload apart from those that are set via [the command line arguments](configuration.md#command-line-args), logging level can be increased but not decreased.
