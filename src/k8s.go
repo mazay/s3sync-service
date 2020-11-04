@@ -21,10 +21,13 @@ package main
 import (
 	"context"
 	"strings"
+	"time"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,23 +49,43 @@ func k8sClientset() *kubernetes.Clientset {
 
 func k8sWatchCm(configmap string, reloaderChan chan<- bool) {
 	clientset := k8sClientset()
-	ctx := context.Background()
+
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
 	configmapName := cm[1]
 
-	watcher, err := clientset.CoreV1().ConfigMaps(namespace).Watch(ctx, metav1.ListOptions{
-		FieldSelector: fields.Set{"metadata.name": configmapName}.AsSelector().String(),
-		Watch:         true,
-	})
+	logger.Infoln("starting to watch for configmap changes")
 
-	if err != nil {
-		logger.Fatalln(err.Error())
-	}
+	watchlist := cache.NewListWatchFromClient(
+		clientset.CoreV1().RESTClient(),
+		"configmaps",
+		namespace,
+		fields.OneTermEqualSelector("metadata.name", configmapName),
+	)
 
-	for event := range watcher.ResultChan() {
-		logger.Infof("configmap %s was %s", configmap, event.Type)
-		reloaderChan <- true
+	_, controller := cache.NewInformer(
+		watchlist,
+		&v1.ConfigMap{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				logger.Infof("configmap %s added, triggering reload", configmap)
+				reloaderChan <- true
+			},
+			DeleteFunc: func(obj interface{}) {
+				logger.Panicf("configmap %s deleted", configmap)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				logger.Infof("configmap %s updated, triggering reload", configmap)
+				reloaderChan <- true
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	go controller.Run(stop)
+	for {
+		time.Sleep(time.Second)
 	}
 }
 
