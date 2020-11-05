@@ -1,0 +1,35 @@
+name: Helm lint
+
+on:
+  push:
+    branches:
+      - master
+      - devel
+    pull_request:
+      branches:
+        - master
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Helm
+        run: |
+          curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+          sudo apt-get install apt-transport-https --yes
+          echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update -y
+          sudo apt-get install helm -y
+
+      - name: Cleanup build path just in case
+        run: |
+          cd charts
+          rm -rf ./s3sync-service/charts/*
+
+      - name: Helm lint
+        run: |
+          cd charts
+          helm lint ./s3sync-service

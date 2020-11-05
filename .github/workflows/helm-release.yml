@@ -1,0 +1,59 @@
+name: Helm Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Helm
+        run: |
+          curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+          sudo apt-get install apt-transport-https --yes
+          echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update -y
+          sudo apt-get install helm -y
+
+      - name: Install AWS CLI
+        run: sudo apt-get install awscli -y
+
+      - name: Cleanup build path just in case
+        run: |
+          cd charts
+          rm -rf ./s3sync-service/charts/*
+
+      - name: Package Helm Chart
+        run: |
+          cd charts
+          helm package s3sync-service -d ./s3sync-service/charts
+
+      - name: Get existing releases
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd charts
+          aws s3 sync s3://charts.s3sync-service.org ./s3sync-service
+
+      - name: Generate Helm index file
+        run: |
+          cd charts
+          helm repo index s3sync-service --url https://charts.s3sync-service.org/
+
+      - name: Upload the charts and index file
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd charts
+          aws s3 cp ./s3sync-service/index.html s3://charts.s3sync-service.org
+          aws s3 cp ./s3sync-service/index.yaml s3://charts.s3sync-service.org
+          aws s3 sync ./s3sync-service s3://charts.s3sync-service.org --exclude "*" --include "charts/*"
