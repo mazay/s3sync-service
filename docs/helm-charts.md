@@ -58,8 +58,8 @@ Please check [this page](running-on-k8s.md#helm) for examples.
 | **config.watch_interval** | Interval for file system watcher | no | `1s` |
 | **config.s3_ops_retries** | Number of retries for upload and delete operations | no | `1s` |
 | **config.sites** | List of the site configurations, check [this](configuration.md) for available options | **yes** | `1s` |
-| **secret.name** | Name of a secret object if managed separately | no | `""` |
+| **secret.name** | Name of a secret object if managed separately, the data expected in the following format: `data: { AWS_ACCESS_KEY_ID: KEYID, AWS_SECRET_ACCESS_KEY: SECRETKEY }` | no | `""` |
 | **secret.AWS_ACCESS_KEY_ID** | AWS Access Key, will be used to create secret object if provided | no | `""` |
 | **secret.AWS_SECRET_ACCESS_KEY** | AWS Secret Access Key, will be used to create secret object if provided | no | `""` |
-| **volumes** | A map of volumes (PVCs) to be attached to the container and used for syncing the data | **yes** | `{}` |
+| **volumes** | A map of [volumes](https://kubernetes.io/docs/concepts/storage/volumes/) to be attached to the container and used for syncing the data | **yes** | `{}` |
 | **volumeMounts** | A map of volumeMounts for the listed above volumes | **yes** | `{}` |
