@@ -61,13 +61,13 @@ spec:
         - "-metrics-port=0"
       {{- end }}
         - "-http-port={{ .Values.httpServerPort }}"
-      {{- if or (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) .Values.secret.customName }}
+      {{- if or (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) .Values.secret.name }}
         envFrom:
         - secretRef:
           {{- if and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY }}
             name: {{ .Release.Name }}-secret
           {{- else }}
-            name: {{ .Values.secret.customName }}
+            name: {{ .Values.secret.name }}
           {{- end }}
       {{- end }}
       {{- if .Values.resources }}
