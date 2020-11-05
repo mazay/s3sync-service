@@ -30,4 +30,6 @@ jobs:
           rm -rf ./s3sync-service/charts/*
 
       - name: Helm lint
-        run: helm lint ./s3sync-service
+        run: |
+          cd charts
+          helm lint ./s3sync-service
