@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-{{ .Release.Namespace }}
+  name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -23,7 +23,7 @@ spec:
     {{- end }}
     spec:
     {{- if .Values.createRbac }}
-      serviceAccountName: {{ .Release.Name }}-{{ .Release.Namespace }}-serviceaccount
+      serviceAccountName: {{ .Release.Name }}-serviceaccount
     {{- else if .Values.serviceAccountName }}
       serviceAccountName: {{ .Values.serviceAccountName }}
     {{- end }}
@@ -44,13 +44,13 @@ spec:
       affinity: {{ toYaml .Values.affinity | nindent 8 }}
     {{- end }}
       containers:
-      - name: {{ .Release.Name }}-{{ .Release.Namespace }}
+      - name: {{ .Release.Name }}
         image: {{ .Values.image.repository }}:{{- if .Values.image.tag }}{{ .Values.image.tag }}{{- else }}{{ .Chart.AppVersion }}{{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - "./s3sync-service"
       {{- if .Values.configmap.watch }}
-        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-{{ .Release.Namespace }}-configmap{{ end }}"
+        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-configmap{{ end }}"
       {{- else }}
         - "-config=/opt/s3sync-service/config.yml"
       {{- end }}
@@ -65,7 +65,7 @@ spec:
         envFrom:
         - secretRef:
           {{- if and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY }}
-            name: {{ .Release.Name }}-{{ .Release.Namespace }}-secret
+            name: {{ .Release.Name }}-secret
           {{- else }}
             name: {{ .Values.secret.customName }}
           {{- end }}
@@ -90,6 +90,6 @@ spec:
       - name: config-volume
         configMap:
           defaultMode: 420
-          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-{{ .Release.Namespace }}-configmap{{ end }}
+          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-configmap{{ end }}
     {{- end }}
     {{- end }}
