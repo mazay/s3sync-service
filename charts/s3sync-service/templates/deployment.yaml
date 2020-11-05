@@ -7,11 +7,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-{{ .Release.Namespace }}
+      app: s3sync-service
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-{{ .Release.Namespace }}
+        app: s3sync-service
     {{- if or .Values.podAnnotations .Values.prometheusExporter.enable }}
       annotations:
         prometheus.io/path: {{ .Values.prometheusExporter.path | quote }}
