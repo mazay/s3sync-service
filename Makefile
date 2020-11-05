@@ -57,6 +57,15 @@ $(go-build-args):
 clean:
 	rm -rf ./s3sync-service*
 
+docker:
+	DOCKER_CLI_EXPERIMENTAL=enabled
+	docker buildx create --use
+	docker buildx build \
+	--build-arg RELEASE_VERSION=${RELEASE_VERSION} \
+	--push \
+	--tag $(DOCKER_IMAGE_NAME) -f ./Dockerfile .
+	docker buildx rm
+
 docker-multi-arch:
 	DOCKER_CLI_EXPERIMENTAL=enabled
 	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
