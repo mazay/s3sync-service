@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-{{ .Release.Namespace }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-{{ .Release.Namespace }}
+    {{- if or .Values.podAnnotations .Values.prometheusExporter.enable }}
+      annotations:
+        prometheus.io/path: {{ .Values.prometheusExporter.path | quote }}
+        prometheus.io/port: {{ .Values.prometheusExporter.port | quote }}
+        prometheus.io/scrape: "true"
+      {{- range $key, $value := .Values.podAnnotations }}
+        {{ $key }}: {{ $value | quote }}
+      {{- end }}
+    {{- end }}
+    spec:
+    {{- if .Values.createRbac }}
+      serviceAccountName: {{ .Release.Name }}-{{ .Release.Namespace }}-serviceaccount
+    {{- else if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+    {{- end }}
+    {{- if .Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
+    {{- end }}
+    {{- if .Values.podSecurityContext }}
+      securityContext:
+      {{- toYaml .Values.podSecurityContext | nindent 8 }}
+    {{- end }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 8 }}
+    {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+    {{- end }}
+    {{- if .Values.affinity }}
+      affinity: {{ toYaml .Values.affinity | nindent 8 }}
+    {{- end }}
+      containers:
+      - name: {{ .Release.Name }}-{{ .Release.Namespace }}
+        image: {{ .Values.image.repository }}:{{- if .Values.image.tag }}{{ .Values.image.tag }}{{- else }}{{ .Chart.AppVersion }}{{- end }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - "./s3sync-service"
+      {{- if .Values.configmap.watch }}
+        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-{{ .Release.Namespace }}-configmap{{ end }}"
+      {{- else }}
+        - "-config=/opt/s3sync-service/config.yml"
+      {{- end }}
+      {{- if .Values.prometheusExporter.enable }}
+        - "-metrics-path={{ .Values.prometheusExporter.path }}"
+        - "-metrics-port={{ .Values.prometheusExporter.port }}"
+      {{- else }}
+        - "-metrics-port=0"
+      {{- end }}
+        - "-http-port={{ .Values.httpServerPort }}"
+      {{- if or (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) .Values.secret.customName }}
+        envFrom:
+        - secretRef:
+          {{- if and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY }}
+            name: {{ .Release.Name }}-{{ .Release.Namespace }}-secret
+          {{- else }}
+            name: {{ .Values.secret.customName }}
+          {{- end }}
+      {{- end }}
+      {{- if .Values.resources }}
+        resources: {{ toYaml .Values.resources | nindent 10 }}
+      {{- end }}
+      {{- if .Values.securityContext }}
+        resources: {{ toYaml .Values.securityContext | nindent 10 }}
+      {{- end }}
+      {{- if or .Values.volumeMounts (eq .Values.configmap.watch false) }}
+        volumeMounts: {{ toYaml .Values.volumeMounts | nindent 8 }}
+      {{- if eq .Values.configmap.watch false }}
+        - name: config-volume
+          mountPath: /opt/s3sync-service
+      {{- end }}
+      {{- end }}
+      terminationGracePeriodSeconds: 300
+    {{- if or .Values.volumes (eq .Values.configmap.watch false) }}
+      volumes: {{ toYaml .Values.volumes | nindent 6 }}
+    {{- if eq .Values.configmap.watch false }}
+      - name: config-volume
+        configMap:
+          defaultMode: 420
+          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-{{ .Release.Namespace }}-configmap{{ end }}
+    {{- end }}
+    {{- end }}

@@ -1,0 +1,73 @@
+# Default values for s3sync-service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: zmazay/s3sync-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+createRbac: true
+serviceAccountName: ""
+
+imagePullSecrets: []
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+httpServerPort: 8090
+
+prometheusExporter:
+  enable: true
+  port: 9350
+  path: /metrics
+
+configmap:
+  name: ""
+  watch: true
+
+config:
+  access_key: ""
+  secret_access_key: ""
+  aws_region: us-east-1
+  loglevel: info
+  upload_queue_buffer: 0
+  upload_workers: 10
+  checksum_workers: 5
+  watch_interval: 1s
+  s3_ops_retries: 5
+  sites: {}
+
+secret:
+  customName: ""
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+
+volumes: {}
+
+volumeMounts: {}

@@ -30,6 +30,9 @@ config.yml
 ### Binary files
 s3sync-service*
 
+### Include charts
+!/charts/**
+
 ### dep
 vendor
 go.sum
