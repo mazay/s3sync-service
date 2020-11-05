@@ -28,6 +28,7 @@ nav:
     - Running locally: running-locally.md
     - Running in docker: running-in-docker.md
     - Running on k8s: running-on-k8s.md
+    - Helm Charts: helm-charts.md
   - Advance details:
     - How it works: how-it-works.md
     - Configuration: configuration.md
