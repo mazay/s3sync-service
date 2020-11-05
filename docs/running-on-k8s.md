@@ -16,104 +16,139 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 
-# Running on k8s
+# Intro
 
-Please check an example deployment manifest below.
+The `s3sync-service` was designed with containerisation in mind thus it's really easy to run in Docker or Kubernetes. To simplify things we have prepared [Helm](https://helm.sh/) charts and all in one deployment manifest, however you still have to create PVs/PVCs in order to mount the data volumes on the `s3sync-service` pod.
 
-- Pay attention to the image tag - it's not recommended to use neither `devel` nor `latest` as those are not providing any stability and rebuilt upon changes in `devel` or `master` branches respectively.
-- Please note that you have to take care of creation of `persistentVolume`'s and `persistentVolumeClaim`'s.
+# Helm
 
-It is advised to use `configmap` argument when run on k8s, with this set up `s3sync-service` will ignore the `config` setting and read directly from the specified configmap. If the configmap gets changed during the runtime - `s3sync-service` will perform reload in order to apply the changes.
+In order to start with helm approach your would need to add the repository with:
+```bash
+helm repo add s3sync-service https://charts.s3sync-service.org
+```
 
----
-
-The `resources` allocation is the tricky part and you should play around with your setup in order to figure out the right values, the provided example works fine with syncing 5 sites, with total about 25000 of files in size of around 200GB.
-
----
-
+Now let's create a `values.yaml` file for our deployment with the following contents:
 ```yaml
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: s3sync-service
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: s3sync-service
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: s3sync-service
-  namespace: kube-system
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    resourceNames:
-      - "s3sync-service"
-    verbs:
-      - get
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: s3sync-service
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: s3sync-service
-subjects:
-  - kind: ServiceAccount
-    name: s3sync-service
-    namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: s3sync-service
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: s3sync-service
-subjects:
-  - kind: ServiceAccount
-    name: s3sync-service
-    namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    app: s3sync-service
-  name: s3sync-service
-  namespace: kube-system
+# You can omit this part if you choose to create the secret manually
+# please note the keys we expect in the secret
+# or use some other authentication methods
+secret:
+  AWS_ACCESS_KEY_ID: "AKIAI44QH8DHBEXAMPLE"
+  AWS_SECRET_ACCESS_KEY: "je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY"
+
+# PVCs local-path1 and local-path2 should be created separately
+# as well at corresponding PVs
+volumes:
+  - name: local-path1
+    persistentVolumeClaim:
+      claimName: local-path1
+  - name: local-path2
+    persistentVolumeClaim:
+      claimName: local-path2
+
+volumeMounts:
+  - name: local-path1
+    mountPath: /local/path1
+    readOnly: true
+  - name: local-path2
+    mountPath: /local/path2
+    readOnly: true
+
+# The sites configuration for syncing the mentioned above PVs/PVCs,
+# please note that there's no limit on the number of sites so feel free to create as many as you meed
+config.sites:
+  - local_path: /local/path1
+    bucket: backup-bucket-path1
+    bucket_region: us-east-1
+    storage_class: STANDARD_IA
+    exclusions:
+      - .[Dd][Ss]_[Ss]tore
+      - .[Aa]pple[Dd]ouble
+  - local_path: /local/path2
+    bucket: backup-bucket-path2
+    bucket_path: path2
+    exclusions:
+      - "[Tt]humbs.db"
+```
+
+That would be the minimal set of variables required to start the application.
+Now we ready to deploy it:
+```bash
+helm install s3sync-service -f values.yaml --name s3sync-service
+```
+
+At this point our application should be up and running, you can check it with the following command or by examining the pod logs:
+```bash
+helm status s3sync-service
+```
+
+Please check [the Helm Charts](helm-charts.md) documentation on available configuration options.
+
+# Deployment manifest
+
+As an alternative to the helm deployments there's a generated [all-in-one.yaml](https://raw.githubusercontent.com/mazay/s3sync-service/master/deploy/all-in-one.yaml) deployment manifest, however, this approach is a bit more challenging as it requires some modifications in the manifest to be made prior the deployment.
+
+The first part to be adjusted is the secret:
+```yaml
+...
+data:
+  token: |-
+    AWS_ACCESS_KEY_ID: QUtJQUk0NFFIOERIQkVYQU1QTEU=
+    AWS_SECRET_ACCESS_KEY: amU3TXRHYkNsd0JGLzJacDlVdGsvaDN5Q284bnZiRVhBTVBMRUtFWQ==
+...
+```
+
+This is `base64` encoded secret key for accessing your S3 bucket(s), you can either update these values with the actual keys or you can create them using some more secure tool, for example [sealed-secrets-controller](https://github.com/bitnami-labs/sealed-secrets). If you choose the second option - the secret object can be removed and you just need to pass the right secret name in the following line:
+```yaml
+...
+envFrom:
+- secretRef:
+    name: s3sync-service-kube-system-secret
+...
+```
+
+Next you need to create PVs/PVCs and add something like that to the manifest:
+```yaml
+...
+        envFrom:
+        - secretRef:
+            name: s3sync-service-kube-system-secret
+        volumes:
+        - name: local-path1
+          persistentVolumeClaim:
+            claimName: local-path1
+        - name: local-path2
+          persistentVolumeClaim:
+            claimName: local-path2
+...
+      terminationGracePeriodSeconds: 300
+      volumeMounts:
+      - name: local-path1
+        mountPath: /local/path1
+        readOnly: true
+      - name: local-path2
+        mountPath: /local/path2
+        readOnly: true
+...
+```
+
+And finally add your sites to the configmap:
+```yaml
+...
 data:
   config.yml: |-
-    aws_region: eu-central-1
+    aws_region: us-east-1
+    loglevel: info
+    upload_queue_buffer: 0
     upload_workers: 10
+    checksum_workers: 5
+    watch_interval: 1s
+    s3_ops_retries: 5
     sites:
     - local_path: /local/path1
       bucket: backup-bucket-path1
       bucket_region: us-east-1
       storage_class: STANDARD_IA
-      access_key: AKIAI44QH8DHBEXAMPLE
-      secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
       exclusions:
         - .[Dd][Ss]_[Ss]tore
         - .[Aa]pple[Dd]ouble
@@ -122,81 +157,13 @@ data:
       bucket_path: path2
       exclusions:
         - "[Tt]humbs.db"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: s3sync-service
-  namespace: kube-system
-data:
-  AWS_ACCESS_KEY_ID: QUtJQUk0NFFIOERIQkVYQU1QTEUK
-  AWS_SECRET_ACCESS_KEY: amU3TXRHYkNsd0JGLzJacDlVdGsvaDN5Q284bnZiRVhBTVBMRUtFWQo=
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: s3sync-service
-  namespace: kube-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: s3sync-service
-  template:
-    metadata:
-      labels:
-        app: s3sync-service
-      annotations:
-        prometheus.io/path: "/metrics"
-        prometheus.io/port: "9350"
-        prometheus.io/scrape: "true"
-    spec:
-      serviceAccountName: s3sync-service
-      containers:
-      - image: zmazay/s3sync-service:devel
-        name: s3sync-service
-        command:
-        - "./s3sync-service"
-        - "-configmap=kube-system/s3sync-service"
-        env:
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: s3sync-service
-              key: AWS_ACCESS_KEY_ID
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: s3sync-service
-              key: AWS_SECRET_ACCESS_KEY
-        resources:
-          limits:
-            cpu: 400m
-            memory: 512Mi
-          requests:
-            cpu: 200m
-            memory: 384Mi
-        ports:
-        - containerPort: 8090
-          name: http
-          protocol: TCP
-        volumeMounts:
-        - name: config-volume
-          mountPath: /opt/s3sync-service
-        - name: local-path1
-          mountPath: /local/path1
-          readOnly: true
-        - name: local-path2
-          mountPath: /local/path2
-          readOnly: true
-      terminationGracePeriodSeconds: 300
-      volumes:
-      - name: local-path1
-        persistentVolumeClaim:
-          claimName: local-path1
-      - name: local-path2
-        persistentVolumeClaim:
-          claimName: /local/path2
 ```
 
-Please check [this page](configuration.md) for more details on configuration options.
+And deploy your resources:
+```bash
+kubectl apply -f all-in-one.yaml
+```
+
+At this point the app should be running on your k8s cluster, feel free to go ahead and check it's logs.
+
+---

@@ -6,6 +6,18 @@ metadata:
   name: s3sync-service-kube-system-serviceaccount
   namespace: kube-system
 ---
+# Source: s3sync-service/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s3sync-service-kube-system-secret
+  namespace: kube-system
+type: Opaque
+data:
+  token: |-
+    AWS_ACCESS_KEY_ID: QUtJQUk0NFFIOERIQkVYQU1QTEU=
+    AWS_SECRET_ACCESS_KEY: amU3TXRHYkNsd0JGLzJacDlVdGsvaDN5Q284bnZiRVhBTVBMRUtFWQ==
+---
 # Source: s3sync-service/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -118,4 +130,7 @@ spec:
         - "-metrics-path=/metrics"
         - "-metrics-port=9350"
         - "-http-port=8090"
+        envFrom:
+        - secretRef:
+            name: s3sync-service-kube-system-secret
       terminationGracePeriodSeconds: 300
