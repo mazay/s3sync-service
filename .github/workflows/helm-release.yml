@@ -2,7 +2,9 @@ name: Helm Release
 
 on:
   push:
-    branches: [ master devel ]
+    branches:
+      - master
+      - devel
 
 jobs:
   release:
