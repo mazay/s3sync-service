@@ -1,0 +1,88 @@
+name: Build
+
+env:
+  GO_VERSION: 1.15
+  ATTACHMENTS: ""
+
+on:
+  push:
+    release:
+      types:
+        - created
+    branches:
+      - master
+      - devel
+    pull_request:
+      branches:
+        - master
+        - devel
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chechout
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Install dependencies
+        run: |
+          cd src
+          go mod vendor
+      - name: Run tests
+        run: make test
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Chechout
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Install dependencies
+        run: |
+          cd src
+          go mod vendor
+      - name: Build
+        run: make build-all
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ github.event_name == 'release' }}
+        with:
+          name: s3sync-service-${{ github.ref }}
+          path: s3sync-service-*
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Chechout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+      - name: Docker buildx
+        run: |
+          if [ "${{ github.ref }}" = "master" ]; then RELEASE_VERSION="latest"; elif RELEASE_VERSION=${{ github.ref }}; fi;
+          make docker-multi-arch
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' }}
+    needs: [build, docker]
+    steps:
+      - name: Chechout
+        uses: actions/checkout@v2
+      - name: Set up Hub
+        uses: geertvdc/setup-hub@master
+      - name: Download artifacts
+        with:
+          name: s3sync-service-${{ github.ref }}
+          path: artifacts/
+      - name: Upload assets
+        run: |
+          for artifact in $(ls artifacts/*); do ATTACHMENTS="${ATTACHMENTS} -a ${artifact}"; done;
+          hub release edit -d -m "" ${{ github.ref }} ${ATTACHMENTS}
