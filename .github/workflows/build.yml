@@ -21,6 +21,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
       - name: Chechout
         uses: actions/checkout@v2
       - name: Set up Go
@@ -32,18 +34,18 @@ jobs:
           cd src
           go mod vendor
       - name: Run tests
+        RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
         run: |
-          if [ "${{ github.ref }}" = "master" ]
-          then
+          if [ "${RELEASE_VERSION}" = "master" ]; then
             RELEASE_VERSION="latest"
-          else
-            RELEASE_VERSION=${{ github.ref }}
           fi
           make test
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
       - name: Chechout
         uses: actions/checkout@v2
       - name: Set up Go
@@ -60,12 +62,14 @@ jobs:
         uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' }}
         with:
-          name: s3sync-service-${{ github.ref }}
+          name: s3sync-service-${{ env.GITHUB_REF_SLUG }}
           path: s3sync-service-*
   docker:
     runs-on: ubuntu-latest
     needs: test
     steps:
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
       - name: Chechout
         uses: actions/checkout@v2
       - name: Set up Docker Buildx
@@ -73,12 +77,11 @@ jobs:
         with:
           version: latest
       - name: Docker buildx
+        env:
+          RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
         run: |
-          if [ "${{ github.ref }}" = "master" ]
-          then
+          if [ "${RELEASE_VERSION}" = "master" ]; then
             RELEASE_VERSION="latest"
-          else
-            RELEASE_VERSION=${{ github.ref }}
           fi
           make docker-multi-arch
   publish:
@@ -93,9 +96,9 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          name: s3sync-service-${{ github.ref }}
+          name: s3sync-service-${{ env.GITHUB_REF_SLUG }}
           path: artifacts/
       - name: Upload assets
         run: |
           for artifact in $(ls artifacts/*); do ATTACHMENTS="${ATTACHMENTS} -a ${artifact}"; done;
-          hub release edit -d -m "" ${{ github.ref }} ${ATTACHMENTS}
+          hub release edit -d -m "" ${{ env.GITHUB_REF_SLUG }} ${ATTACHMENTS}
