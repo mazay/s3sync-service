@@ -20,6 +20,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}
+      RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
@@ -34,8 +37,6 @@ jobs:
           cd src
           go mod vendor
       - name: Run tests
-        env:
-          RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
         run: |
           if [ "${RELEASE_VERSION}" = "master" ]; then
             RELEASE_VERSION="latest"
@@ -44,6 +45,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: test
+    env:
+      GOPATH: ${{ github.workspace }}
+      RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
@@ -68,6 +72,8 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: test
+    env:
+      RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
@@ -78,8 +84,6 @@ jobs:
         with:
           version: latest
       - name: Docker buildx
-        env:
-          RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
         run: |
           if [ "${RELEASE_VERSION}" = "master" ]; then
             RELEASE_VERSION="latest"
