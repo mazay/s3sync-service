@@ -23,29 +23,24 @@ jobs:
       - name: Install AWS CLI
         run: sudo apt-get install awscli -y
 
-      - name: Cleanup build path just in case
-        run: |
-          cd charts
-          rm -rf ./s3sync-service/charts/*
-
       - name: Package Helm Chart
         run: |
           cd charts
           helm package s3sync-service -d ./s3sync-service/charts
 
-      - name: Get existing releases
+      - name: Get existing index
         env:
           AWS_DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd charts
-          aws s3 sync s3://charts.s3sync-service.org ./s3sync-service
+          aws s3 cp s3://charts.s3sync-service.org/index.yaml ./s3sync-service/index.yaml
 
-      - name: Generate Helm index file
+      - name: Generate new Helm index file
         run: |
           cd charts
-          helm repo index s3sync-service --url https://charts.s3sync-service.org/
+          helm repo index s3sync-service --url https://charts.s3sync-service.org/ --merge ./s3sync-service/index.yaml
 
       - name: Upload the charts and index file
         env:

@@ -30,8 +30,10 @@ config.yml
 ### Binary files
 s3sync-service*
 
-### Include charts
+### Helm charts
 !/charts/**
+charts/s3sync-service/index.yaml
+charts/s3sync-service/charts/*
 
 ### dep
 vendor
