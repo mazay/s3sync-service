@@ -79,6 +79,7 @@ jobs:
       - name: Set up Hub
         uses: geertvdc/setup-hub@master
       - name: Download artifacts
+        uses: actions/download-artifact@v2
         with:
           name: s3sync-service-${{ github.ref }}
           path: artifacts/
