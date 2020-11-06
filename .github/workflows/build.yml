@@ -33,7 +33,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd src
-          go mod download
+          go mod vendor
+          ls -l *
       - name: Run tests
         env:
           RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
