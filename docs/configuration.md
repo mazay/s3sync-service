@@ -32,40 +32,7 @@ Usage of ./s3sync-service:
     	Prometheus exporter port, 0 to disable the exporter (default "9350")
 ```
 
-# Global configuration options
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| access_key | Global AWS Access Key | n/a | no |
-| secret_access_key | Global AWS Secret Access Key | n/a | no |
-| aws_region | [AWS region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) | n/a | no |
-| loglevel | Logging level, valid options are - `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. With log level set to `trace` logger will output everything, with `debug` everything apart from `trace` and so on. | `info` | no |
-| upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
-| checksum_workers | Number of checksum workers for the service | `2 in k8s, otherwise <CPU cores> * 2` | no |
-| upload_workers | Number of upload workers for the service | `10` | no |
-| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `1000ms` | no |
-| s3_ops_retries | Number of retries for upload and delete operations | `5` | no |
-
----
-
-# Site configuration options
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| name | Human friendly site name | `bucket/bucket_path` | no |
-| local_path | **Absolute** path on local file system to be synced with S3 | n/a | yes |
-| bucket | S3 bucket name | n/a | yes |
-| bucket_path | S3 path prefix | n/a | no |
-| bucket_region | [S3 bucket region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) | `global.aws_region` | no |
-| retire_deleted | Remove files from S3 which do not exist locally | `false` | no |
-| storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
-| access_key | Site AWS Access Key | `global.access_key` | no |
-| secret_access_key | Site AWS Secret Access Key | `global.secret_access_key` | no |
-| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `global.watch_interval` | no |
-| exclusions | List of regex filters for exclusions | n/a | no |
-| s3_ops_retries | Number of retries for upload and delete operations | `global.s3_ops_retries` | no |
-
----
+# Example configuration
 
 ```yaml
 access_key: AKIAI44QH8DHBEXAMPLE
@@ -106,3 +73,38 @@ sites:
   exclusions:
   - logs
 ```
+
+# Global configuration options
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| access_key | Global AWS Access Key | n/a | no |
+| secret_access_key | Global AWS Secret Access Key | n/a | no |
+| aws_region | [AWS region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) | n/a | no |
+| loglevel | Logging level, valid options are - `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. With log level set to `trace` logger will output everything, with `debug` everything apart from `trace` and so on. | `info` | no |
+| upload_queue_buffer | Number of elements in the upload queue waiting for processing, might improve performance, however, increases memory usage | `0` | no |
+| checksum_workers | Number of checksum workers for the service | `2 in k8s, otherwise <CPU cores> * 2` | no |
+| upload_workers | Number of upload workers for the service | `10` | no |
+| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `1000ms` | no |
+| s3_ops_retries | Number of retries for upload and delete operations | `5` | no |
+
+---
+
+# Site configuration options
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| name | Human friendly site name | `bucket/bucket_path` | no |
+| local_path | **Absolute** path on local file system to be synced with S3 | n/a | yes |
+| bucket | S3 bucket name | n/a | yes |
+| bucket_path | S3 path prefix | n/a | no |
+| bucket_region | [S3 bucket region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) | `global.aws_region` | no |
+| retire_deleted | Remove files from S3 which do not exist locally | `false` | no |
+| storage_class | [S3 storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-compare) | `STANDARD` | no |
+| access_key | Site AWS Access Key | `global.access_key` | no |
+| secret_access_key | Site AWS Secret Access Key | `global.secret_access_key` | no |
+| watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `global.watch_interval` | no |
+| exclusions | List of regex filters for exclusions | n/a | no |
+| s3_ops_retries | Number of retries for upload and delete operations | `global.s3_ops_retries` | no |
+
+---
