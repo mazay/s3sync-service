@@ -34,7 +34,8 @@ jobs:
           cd src
           go mod vendor
       - name: Run tests
-        RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
+        env:
+          RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
         run: |
           if [ "${RELEASE_VERSION}" = "master" ]; then
             RELEASE_VERSION="latest"
