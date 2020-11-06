@@ -29,6 +29,7 @@ nav:
     - Running in docker: running-in-docker.md
     - Running on k8s: running-on-k8s.md
     - Helm Charts: helm-charts.md
+    - Charts Release Notes: charts-releasenotes.md
   - Advance details:
     - How it works: how-it-works.md
     - Configuration: configuration.md
