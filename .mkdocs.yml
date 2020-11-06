@@ -35,6 +35,7 @@ nav:
     - Authentication: authentication.md
     - Prometheus exporter: prometheus-exporter.md
     - HTTP server: http-server.md
+    - Charts Release Notes: charts-releasenotes.md
 
 docs_dir: docs
 site_dir: site
