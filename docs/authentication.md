@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 
-# Authentication
+# Authentication options
 
 The application support the following ways of providing AWS credentials and region, they all can coexist but have different level of priority.
 
