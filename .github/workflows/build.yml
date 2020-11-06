@@ -33,7 +33,12 @@ jobs:
           go mod vendor
       - name: Run tests
         run: |
-          if [ "${{ github.ref }}" = "master" ]; then RELEASE_VERSION="latest"; elif RELEASE_VERSION=${{ github.ref }}; fi;
+          if [ "${{ github.ref }}" = "master" ]
+          then
+            RELEASE_VERSION="latest"
+          else
+            RELEASE_VERSION=${{ github.ref }}
+          fi
           make test
   build:
     runs-on: ubuntu-latest
@@ -69,7 +74,12 @@ jobs:
           version: latest
       - name: Docker buildx
         run: |
-          if [ "${{ github.ref }}" = "master" ]; then RELEASE_VERSION="latest"; elif RELEASE_VERSION=${{ github.ref }}; fi;
+          if [ "${{ github.ref }}" = "master" ]
+          then
+            RELEASE_VERSION="latest"
+          else
+            RELEASE_VERSION=${{ github.ref }}
+          fi
           make docker-multi-arch
   publish:
     runs-on: ubuntu-latest
