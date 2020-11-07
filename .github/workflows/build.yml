@@ -146,4 +146,4 @@ jobs:
       - name: Upload assets
         run: |
           for artifact in $(ls artifacts/*); do ATTACHMENTS="${ATTACHMENTS} -a ${artifact}"; done;
-          hub release edit -d -m "" ${{ env.GITHUB_REF_SLUG }} ${ATTACHMENTS}
+          hub release edit -m "" ${{ env.GITHUB_REF_SLUG }} ${ATTACHMENTS}
