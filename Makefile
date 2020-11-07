@@ -78,4 +78,4 @@ docker-multi-arch:
 	docker buildx rm
 
 test:
-	GOFLAGS="-json" go test ./src/
+	GOFLAGS="-json" go test ./src/ -coverprofile cover.out
