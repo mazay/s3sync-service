@@ -18,9 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # s3sync-service
 
-[![Build Status](https://teamcity.yottacloud.org:30000/app/rest/builds/buildType:(id:S3syncService_UnitTesting)/statusIcon)](https://teamcity.yottacloud.org:30000/viewType.html?buildTypeId=S3syncService_UnitTesting&guest=1) [![Go Report Card](https://goreportcard.com/badge/github.com/mazay/s3sync-service)](https://goreportcard.com/report/github.com/mazay/s3sync-service) ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zmazay/s3sync-service)
+[![Build](https://github.com/mazay/s3sync-service/workflows/Build/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Build/badge.svg) [![golangci-lint](https://github.com/mazay/s3sync-service/workflows/golangci-lint/badge.svg)](https://github.com/mazay/s3sync-service/workflows/golangci-lint/badge.svg) [![CodeQL](https://github.com/mazay/s3sync-service/workflows/CodeQL/badge.svg)](https://github.com/mazay/s3sync-service/workflows/CodeQL/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mazay/s3sync-service)](https://goreportcard.com/report/github.com/mazay/s3sync-service) ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zmazay/s3sync-service)
 
-The `s3sync-service` tool is asynchronously syncing data to S3 storage service for multiple _sites_ (path + bucket combination).
+[![Helm lint](https://github.com/mazay/s3sync-service/workflows/Helm%20lint/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Helm%20lint/badge.svg) [![Helm Release](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg)
+
+The `s3sync-service` tool is a lightweight tool designed with k8s in mind and aimed to syncing data to S3 storage service for multiple _sites_ (path + bucket combination). Each _site_ can have its own set of credentials and be in different region, which makes the `s3sync-service` really flexible.
+
+Check out the quickstart note or head over to [the documentation](https://docs.s3sync-service.org/) where you will find more examples on running the application locally or on k8s.
 
 
 # Quickstart
@@ -66,8 +70,6 @@ sites:
   exclusions:
     - "[Tt]humbs.db"
 ```
-
-For more details please refer to [the documentation](https://docs.s3sync-service.org/).
 
 # Contributing
 

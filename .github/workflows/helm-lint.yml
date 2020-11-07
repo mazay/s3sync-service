@@ -2,19 +2,23 @@ name: Helm lint
 
 on:
   push:
+    paths:
+      - 'charts/**'
     branches:
       - master
       - devel
     pull_request:
+      paths:
+        - 'charts/**'
       branches:
         - master
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Install Helm
         run: |
