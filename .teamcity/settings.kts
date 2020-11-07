@@ -111,10 +111,10 @@ object UnitTesting : BuildType({
     }
 
 
-    triggers {
+    /* triggers {
         vcs {
         }
-    }
+    } */
 
     features {
         pullRequests {
@@ -179,10 +179,10 @@ object DockerBuild : BuildType({
     }
 
 
-    triggers {
+    /* triggers {
         vcs {
         }
-    }
+    } */
 
     dependencies {
         snapshot(UnitTesting){
