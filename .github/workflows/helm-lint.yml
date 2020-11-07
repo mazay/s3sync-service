@@ -2,10 +2,14 @@ name: Helm lint
 
 on:
   push:
+    paths:
+      - 'charts/**'
     branches:
       - master
       - devel
     pull_request:
+      paths:
+        - 'charts/**'
       branches:
         - master
 
