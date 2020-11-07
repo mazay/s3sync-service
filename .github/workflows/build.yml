@@ -34,8 +34,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd src
-          go mod vendor
-          ls -l *
+          go mod download
+          ls -l ${GOROOT}*
       - name: Run tests
         env:
           RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
