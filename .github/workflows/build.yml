@@ -50,6 +50,9 @@ jobs:
           cd ./src/github.com/${{ github.repository }}
           make test
 
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+
   build:
     runs-on: ubuntu-latest
     needs: test
