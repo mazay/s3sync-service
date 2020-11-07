@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 [![Helm lint](https://github.com/mazay/s3sync-service/workflows/Helm%20lint/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Helm%20lint/badge.svg) [![Helm Release](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg)
 
-The `s3sync-service` tool is a lightweight tool designed with k8s in mind and aimed to syncing data to S3 storage service for multiple _sites_ (path + bucket combination). Each _site_ can have its own set of credentials and be in different region, which makes the `s3sync-service` really flexible.
+The `s3sync-service` is a lightweight tool designed with k8s in mind and aimed to syncing data to S3 storage service for multiple _sites_ (path + bucket combination). Each _site_ can have its own set of credentials and be in different region, which makes the `s3sync-service` really flexible.
 
 Check out the quickstart note or head over to [the documentation](https://docs.s3sync-service.org/) where you will find more examples on running the application locally or on k8s.
 
