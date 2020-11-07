@@ -38,3 +38,6 @@ charts/s3sync-service/charts/*
 ### dep
 vendor
 go.sum
+
+### Tests output
+cover.out
