@@ -4,6 +4,7 @@ env:
   GO_VERSION: 1.15
   ATTACHMENTS: ""
   GOPATH: ${{ github.workspace }}
+  GOFLAGS: -mod=vendor
 
 on:
   push:
