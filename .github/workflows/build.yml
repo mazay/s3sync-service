@@ -4,7 +4,6 @@ env:
   GO_VERSION: 1.15
   ATTACHMENTS: ""
   GOPATH: ${{ github.workspace }}
-  GOFLAGS: -mod=vendor -json
 
 on:
   push:
@@ -27,6 +26,8 @@ jobs:
         uses: rlespinasse/github-slug-action@v3.x
       - name: Chechout
         uses: actions/checkout@v2
+        with:
+          path: ./src/github.com/${{ github.repository }}
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -34,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd src
-          go mod download
+          go mod vendor
           ls -l ${GOROOT}*
       - name: Run tests
         env:
@@ -43,7 +44,7 @@ jobs:
           if [ "${RELEASE_VERSION}" = "master" ]; then
             RELEASE_VERSION="latest"
           fi
-          go test ./src/
+          make test
   build:
     runs-on: ubuntu-latest
     needs: test
@@ -52,6 +53,8 @@ jobs:
         uses: rlespinasse/github-slug-action@v3.x
       - name: Chechout
         uses: actions/checkout@v2
+        with:
+          path: ./src/github.com/${{ github.repository }}
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -74,6 +77,8 @@ jobs:
         uses: rlespinasse/github-slug-action@v3.x
       - name: Chechout
         uses: actions/checkout@v2
+        with:
+          path: ./src/github.com/${{ github.repository }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
         with:
@@ -93,6 +98,8 @@ jobs:
     steps:
       - name: Chechout
         uses: actions/checkout@v2
+        with:
+          path: ./src/github.com/${{ github.repository }}
       - name: Set up Hub
         uses: geertvdc/setup-hub@master
       - name: Download artifacts
