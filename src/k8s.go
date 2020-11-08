@@ -89,12 +89,12 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
 	var configMap map[string]string
 
-	// ctx := context.Background()
+	ctx := context.Background()
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
 	configmapName := cm[1]
 
-	cmObj, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configmapName,
+	cmObj, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName,
 		metav1.GetOptions{})
 
 	if err != nil {
