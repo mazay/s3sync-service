@@ -28,6 +28,17 @@ type SetDefaultsTest struct {
 	expected bool
 }
 
+func TestGetConfig(t *testing.T) {
+	var emptyConfig *Config
+
+	configpath = "../test_data/valid_config.yml"
+	config := getConfig()
+
+	if config == emptyConfig {
+		t.Error("Expected to get config data, got empty struct")
+	}
+}
+
 func TestReadConfigFile(t *testing.T) {
 	config := readConfigFile("../test_data/valid_config.yml")
 	if config == nil {
