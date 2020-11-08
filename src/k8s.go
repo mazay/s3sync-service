@@ -24,12 +24,11 @@ import (
 	"time"
 
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func k8sClientset() *kubernetes.Clientset {
@@ -47,9 +46,7 @@ func k8sClientset() *kubernetes.Clientset {
 	return clientset
 }
 
-func k8sWatchCm(configmap string, reloaderChan chan<- bool) {
-	clientset := k8sClientset()
-
+func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan chan<- bool) {
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
 	configmapName := cm[1]
@@ -89,10 +86,9 @@ func k8sWatchCm(configmap string, reloaderChan chan<- bool) {
 	}
 }
 
-func k8sGetCm(configmap string) string {
+func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
 	var configMap map[string]string
 
-	clientset := k8sClientset()
 	ctx := context.Background()
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
