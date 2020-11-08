@@ -32,7 +32,7 @@ func TestK8sGetCm(t *testing.T) {
 aws_region: us-east-1
 sites:
 - local_path: /some/local/path
-  bucket: test-s3sync-service
+  bucket: mock-bucket
 `
 
 	cm := &v1.ConfigMap{
