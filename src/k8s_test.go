@@ -41,11 +41,20 @@ sites:
 	}
 	clientset := k8smock.NewSimpleClientset(cm)
 
-	data := k8sGetCm(clientset, "test/mock-configmap")
-	if !reflect.DeepEqual(config, data) {
-		t.Error(
-			"Expected:", config,
-			"got:", data,
-		)
+	tests := []struct {
+		cm   string
+		want string
+	}{
+		{"test/mock-configmap", "match"},
+		{"test/mock-configmap-does-not-exist", "fail"},
+	}
+	for _, tt := range tests {
+		data := k8sGetCm(clientset, tt.cm)
+		if !reflect.DeepEqual(config, data) && tt.want != "fail" {
+			t.Error(
+				"Expected:", config,
+				"got:", data,
+			)
+		}
 	}
 }

@@ -70,7 +70,7 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 				reloaderChan <- true
 			},
 			DeleteFunc: func(obj interface{}) {
-				logger.Panicf("configmap %s deleted", configmap)
+				logger.Errorf("configmap %s deleted", configmap)
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				logger.Infof("configmap %s updated, triggering reload", configmap)
@@ -98,7 +98,7 @@ func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
 		metav1.GetOptions{})
 
 	if err != nil {
-		logger.Fatalln(err.Error())
+		logger.Errorln(err.Error())
 	} else {
 		configMap = cmObj.Data
 	}
