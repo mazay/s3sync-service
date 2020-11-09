@@ -32,12 +32,11 @@ import (
 )
 
 func k8sClientset() *kubernetes.Clientset {
-	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		logger.Panic(err.Error())
 	}
-	// creates the clientset
+
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logger.Panic(err.Error())
@@ -46,7 +45,7 @@ func k8sClientset() *kubernetes.Clientset {
 	return clientset
 }
 
-func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan chan<- bool) {
+func k8sWatchCm(clientset *kubernetes.Clientset, configmap string, reloaderChan chan<- bool) {
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
 	configmapName := cm[1]
@@ -86,7 +85,7 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 	}
 }
 
-func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
+func k8sGetCm(clientset *kubernetes.Clientset, configmap string) string {
 	var configMap map[string]string
 
 	ctx := context.Background()
