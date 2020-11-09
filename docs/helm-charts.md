@@ -23,6 +23,8 @@ The following command can be used to add the repository:
 helm repo add s3sync-service https://charts.s3sync-service.org
 ```
 
+The chart is know to work with k8s versions older than `0.13.10`, earlier versions was not tested thus not supported by the chart.
+
 Please check [this page](running-on-k8s.md#helm) for examples.
 
 # Configuration
