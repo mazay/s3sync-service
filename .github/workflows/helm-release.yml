@@ -1,5 +1,9 @@
 name: Helm Release
 
+env:
+  BUCKET: charts.s3sync-service.org
+  AWS_DEFAULT_REGION: us-east-1
+
 on:
   push:
     paths:
@@ -25,32 +29,48 @@ jobs:
       - name: Install AWS CLI
         run: sudo apt-get install awscli -y
 
+      - name: Check if version exists
+        id: version-check
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          version=$(helm show chart ./s3sync-service | grep version | awk '{ print $2 }')
+          exists=$(aws s3api head-object --bucket %{{ env.BUCKET }} --key charts/s3sync-service-${version}.tgz || true)
+          if [ -z "${exists}" ]; then
+            echo "::set-output name=exists::false"
+          else
+            echo "::set-output name=exists::$exists"
+          fi
+
       - name: Package Helm Chart
+        if: steps.version-check.outputs.exists != true
         run: |
           cd charts
           helm package s3sync-service -d ./s3sync-service/charts
 
       - name: Get existing index
+        if: steps.version-check.outputs.exists != true
         env:
-          AWS_DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd charts
-          aws s3 cp s3://charts.s3sync-service.org/index.yaml ./s3sync-service/index.yaml
+          aws s3 cp s3://%{{ env.BUCKET }}/index.yaml ./s3sync-service/index.yaml
 
       - name: Generate new Helm index file
+        if: steps.version-check.outputs.exists != true
         run: |
           cd charts
           helm repo index s3sync-service --url https://charts.s3sync-service.org/ --merge ./s3sync-service/index.yaml
 
-      - name: Upload the charts and index file
+      - name: Upload the charts and index files
+        if: steps.version-check.outputs.exists != true
         env:
-          AWS_DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd charts
-          aws s3 cp ./s3sync-service/index.html s3://charts.s3sync-service.org
-          aws s3 cp ./s3sync-service/index.yaml s3://charts.s3sync-service.org
-          aws s3 sync ./s3sync-service s3://charts.s3sync-service.org --exclude "*" --include "charts/*"
+          aws s3 cp ./s3sync-service/index.html s3://%{{ env.BUCKET }}
+          aws s3 cp ./s3sync-service/index.yaml s3://%{{ env.BUCKET }}
+          aws s3 sync ./s3sync-service s3://%{{ env.BUCKET }} --exclude "*" --include "charts/*"
