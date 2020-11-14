@@ -44,7 +44,8 @@ Please check [this page](running-on-k8s.md#helm) for examples.
 | **nodeSelector** | Node labels for pod assignment | no | `{}` |
 | **tolerations** | Node tolerations for pod assignment | no | `[]` |
 | **affinity** | Node affinity for pod assignment | no | `{}` |
-| **httpServerPort** | Listen port for the `s3sync-service` HTTP server | no | `8090` |
+| **httpServer.enable** | Enable the `s3sync-service` HTTP server | no | `true` |
+| **httpServer.port** | Listen port for the `s3sync-service` HTTP server | no | `8090` |
 | **prometheusExporter.enable** | Enable the embedded Prometheus exporter | no | `true` |
 | **prometheusExporter.port** | Listen port for the the embedded Prometheus exporter | no | `9350` |
 | **prometheusExporter.path** | Metrics path for the the embedded Prometheus exporter | no | `/metrics` |

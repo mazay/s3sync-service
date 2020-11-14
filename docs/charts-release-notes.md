@@ -18,6 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Release Notes
 
+## 0.0.7
+
+- Specified `kubeVersion: ">=1.13.10"`
+- Use `.Release.Name` for naming all resources created by the chart
+- Fixed container level `securityContext`
+- Introduced `.Values.httpServer.enable` and `.Values.httpServer.port` to replace `.Values.httpServerPort`
+- Added container health checks using embedded HTTP server resource at `/info`
+
 ## 0.0.6
 
 First working version, minimal supported application version is `0.1.0`.

@@ -36,7 +36,7 @@ nav:
     - k8s integration: k8s-integration.md
     - Prometheus exporter: prometheus-exporter.md
     - HTTP server: http-server.md
-    - Charts Release Notes: charts-releasenotes.md
+    - Charts Release Notes: charts-release-notes.md
 
 docs_dir: docs
 site_dir: site
