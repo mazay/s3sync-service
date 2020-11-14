@@ -60,7 +60,9 @@ spec:
       {{- else }}
         - "-metrics-port=0"
       {{- end }}
-        - "-http-port={{ .Values.httpServerPort }}"
+      {{- if .Values.httpServer.enable }}
+        - "-http-port={{ .Values.httpServer.port }}"
+      {{- end }}
       {{- if or (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) .Values.secret.name }}
         envFrom:
         - secretRef:
@@ -69,6 +71,28 @@ spec:
           {{- else }}
             name: {{ .Values.secret.name }}
           {{- end }}
+      {{- end }}
+      {{- if .Values.httpServer.enable }}
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /info
+            port: {{ .Values.httpServer.port }}
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /info
+            port: {{ .Values.httpServer.port }}
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
       {{- end }}
       {{- if .Values.resources }}
         resources: {{ toYaml .Values.resources | nindent 10 }}

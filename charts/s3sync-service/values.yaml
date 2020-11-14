@@ -40,7 +40,9 @@ tolerations: []
 
 affinity: {}
 
-httpServerPort: 8090
+httpServer:
+  enable: true
+  port: 8090
 
 prometheusExporter:
   enable: true
