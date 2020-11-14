@@ -37,7 +37,7 @@ jobs:
         run: |
           cd charts
           version=$(helm show chart ./s3sync-service | grep version | awk '{ print $2 }')
-          exists=$(aws s3api head-object --bucket ${{ env.BUCKET }} --key charts/s3sync-service-${version}.tgz || true)
+          exists=$(aws s3api head-object --bucket ${BUCKET} --key charts/s3sync-service-${version}.tgz || true)
           if [ -z "${exists}" ]; then
             echo "::set-output name=exists::false"
           else
@@ -57,7 +57,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd charts
-          aws s3 cp s3://${{ env.BUCKET }}/index.yaml ./s3sync-service/index.yaml
+          aws s3 cp s3://${BUCKET}/index.yaml ./s3sync-service/index.yaml
 
       - name: Generate new Helm index file
         if: steps.version-check.outputs.exists != true
@@ -72,6 +72,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd charts
-          aws s3 cp ./s3sync-service/index.html s3://${{ env.BUCKET }}
-          aws s3 cp ./s3sync-service/index.yaml s3://${{ env.BUCKET }}
-          aws s3 sync ./s3sync-service s3://${{ env.BUCKET }} --exclude "*" --include "charts/*"
+          aws s3 cp ./s3sync-service/index.html s3://${BUCKET}
+          aws s3 cp ./s3sync-service/index.yaml s3://${BUCKET}
+          aws s3 sync ./s3sync-service s3://${BUCKET} --exclude "*" --include "charts/*"
