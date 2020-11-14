@@ -74,7 +74,7 @@ spec:
         resources: {{ toYaml .Values.resources | nindent 10 }}
       {{- end }}
       {{- if .Values.securityContext }}
-        resources: {{ toYaml .Values.securityContext | nindent 10 }}
+        securityContext: {{ toYaml .Values.securityContext | nindent 10 }}
       {{- end }}
       {{- if or .Values.volumeMounts (eq .Values.configmap.watch false) }}
         volumeMounts: {{ toYaml .Values.volumeMounts | nindent 8 }}
