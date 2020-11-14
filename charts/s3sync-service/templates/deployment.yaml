@@ -23,7 +23,7 @@ spec:
     {{- end }}
     spec:
     {{- if .Values.createRbac }}
-      serviceAccountName: {{ .Release.Name }}-serviceaccount
+      serviceAccountName: {{ .Release.Name }}
     {{- else if .Values.serviceAccountName }}
       serviceAccountName: {{ .Values.serviceAccountName }}
     {{- end }}
@@ -50,7 +50,7 @@ spec:
         command:
         - "./s3sync-service"
       {{- if .Values.configmap.watch }}
-        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-configmap{{ end }}"
+        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}{{ end }}"
       {{- else }}
         - "-config=/opt/s3sync-service/config.yml"
       {{- end }}
@@ -65,7 +65,7 @@ spec:
         envFrom:
         - secretRef:
           {{- if and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY }}
-            name: {{ .Release.Name }}-secret
+            name: {{ .Release.Name }}
           {{- else }}
             name: {{ .Values.secret.name }}
           {{- end }}
@@ -90,6 +90,6 @@ spec:
       - name: config-volume
         configMap:
           defaultMode: 420
-          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-configmap{{ end }}
+          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}{{ end }}
     {{- end }}
     {{- end }}

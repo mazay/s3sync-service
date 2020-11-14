@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   labels:
     app: {{ .Release.Name }}
-  name: {{ .Release.Name }}-configmap
+  name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 data:
   config.yml: |-
