@@ -8,6 +8,7 @@ on:
   push:
     paths:
       - 'charts/**'
+      - '**/workflows/helm-release.yml'
     branches:
       - master
 
