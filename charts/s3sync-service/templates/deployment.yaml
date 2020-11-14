@@ -23,7 +23,7 @@ spec:
     {{- end }}
     spec:
     {{- if .Values.createRbac }}
-      serviceAccountName: {{ .Release.Name }}-serviceaccount
+      serviceAccountName: {{ .Release.Name }}
     {{- else if .Values.serviceAccountName }}
       serviceAccountName: {{ .Values.serviceAccountName }}
     {{- end }}
@@ -50,7 +50,7 @@ spec:
         command:
         - "./s3sync-service"
       {{- if .Values.configmap.watch }}
-        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-configmap{{ end }}"
+        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}{{ end }}"
       {{- else }}
         - "-config=/opt/s3sync-service/config.yml"
       {{- end }}
@@ -60,21 +60,45 @@ spec:
       {{- else }}
         - "-metrics-port=0"
       {{- end }}
-        - "-http-port={{ .Values.httpServerPort }}"
+      {{- if .Values.httpServer.enable }}
+        - "-http-port={{ .Values.httpServer.port }}"
+      {{- end }}
       {{- if or (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) .Values.secret.name }}
         envFrom:
         - secretRef:
           {{- if and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY }}
-            name: {{ .Release.Name }}-secret
+            name: {{ .Release.Name }}
           {{- else }}
             name: {{ .Values.secret.name }}
           {{- end }}
+      {{- end }}
+      {{- if .Values.httpServer.enable }}
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /info
+            port: {{ .Values.httpServer.port }}
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /info
+            port: {{ .Values.httpServer.port }}
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
       {{- end }}
       {{- if .Values.resources }}
         resources: {{ toYaml .Values.resources | nindent 10 }}
       {{- end }}
       {{- if .Values.securityContext }}
-        resources: {{ toYaml .Values.securityContext | nindent 10 }}
+        securityContext: {{ toYaml .Values.securityContext | nindent 10 }}
       {{- end }}
       {{- if or .Values.volumeMounts (eq .Values.configmap.watch false) }}
         volumeMounts: {{ toYaml .Values.volumeMounts | nindent 8 }}
@@ -90,6 +114,6 @@ spec:
       - name: config-volume
         configMap:
           defaultMode: 420
-          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}-configmap{{ end }}
+          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}{{ end }}
     {{- end }}
     {{- end }}

@@ -24,21 +24,19 @@ import (
 	"time"
 
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func k8sClientset() *kubernetes.Clientset {
-	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		logger.Panic(err.Error())
 	}
-	// creates the clientset
+
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logger.Panic(err.Error())
@@ -47,9 +45,7 @@ func k8sClientset() *kubernetes.Clientset {
 	return clientset
 }
 
-func k8sWatchCm(configmap string, reloaderChan chan<- bool) {
-	clientset := k8sClientset()
-
+func k8sWatchCm(clientset *kubernetes.Clientset, configmap string, reloaderChan chan<- bool) {
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
 	configmapName := cm[1]
@@ -73,7 +69,7 @@ func k8sWatchCm(configmap string, reloaderChan chan<- bool) {
 				reloaderChan <- true
 			},
 			DeleteFunc: func(obj interface{}) {
-				logger.Panicf("configmap %s deleted", configmap)
+				logger.Errorf("configmap %s deleted", configmap)
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				logger.Infof("configmap %s updated, triggering reload", configmap)
@@ -89,10 +85,9 @@ func k8sWatchCm(configmap string, reloaderChan chan<- bool) {
 	}
 }
 
-func k8sGetCm(configmap string) string {
+func k8sGetCm(clientset *kubernetes.Clientset, configmap string) string {
 	var configMap map[string]string
 
-	clientset := k8sClientset()
 	ctx := context.Background()
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
@@ -102,7 +97,7 @@ func k8sGetCm(configmap string) string {
 		metav1.GetOptions{})
 
 	if err != nil {
-		logger.Fatalln(err.Error())
+		logger.Errorln(err.Error())
 	} else {
 		configMap = cmObj.Data
 	}

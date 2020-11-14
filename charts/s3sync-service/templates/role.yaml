@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ .Release.Name }}-role
+  name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:
@@ -10,7 +10,7 @@ rules:
     resources:
       - configmaps
     resourceNames:
-      - "{{ .Release.Name }}-configmap"
+      - "{{ .Release.Name }}"
     verbs:
       - get
       - watch
