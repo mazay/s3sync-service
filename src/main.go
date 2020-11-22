@@ -117,6 +117,10 @@ func main() {
 
 	status = "STARTING"
 
+	if isInK8s() && configmap != "" {
+		clientset = k8sClientset()
+	}
+
 	// Read the config
 	config = getConfig()
 
