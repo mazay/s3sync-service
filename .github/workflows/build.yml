@@ -6,10 +6,10 @@ env:
   GOPATH: ${{ github.workspace }}
 
 on:
+  release:
+    types:
+      - published
   push:
-    release:
-      types:
-        - published
     branches:
       - master
       - devel
