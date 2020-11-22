@@ -65,3 +65,42 @@ func TestInfoHandler(t *testing.T) {
 		)
 	}
 }
+
+func TestReloadHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/reload", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dummyChan := make(chan bool, 1)
+	defer close(dummyChan)
+
+	reloadHandler := ReloadHandler{Chan: dummyChan}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(reloadHandler.handler)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Error(
+			"handler returned wrong status code: got", status,
+			"epected", http.StatusOK)
+	}
+
+	expected, err := json.Marshal(ReloadResponse{
+		version,
+		startupTime,
+		status,
+	})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if rr.Body.String() != string(expected) {
+		t.Error(
+			"handler returned unexpected body: got", rr.Body.String(),
+			"expected", string(expected),
+		)
+	}
+}
