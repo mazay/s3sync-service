@@ -17,15 +17,23 @@
 #
 
 DOCKER_PLATFORMS=linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le
-DOCKER_BASE_REPO=zmazay/s3sync-service
 DOCKER_IMAGE_NAME=${DOCKER_BASE_REPO}:${RELEASE_VERSION}
 
 GOLANG_OS_LIST=freebsd linux windows darwin
 GOLANG_ARCH_LIST=386 amd64 arm
 
+# Set docker repo to Docker Hub if nothing else provided
+ifndef DOCKER_BASE_REPO
+DOCKER_BASE_REPO=zmazay/s3sync-service
+endif
+
 # Validate build arguments
 ifndef RELEASE_VERSION
 $(error RELEASE_VERSION value is not set)
+endif
+
+ifeq ($(RELEASE_VERSION), master)
+RELEASE_VERSION=latest
 endif
 
 # Generate OS specific filename

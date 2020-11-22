@@ -70,8 +70,8 @@ var (
 		[]string{"local_path", "bucket", "bucket_path", "site"},
 	)
 
-	errorsMetric = promauto.NewCounterVec(
-		prometheus.CounterOpts{
+	errorsMetric = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
 			Namespace: "s3sync",
 			Subsystem: "errors",
 			Name:      "count",
@@ -178,13 +178,17 @@ func main() {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
-					logger.Infoln("reloading configuration")
-					config = getConfig()
-					// Reset size metrics
+					// Reset metrics
 					for _, site := range config.Sites {
 						site.setDefaults(config)
 						sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Set(0)
+						objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Set(0)
+						errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Set(0)
+						errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Set(0)
+						errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "watcher").Set(0)
 					}
+					logger.Infoln("reloading configuration")
+					config = getConfig()
 					// Switch logging level (if needed), can't be switched to lower verbosity
 					setLogLevel(config.LogLevel)
 					stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
