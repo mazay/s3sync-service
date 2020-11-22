@@ -157,11 +157,9 @@ jobs:
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
-        
+
       - name: Chechout
         uses: actions/checkout@v2
-        with:
-          path: ./src/github.com/${{ github.repository }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v2
