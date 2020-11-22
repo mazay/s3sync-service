@@ -7,11 +7,11 @@ on:
     branches:
       - master
       - devel
-    pull_request:
-      paths:
-        - 'charts/**'
-      branches:
-        - master
+  pull_request:
+    paths:
+      - 'charts/**'
+    branches:
+      - master
 
 jobs:
   lint:
