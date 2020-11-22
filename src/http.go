@@ -85,13 +85,13 @@ func prometheusExporter(metricsPort string, metricsPath string) {
 // API http server
 func httpServer(httpPort string, reloaderChan chan<- bool) {
 	reloadHandler := ReloadHandler{Chan: reloaderChan}
-	http.HandleFunc("/info", info)
+	http.HandleFunc("/info", infoHandler)
 	http.HandleFunc("/reload", reloadHandler.handler)
 	logger.Fatalln(http.ListenAndServe(":"+httpPort, nil))
 }
 
-// Info resource
-func info(res http.ResponseWriter, req *http.Request) {
+// Info resource handler
+func infoHandler(res http.ResponseWriter, req *http.Request) {
 	var err error
 	var js []byte
 
