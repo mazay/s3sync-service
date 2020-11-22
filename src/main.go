@@ -41,7 +41,7 @@ var (
 	configpath string
 	configmap  string
 	config     *Config
-	clientset  *kubernetes.Clientset
+	clientset  kubernetes.Interface
 
 	startupTime = time.Now()
 

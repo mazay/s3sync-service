@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func k8sClientset() *kubernetes.Clientset {
+func k8sClientset() kubernetes.Interface {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		logger.Panic(err.Error())
@@ -45,7 +45,7 @@ func k8sClientset() *kubernetes.Clientset {
 	return clientset
 }
 
-func k8sWatchCm(clientset *kubernetes.Clientset, configmap string, reloaderChan chan<- bool) {
+func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan chan<- bool) {
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
 	configmapName := cm[1]
@@ -85,7 +85,7 @@ func k8sWatchCm(clientset *kubernetes.Clientset, configmap string, reloaderChan 
 	}
 }
 
-func k8sGetCm(clientset *kubernetes.Clientset, configmap string) string {
+func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
 	var configMap map[string]string
 
 	ctx := context.Background()

@@ -18,34 +18,43 @@
 
 package main
 
-// func TestK8sGetCm(t *testing.T) {
-// 	config := `
-// aws_region: us-east-1
-// sites:
-// - local_path: /some/local/path
-//   bucket: mock-bucket
-// `
-//
-// 	cm := &v1.ConfigMap{
-// 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "mock-configmap"},
-// 		Data:       map[string]string{"config.yml": config},
-// 	}
-// 	clientset := k8smock.NewSimpleClientset(cm)
-//
-// 	tests := []struct {
-// 		cm   string
-// 		want string
-// 	}{
-// 		{"test/mock-configmap", "match"},
-// 		{"test/mock-configmap-does-not-exist", "fail"},
-// 	}
-// 	for _, tt := range tests {
-// 		data := k8sGetCm(clientset, tt.cm)
-// 		if !reflect.DeepEqual(config, data) && tt.want != "fail" {
-// 			t.Error(
-// 				"Expected:", config,
-// 				"got:", data,
-// 			)
-// 		}
-// 	}
-// }
+import (
+	"reflect"
+	"testing"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8smock "k8s.io/client-go/kubernetes/fake"
+)
+
+func TestK8sGetCm(t *testing.T) {
+	config := `
+aws_region: us-east-1
+sites:
+- local_path: /some/local/path
+  bucket: mock-bucket
+`
+
+	cm := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "mock-configmap"},
+		Data:       map[string]string{"config.yml": config},
+	}
+	clientset := k8smock.NewSimpleClientset(cm)
+
+	tests := []struct {
+		cm   string
+		want string
+	}{
+		{"test/mock-configmap", "match"},
+		{"test/mock-configmap-does-not-exist", "fail"},
+	}
+	for _, tt := range tests {
+		data := k8sGetCm(clientset, tt.cm)
+		if !reflect.DeepEqual(config, data) && tt.want != "fail" {
+			t.Error(
+				"Expected:", config,
+				"got:", data,
+			)
+		}
+	}
+}
