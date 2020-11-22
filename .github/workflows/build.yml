@@ -13,10 +13,10 @@ on:
     branches:
       - master
       - devel
-    pull_request:
-      branches:
-        - master
-        - devel
+  pull_request:
+    branches:
+      - master
+      - devel
 
 jobs:
   test:
@@ -49,6 +49,7 @@ jobs:
 
       - name: Codecov
         uses: codecov/codecov-action@v1
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           file: ./src/github.com/${{ github.repository }}/cover.out
 
