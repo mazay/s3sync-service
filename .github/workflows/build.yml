@@ -153,7 +153,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'release' }}
-    needs: [build, docker]
+    needs: [build, docker, docker-quay]
     steps:
       - name: Chechout
         uses: actions/checkout@v2
