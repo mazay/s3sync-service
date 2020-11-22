@@ -160,9 +160,6 @@ jobs:
         with:
           path: ./src/github.com/${{ github.repository }}
 
-      - name: Set up Hub
-        uses: geertvdc/setup-hub@master
-
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
@@ -170,6 +167,8 @@ jobs:
           path: artifacts/
 
       - name: Upload assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for artifact in $(ls artifacts/*); do ATTACHMENTS="${ATTACHMENTS} -a ${artifact}"; done;
           hub release edit -m "" ${{ env.GITHUB_REF_SLUG }} ${ATTACHMENTS}
