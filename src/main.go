@@ -182,6 +182,7 @@ func main() {
 					config = getConfig()
 					// Reset size metrics
 					for _, site := range config.Sites {
+						site.setDefaults(config)
 						sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Set(0)
 					}
 					// Switch logging level (if needed), can't be switched to lower verbosity
