@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Prometheus exporter
 
-The application has built in [Prometheus](https://prometheus.io/) exporter, which exposes a set of [Golang](https://golang.org/) metrics as well as some application related metrics. The exporter is listening for port `9350` by default and exposes metrics under `/metrics` subpath, both options could be changed via [the command line arguments](configuration.md#command-line-args).
+The application has built in [Prometheus](https://prometheus.io/) exporter, which exposes a set of [Golang](https://golang.org/) metrics as well as some site related metrics. The exporter is listening for port `9350` by default and exposes metrics under `/metrics` subpath, both options could be changed via [the command line arguments](configuration.md#command-line-args).
 
-## Custom metrics
+## Site metrics
 
 | Metric name | Description | Metric type |
 |-------------|-------------|-------------|
@@ -28,7 +28,7 @@ The application has built in [Prometheus](https://prometheus.io/) exporter, whic
 | s3sync_data_objects_count | Total number of the synced objects | Gauge |
 | s3sync_errors_count | Number of errors, could be used for alerting | Gauge |
 
-**_All the custom metrics are reset to 0 on reload._**
+**_All the site metrics are reset to 0 on reload._**
 
 ---
 
