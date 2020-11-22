@@ -26,7 +26,9 @@ The application has built in [Prometheus](https://prometheus.io/) exporter, whic
 |-------------|-------------|-------------|
 | s3sync_data_total_size | Total size of the synced objects | Gauge |
 | s3sync_data_objects_count | Total number of the synced objects | Gauge |
-| s3sync_errors_count | Number of errors, could be used for alerting | Counter |
+| s3sync_errors_count | Number of errors, could be used for alerting | Gauge |
+
+**_All the custom metrics are reset to 0 on reload._**
 
 ---
 
