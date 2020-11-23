@@ -18,11 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # s3sync-service
 
-[![Build](https://github.com/mazay/s3sync-service/workflows/Build/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Build/badge.svg) [![golangci-lint](https://github.com/mazay/s3sync-service/workflows/golangci-lint/badge.svg)](https://github.com/mazay/s3sync-service/workflows/golangci-lint/badge.svg) [![CodeQL](https://github.com/mazay/s3sync-service/workflows/CodeQL/badge.svg)](https://github.com/mazay/s3sync-service/workflows/CodeQL/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mazay/s3sync-service)](https://goreportcard.com/report/github.com/mazay/s3sync-service) [![codecov](https://codecov.io/gh/mazay/s3sync-service/branch/master/graph/badge.svg)](https://codecov.io/gh/mazay/s3sync-service)
-
-![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zmazay/s3sync-service) ![Docker pulls](https://img.shields.io/docker/pulls/zmazay/s3sync-service) ![Binary downloads](https://img.shields.io/github/downloads/mazay/s3sync-service/total)
-
-[![Helm lint](https://github.com/mazay/s3sync-service/workflows/Helm%20lint/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Helm%20lint/badge.svg) [![Helm Release](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg)
+[![Build](https://github.com/mazay/s3sync-service/workflows/Build/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Build/badge.svg) [![Helm Release](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg)](https://github.com/mazay/s3sync-service/workflows/Helm%20Release/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mazay/s3sync-service)](https://goreportcard.com/report/github.com/mazay/s3sync-service) [![codecov](https://codecov.io/gh/mazay/s3sync-service/branch/master/graph/badge.svg)](https://codecov.io/gh/mazay/s3sync-service)
 
 The `s3sync-service` is a lightweight tool designed with k8s in mind and aimed to syncing data to S3 storage service for multiple _sites_ (path + bucket combination). Each _site_ can have its own set of credentials and be in different region, which makes the `s3sync-service` really flexible.
 
