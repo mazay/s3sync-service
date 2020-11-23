@@ -18,6 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Release Notes
 
+## 0.0.8
+
+- Changed `kubeVersion` value to `">=1.13.10-0"` in order to support improper versioning of managed k8s services
+
 ## 0.0.7
 
 - Specified `kubeVersion: ">=1.13.10"`
