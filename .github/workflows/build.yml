@@ -91,6 +91,7 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     needs: test
     steps:
       - name: Inject slug/short variables
@@ -121,6 +122,7 @@ jobs:
 
   docker-quay:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     needs: test
     steps:
       - name: Inject slug/short variables
