@@ -21,6 +21,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -53,6 +54,9 @@ type ReloadHandler struct {
 func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
 	var err error
 	var js []byte
+
+	logger.Infof("%s - \"%s %s %s\" %s", req.RemoteAddr, req.Method,
+		req.URL.String(), req.Proto, strconv.FormatInt(req.ContentLength, 10))
 
 	res.Header().Set("Server", "s3sync-service")
 	res.Header().Set("Content-Type", "application/json")
@@ -94,6 +98,9 @@ func httpServer(httpPort string, reloaderChan chan<- bool) {
 func infoHandler(res http.ResponseWriter, req *http.Request) {
 	var err error
 	var js []byte
+
+	logger.Infof("%s - \"%s %s %s\" %s", req.RemoteAddr, req.Method,
+		req.URL.String(), req.Proto, strconv.FormatInt(req.ContentLength, 10))
 
 	res.Header().Set("Server", "s3sync-service")
 	res.Header().Set("Content-Type", "application/json")
