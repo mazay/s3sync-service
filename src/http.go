@@ -21,6 +21,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -54,9 +55,6 @@ func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
 	var err error
 	var js []byte
 
-	res.Header().Set("Server", "s3sync-service")
-	res.Header().Set("Content-Type", "application/json")
-
 	info := ReloadResponse{
 		version,
 		startupTime,
@@ -76,6 +74,19 @@ func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// HTTP handler wrapper function
+func handlerWrapper(fn http.HandlerFunc) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		logger.Infof("%s - \"%s %s %s\" %s", req.RemoteAddr, req.Method,
+			req.URL.String(), req.Proto, strconv.FormatInt(req.ContentLength, 10))
+
+		res.Header().Set("Server", "s3sync-service"+"/"+version)
+		res.Header().Set("Content-Type", "application/json")
+
+		fn(res, req)
+	}
+}
+
 // Prometheus exporter http server
 func prometheusExporter(metricsPort string, metricsPath string) {
 	http.Handle(metricsPath, promhttp.Handler())
@@ -85,8 +96,8 @@ func prometheusExporter(metricsPort string, metricsPath string) {
 // API http server
 func httpServer(httpPort string, reloaderChan chan<- bool) {
 	reloadHandler := ReloadHandler{Chan: reloaderChan}
-	http.HandleFunc("/info", infoHandler)
-	http.HandleFunc("/reload", reloadHandler.handler)
+	http.HandleFunc("/info", handlerWrapper(infoHandler))
+	http.HandleFunc("/reload", handlerWrapper(reloadHandler.handler))
 	logger.Fatalln(http.ListenAndServe(":"+httpPort, nil))
 }
 
@@ -94,9 +105,6 @@ func httpServer(httpPort string, reloaderChan chan<- bool) {
 func infoHandler(res http.ResponseWriter, req *http.Request) {
 	var err error
 	var js []byte
-
-	res.Header().Set("Server", "s3sync-service")
-	res.Header().Set("Content-Type", "application/json")
 
 	info := InfoResponse{
 		version,
