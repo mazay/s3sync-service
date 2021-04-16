@@ -49,7 +49,7 @@ go-build-args := $(foreach OS,$(GOLANG_OS_LIST), \
 
 build:
 	$(eval FILENAME := $(call get-filename,$(OS)))
-	go build -o $(FILENAME) -ldflags \
+	GO111MODULE=off go build -o $(FILENAME) -ldflags \
 	"-X main.version=${RELEASE_VERSION}" ./src/
 
 build-all: $(go-build-args)
@@ -57,7 +57,7 @@ $(go-build-args):
 	$(eval OS := $(word 1,$(subst -, ,$@)))
 	$(eval ARCH := $(word 2,$(subst -, ,$@)))
 	$(eval FILENAME := $(call get-filename,$(OS)))
-	GOOS=$(OS) GOARCH=$(ARCH) go build -o $(FILENAME) -ldflags \
+	GO111MODULE=off GOOS=$(OS) GOARCH=$(ARCH) go build -o $(FILENAME) -ldflags \
 	"-X main.version=${RELEASE_VERSION}" ./src/ && \
 	tar -czvf s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz $(FILENAME) && \
 	rm $(FILENAME)
