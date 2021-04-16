@@ -1,4 +1,8 @@
 name: golangci-lint
+
+env:
+  GO111MODULE: off
+
 on:
   push:
     tags:
@@ -6,6 +10,7 @@ on:
       - master
       - devel
   pull_request:
+
 jobs:
   golangci:
     name: lint
