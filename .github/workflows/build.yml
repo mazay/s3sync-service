@@ -1,7 +1,6 @@
 name: Build
 
 env:
-  GO111MODULE: off
   GO_VERSION: 1.16
   ATTACHMENTS: ""
   GOPATH: ${{ github.workspace }}
