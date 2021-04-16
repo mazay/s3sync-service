@@ -1,8 +1,5 @@
 name: golangci-lint
 
-env:
-  GO111MODULE: off
-
 on:
   push:
     tags:

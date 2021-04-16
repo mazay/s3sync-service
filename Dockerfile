@@ -22,13 +22,12 @@ ARG TARGETOS
 ARG TARGETARCH
 ENV GOOS=${TARGETOS}
 ENV GOARCH=${TARGETARCH}
-ENV GO111MODULE=off
 WORKDIR /go/src/s3sync-service
 RUN apk add git curl
 COPY src/*.go ./
 COPY src/go.mod ./
 RUN go mod vendor
-RUN go build -ldflags "-X main.version=${RELEASE_VERSION}"
+RUN GO111MODULE=off go build -ldflags "-X main.version=${RELEASE_VERSION}"
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.13.5
 ARG TARGETPLATFORM
