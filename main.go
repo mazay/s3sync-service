@@ -16,21 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-module github.com/mazay/s3sync-service
+package main
 
-go 1.15
+import "github.com/mazay/s3sync-service/service"
 
-require (
-	github.com/aws/aws-sdk-go v1.35.5
-	github.com/bxcodec/faker v2.0.1+incompatible
-	github.com/prometheus/client_golang v1.7.1
-	github.com/prometheus/common v0.14.0 // indirect
-	github.com/prometheus/procfs v0.2.0 // indirect
-	github.com/radovskyb/watcher v1.0.7
-	github.com/sirupsen/logrus v1.7.0
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-	k8s.io/api v0.19.3
-	k8s.io/apimachinery v0.19.3
-	k8s.io/client-go v0.19.3
-	k8s.io/utils v0.0.0-20201027101359-01387209bb0d // indirect
-)
+func main() {
+	service.Start()
+}
