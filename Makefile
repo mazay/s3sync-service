@@ -49,16 +49,16 @@ go-build-args := $(foreach OS,$(GOLANG_OS_LIST), \
 
 build:
 	$(eval FILENAME := $(call get-filename,$(OS)))
-	GO111MODULE=off go build -o $(FILENAME) -ldflags \
-	"-X main.version=${RELEASE_VERSION}" ./src/
+	go build -o $(FILENAME) -ldflags \
+	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
 build-all: $(go-build-args)
 $(go-build-args):
 	$(eval OS := $(word 1,$(subst -, ,$@)))
 	$(eval ARCH := $(word 2,$(subst -, ,$@)))
 	$(eval FILENAME := $(call get-filename,$(OS)))
-	GO111MODULE=off GOOS=$(OS) GOARCH=$(ARCH) go build -o $(FILENAME) -ldflags \
-	"-X main.version=${RELEASE_VERSION}" ./src/ && \
+	GOOS=$(OS) GOARCH=$(ARCH) go build -o $(FILENAME) -ldflags \
+	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}" && \
 	tar -czvf s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz $(FILENAME) && \
 	rm $(FILENAME)
 
@@ -86,4 +86,4 @@ docker-multi-arch:
 	docker buildx rm
 
 test:
-	GO111MODULE=off GOFLAGS="-json" go test ./src/ -coverprofile cover.out
+	GOFLAGS="-json" go test ./... -coverprofile cover.out

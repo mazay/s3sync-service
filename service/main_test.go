@@ -16,49 +16,31 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-package main
+package service
 
 import (
+	"os"
 	"testing"
 )
 
-func TestValidLoggerInit(t *testing.T) {
-	var config Config
-	var LogLevels = []string{
-		"",
-		"trace",
-		"debug",
-		"info",
-		"warn",
-		"error",
-		"fatal",
-		"panic",
+func TestIsInK8s(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		{"inK8s", true},
+		{"notInK8s", false},
 	}
-
-	for _, item := range LogLevels {
-		config.LogLevel = item
-		initLogger(&config)
-	}
-}
-
-func TestInvalidLoggerInit(t *testing.T) {
-	var config Config
-	var oldOsExit = osExit
-	var got int
-
-	config.LogLevel = "invalid_loglevel"
-
-	defer func() { osExit = oldOsExit }()
-
-	myExit := func(code int) {
-		got = code
-	}
-
-	osExit = myExit
-
-	initLogger(&config)
-
-	if exp := 3; got != exp {
-		t.Errorf("Expected exit code: %d, got: %d", exp, got)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "inK8s" {
+				os.Setenv("KUBERNETES_SERVICE_HOST", "127.0.0.1")
+			} else if tt.name == "notInK8s" {
+				os.Unsetenv("KUBERNETES_SERVICE_HOST")
+			}
+			if got := isInK8s(); got != tt.want {
+				t.Errorf("isInK8s() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

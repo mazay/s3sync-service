@@ -16,7 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-package main
+package service
 
 import (
 	"flag"
@@ -102,7 +102,8 @@ func isInK8s() bool {
 	return present
 }
 
-func main() {
+// Start function starts the s3sync-service daemon
+func Start() {
 	var httpPort string
 	var metricsPort string
 	var metricsPath string

@@ -22,17 +22,18 @@ ARG TARGETOS
 ARG TARGETARCH
 ENV GOOS=${TARGETOS}
 ENV GOARCH=${TARGETARCH}
-WORKDIR /go/src/s3sync-service
+WORKDIR /go/src/github.com/mazay/s3sync-service
 RUN apk add git curl
-COPY src/*.go ./
-COPY src/go.mod ./
-RUN go mod vendor
-RUN GO111MODULE=off go build -ldflags "-X main.version=${RELEASE_VERSION}"
+COPY service ./service
+COPY *.go ./
+COPY go.mod ./
+RUN go mod download
+RUN go build -ldflags "-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.13.5
 ARG TARGETPLATFORM
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 RUN apk --no-cache add ca-certificates
 WORKDIR /app/
-COPY --from=builder /go/src/s3sync-service/s3sync-service .
+COPY --from=builder /go/src/github.com/mazay/s3sync-service/s3sync-service .
 CMD ["./s3sync-service"]

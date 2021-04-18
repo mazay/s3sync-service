@@ -37,8 +37,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd ./src/github.com/${{ github.repository }}/src
-          go mod vendor
+          cd ./src/github.com/${{ github.repository }}
+          go mod download
 
       - name: Run tests
         env:
@@ -72,8 +72,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd ./src/github.com/${{ github.repository }}/src
-          go mod vendor
+          cd ./src/github.com/${{ github.repository }}
+          go mod download
 
       - name: Build
         env:
