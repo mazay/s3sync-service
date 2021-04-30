@@ -31,6 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+// IsExcluded check if a path is excluded
 func IsExcluded(path string, exclusions []string) bool {
 	excluded := false
 
