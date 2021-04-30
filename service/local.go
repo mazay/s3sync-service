@@ -31,7 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func checkIfExcluded(path string, exclusions []string) bool {
+func IsExcluded(path string, exclusions []string) bool {
 	excluded := false
 
 	for _, exclusion := range exclusions {
@@ -54,7 +54,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 		}
 
 		if !info.IsDir() {
-			excluded := checkIfExcluded(path, site.Exclusions)
+			excluded := IsExcluded(path, site.Exclusions)
 			s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 			if excluded {
 				logger.Debugf("skipping without errors: %+v", path)
