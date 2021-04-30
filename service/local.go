@@ -89,7 +89,8 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 	}
 }
 
-func compareChecksum(filename string, checksumRemote string, site Site) string {
+// CompareChecksum compares local file checksum with S3 ETag value
+func CompareChecksum(filename string, checksumRemote string, site Site) string {
 	var sumOfSums []byte
 	var parts int
 	var finalSum []byte

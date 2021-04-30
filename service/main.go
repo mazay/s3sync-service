@@ -263,7 +263,7 @@ func checksumWorker(config *Config, checksumCh <-chan ChecksumCFG,
 			for {
 				select {
 				case cfg := <-checksumCh:
-					filename := compareChecksum(cfg.filename, cfg.checksumRemote, cfg.site)
+					filename := CompareChecksum(cfg.filename, cfg.checksumRemote, cfg.site)
 					if len(filename) > 0 {
 						// Add file to the upload queue
 						uploadCh <- cfg.UploadCFG
