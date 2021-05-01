@@ -109,6 +109,9 @@ func TestReloadHandler(t *testing.T) {
 func TestPrometheusExporter(t *testing.T) {
 	go prometheusExporter("9350", "/metrics")
 
+	// Give http server some time to start
+	time.Sleep(time.Second * 5)
+
 	resp, err := http.Get("http://127.0.0.1:9350/metrics")
 
 	if err != nil {
