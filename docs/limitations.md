@@ -18,7 +18,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 This page contains known issues and limitations.
 
-| Description |
-|-------------|
-| Due to some specifics of the files processing and filepath generation `local_path` should be absolute path to the sync (_site_) directory. So far there's no plans for fixing this. |
-| Symlinks within the sync (_site_) directory are ignored since it's hard to properly process them with the current implementation. |
+* Due to some specifics of the files processing and filepath generation `local_path` should be absolute path to the sync (_site_) directory. So far there are no plans for fixing this.
+* Symlinks within the sync (_site_) directory are ignored since it's hard to properly process them with the current implementation.
