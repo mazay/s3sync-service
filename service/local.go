@@ -22,6 +22,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -31,7 +32,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func checkIfExcluded(path string, exclusions []string) bool {
+// IsExcluded check if a path is excluded
+func IsExcluded(path string, exclusions []string) bool {
 	excluded := false
 
 	for _, exclusion := range exclusions {
@@ -46,15 +48,15 @@ func checkIfExcluded(path string, exclusions []string) bool {
 
 // FilePathWalkDir walks through the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
 func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
-	err := filepath.Walk(site.LocalPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(site.LocalPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			// Update errors metric
 			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 			logger.Error(err)
 		}
 
-		if !info.IsDir() {
-			excluded := checkIfExcluded(path, site.Exclusions)
+		if !d.IsDir() {
+			excluded := IsExcluded(path, site.Exclusions)
 			s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 			if excluded {
 				logger.Debugf("skipping without errors: %+v", path)
@@ -88,7 +90,8 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 	}
 }
 
-func compareChecksum(filename string, checksumRemote string, site Site) string {
+// CompareChecksum compares local file checksum with S3 ETag value
+func CompareChecksum(filename string, checksumRemote string, site Site) string {
 	var sumOfSums []byte
 	var parts int
 	var finalSum []byte
@@ -97,6 +100,7 @@ func compareChecksum(filename string, checksumRemote string, site Site) string {
 	logger.Debugf("%s: comparing checksums", filename)
 
 	if checksumRemote == "" {
+		logger.Infof("%s: remote checksum is unavailable, probably dealing with a new file", filename)
 		return filename
 	}
 
@@ -154,7 +158,7 @@ func compareChecksum(filename string, checksumRemote string, site Site) string {
 	}
 
 	if sumHex != checksumRemote {
-		logger.Debugf("%s: checksums do not match, local checksum is %s, remote - %s", filename, sumHex, checksumRemote)
+		logger.Infof("%s: checksums missmatch, local checksum is %s, remote - %s", filename, sumHex, checksumRemote)
 		return filename
 	}
 	logger.Debugf("%s: checksums matched", filename)

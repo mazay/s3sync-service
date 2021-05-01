@@ -35,7 +35,7 @@ type checksumComparisonTest struct {
 	expected string
 }
 
-func TestCheckIfExcluded(t *testing.T) {
+func TestIsExcluded(t *testing.T) {
 	var exclusionsTestData = []exclusionsTest{
 		{"/etc/init.d", []string{"etc", "init.d"}, true},
 		{"/var/log/messages", []string{}, false},
@@ -43,7 +43,7 @@ func TestCheckIfExcluded(t *testing.T) {
 	}
 
 	for _, testSet := range exclusionsTestData {
-		result := checkIfExcluded(testSet.path, testSet.exclusions)
+		result := IsExcluded(testSet.path, testSet.exclusions)
 		if result != testSet.expected {
 			t.Error(
 				"For path", testSet.path,
@@ -65,7 +65,7 @@ func TestCompareChecksum(t *testing.T) {
 	}
 
 	for _, testSet := range checksumTestData {
-		result := compareChecksum(testSet.filename, testSet.checksum, testSet.site)
+		result := CompareChecksum(testSet.filename, testSet.checksum, testSet.site)
 		if result != testSet.expected {
 			t.Error(
 				"For file", testSet.filename,

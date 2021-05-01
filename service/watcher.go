@@ -42,7 +42,7 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG,
 					logger.Debugln(event)
 					// Convert filepath to string
 					filepath := fmt.Sprint(event.Path)
-					excluded := checkIfExcluded(filepath, site.Exclusions)
+					excluded := IsExcluded(filepath, site.Exclusions)
 					if excluded {
 						logger.Debugf("skipping without errors: %+v", filepath)
 					} else {
