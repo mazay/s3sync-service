@@ -20,6 +20,7 @@ package service
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"time"
 
@@ -59,7 +60,12 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG,
 							removedS3Key := generateS3Key(site.BucketPath, site.LocalPath, oldFilepath)
 							uploadCh <- UploadCFG{s3Service, removedS3Key, site, "delete"}
 						} else {
-							fileWatcher(s3Service, site, uploadCh, event, filepath)
+							// A shorthand workaround for skipping symlinks from processing
+							if event.FileInfo.Mode().Type() == fs.ModeSymlink {
+								logger.Infof("%s is a symlink, skipping", event.Path)
+							} else {
+								fileWatcher(s3Service, site, uploadCh, filepath)
+							}
 						}
 					}
 				}
@@ -92,7 +98,7 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG,
 
 // fileWatcher is watching for file mtime and adds the file into the upload queue if it's > 30 seconds old
 // Workaround for - https://github.com/radovskyb/watcher/issues/66
-func fileWatcher(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG, event watcher.Event, filepath string) {
+func fileWatcher(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG, filepath string) {
 	for {
 		file, _ := os.Stat(filepath)
 		mtime := file.ModTime()

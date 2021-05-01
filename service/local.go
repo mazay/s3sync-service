@@ -56,16 +56,21 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 		}
 
 		if !d.IsDir() {
-			excluded := IsExcluded(path, site.Exclusions)
-			s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
-			if excluded {
-				logger.Debugf("skipping without errors: %+v", path)
-				// Delete the excluded object if already in the cloud
-				if awsItems[s3Key] != "" && site.RetireDeleted {
-					uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
-				}
+			// A shorthand workaround for skipping symlinks from processing
+			if d.Type() == fs.ModeSymlink {
+				logger.Infof("%s is a symlink, skipping", path)
 			} else {
-				checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, awsItems[s3Key], site}
+				excluded := IsExcluded(path, site.Exclusions)
+				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
+				if excluded {
+					logger.Debugf("skipping without errors: %+v", path)
+					// Delete the excluded object if already in the cloud
+					if awsItems[s3Key] != "" && site.RetireDeleted {
+						uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
+					}
+				} else {
+					checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, awsItems[s3Key], site}
+				}
 			}
 		}
 		return nil
