@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestInfoHandler(t *testing.T) {
@@ -101,6 +102,45 @@ func TestReloadHandler(t *testing.T) {
 		t.Error(
 			"handler returned unexpected body: got", rr.Body.String(),
 			"expected", string(expected),
+		)
+	}
+}
+
+func TestPrometheusExporter(t *testing.T) {
+	go prometheusExporter("9350", "/metrics")
+
+	resp, err := http.Get("http://127.0.0.1:9350/metrics")
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if resp.StatusCode != 200 {
+		t.Error(
+			"server returned unexpected status: got", resp.Status,
+			"expected 200",
+		)
+	}
+}
+
+func TestHttpServerr(t *testing.T) {
+	tstReloaderChan := make(chan bool)
+
+	go httpServer("8090", tstReloaderChan)
+
+	// Give http server some time to start
+	time.Sleep(time.Second * 5)
+
+	resp, err := http.Get("http://127.0.0.1:8090/info")
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if resp.StatusCode != 200 {
+		t.Error(
+			"server returned unexpected status: got", resp.Status,
+			"expected 200",
 		)
 	}
 }

@@ -66,14 +66,14 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				logger.Infof("configmap %s added, triggering reload", configmap)
-				reloaderChan <- true
+				reloaderChan <- false
 			},
 			DeleteFunc: func(obj interface{}) {
 				logger.Errorf("configmap %s deleted", configmap)
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				logger.Infof("configmap %s updated, triggering reload", configmap)
-				reloaderChan <- true
+				reloaderChan <- false
 			},
 		},
 	)

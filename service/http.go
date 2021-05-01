@@ -66,7 +66,11 @@ func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
-	rh.Chan <- true
+	// Check if forced reload requested
+	_, force := req.URL.Query()["force"]
+
+	rh.Chan <- force
+
 	res.WriteHeader(http.StatusOK)
 	_, err = res.Write(js)
 	if err != nil {
@@ -89,12 +93,14 @@ func handlerWrapper(fn http.HandlerFunc) http.HandlerFunc {
 
 // Prometheus exporter http server
 func prometheusExporter(metricsPort string, metricsPath string) {
+	logger.Infof("starting prometheus exporter on port %s and path %s", metricsPort, metricsPath)
 	http.Handle(metricsPath, promhttp.Handler())
 	logger.Fatalln(http.ListenAndServe(":"+metricsPort, nil))
 }
 
 // API http server
 func httpServer(httpPort string, reloaderChan chan<- bool) {
+	logger.Infof("starting http server on port %s", httpPort)
 	reloadHandler := ReloadHandler{Chan: reloaderChan}
 	http.HandleFunc("/info", handlerWrapper(infoHandler))
 	http.HandleFunc("/reload", handlerWrapper(reloadHandler.handler))

@@ -45,7 +45,11 @@ At the moment reload can be triggered manually with the following command:
 {"VERSION":"devel","STARTUPTIME":"2020-11-04T01:23:22.335032+01:00","STATUS":"RUNNING"}* Closing connection 0
 ```
 
-Reload uses the following logic. Most of the configuration options can be changed using the reload apart from those that are set via [the command line arguments](configuration.md#command-line-args), logging level can be increased but not decreased.
+Currently, there are two preconditions for reloading to be executed:
+1. an actual configuration drift detected, i.e. current running configuration differs from configmap/config file
+1. reload is forced with the `force` URL parameter, in this case, configuration drift check is ignored
+
+Most of the configuration options can be changed using the reload apart from those that are set via [the command line arguments](configuration.md#command-line-args), logging level can be increased but not decreased.
 
 In k8s environments reload is triggered by configmap changes, check [the k8s recipe for more details](running-on-k8s.md)
 
