@@ -177,9 +177,9 @@ func Start() {
 				stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
 				wg.Done()
 				return
-			case <-reloaderChan:
+			case force := <-reloaderChan:
 				newConfig := getConfig()
-				if reflect.DeepEqual(config, newConfig) {
+				if reflect.DeepEqual(config, newConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
