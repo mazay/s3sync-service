@@ -19,8 +19,10 @@
 DOCKER_PLATFORMS=linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le
 DOCKER_IMAGE_NAME=${DOCKER_BASE_REPO}:${RELEASE_VERSION}
 
-GOLANG_OS_LIST=freebsd linux windows darwin
-GOLANG_ARCH_LIST=386 amd64 arm
+PLATFORMS=darwin/amd64 darwin/arm64 \
+windows/amd64 windows/386 windows/arm \
+linux/amd64 linux/386 linux/arm linux/arm64 \
+freebsd/amd64 freebsd/386 freebsd/arm freebsd/arm64
 
 # Set docker repo to Docker Hub if nothing else provided
 ifndef DOCKER_BASE_REPO
@@ -41,21 +43,15 @@ define get-filename
 	$(if $(filter $(1),windows),s3sync-service.exe,s3sync-service)
 endef
 
-# Generates a set of build args
-go-build-args := $(foreach OS,$(GOLANG_OS_LIST), \
-	$(foreach ARCH,$(if $(filter $(OS),darwin), \
-		$(filter-out 386 arm,$(GOLANG_ARCH_LIST)),$(GOLANG_ARCH_LIST)), \
-		$(OS)-$(ARCH)))
-
 build:
 	$(eval FILENAME := $(call get-filename,$(OS)))
 	go build -o $(FILENAME) -ldflags \
 	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
-build-all: $(go-build-args)
-$(go-build-args):
-	$(eval OS := $(word 1,$(subst -, ,$@)))
-	$(eval ARCH := $(word 2,$(subst -, ,$@)))
+build-all: $(PLATFORMS)
+$(PLATFORMS):
+	$(eval OS := $(word 1,$(subst /, ,$@)))
+	$(eval ARCH := $(word 2,$(subst /, ,$@)))
 	$(eval FILENAME := $(call get-filename,$(OS)))
 	GOOS=$(OS) GOARCH=$(ARCH) go build -o $(FILENAME) -ldflags \
 	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}" && \
