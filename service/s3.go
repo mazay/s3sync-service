@@ -59,8 +59,8 @@ func getS3Session(site Site) *session.Session {
 		MaxRetries: aws.Int(site.S3OpsRetries),
 	}
 
-	if site.CustomEndpoint != "" {
-		config.Endpoint = &site.CustomEndpoint
+	if site.Endpoint != "" {
+		config.Endpoint = &site.Endpoint
 	}
 
 	if site.AccessKey != "" && site.SecretAccessKey != "" {

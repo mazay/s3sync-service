@@ -46,7 +46,7 @@ type Site struct {
 	Name            string        `yaml:"name"`
 	LocalPath       string        `yaml:"local_path"`
 	Bucket          string        `yaml:"bucket"`
-	CustomEndpoint  string        `yaml:"custom_endpoint"`
+	Endpoint        string        `yaml:"endpoint"`
 	BucketPath      string        `yaml:"bucket_path"`
 	BucketRegion    string        `yaml:"bucket_region"`
 	StorageClass    string        `yaml:"storage_class"`
