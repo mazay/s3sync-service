@@ -96,6 +96,7 @@ sites:
 |----------|-------------|---------|----------|
 | name | Human friendly site name | `bucket/bucket_path` | no |
 | local_path | **Absolute** path on local file system to be synced with S3 | n/a | yes |
+| custom_endpoint | An optional endpoint URL (hostname only or fully qualified URI) that overrides the default generated endpoint for a client. May become handy when using S3 compatible storage providers. | n/a | no |
 | bucket | S3 bucket name | n/a | yes |
 | bucket_path | S3 path prefix | n/a | no |
 | bucket_region | [S3 bucket region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) | `global.aws_region` | no |
