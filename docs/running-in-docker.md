@@ -32,6 +32,21 @@ zmazay/s3sync-service \
 ./s3sync-service -config /opt/s3sync-service/config.yml
 ```
 
+or docker compose:
+```yaml
+version: '3.3'
+services:
+  s3sync-service:
+    environment:
+      - AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE
+      - AWS_SECRET_ACCESS_KEY=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - '/backup/path:/backup'
+      - '/path/to/config.yml:/app/config.yml'
+    image: zmazay/s3sync-service
+```
+
 # Configuration
 
 Example configuration:
