@@ -27,6 +27,7 @@ RUN apk add git curl
 COPY service ./service
 COPY *.go ./
 COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
 RUN go build -ldflags "-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
