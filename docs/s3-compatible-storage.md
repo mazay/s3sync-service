@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 As of version 0.2.0 s3sync-service supports other S3 compatible services. So far it's been successfully tested with [Backblaze](https://www.backblaze.com/).
 
-Multiple storage providers can be used at the same time, eg. _site_ `A` syncs with S3 buckets while _site_ `B` with Backblaze B2.
+Multiple storage providers can be used at the same time, eg. _site_ `A` syncs with S3 bucket while _site_ `B` with Backblaze B2.
 
 # Backblaze site configuration
 
