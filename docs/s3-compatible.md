@@ -23,6 +23,7 @@ Multiple storage providers can be used at the same time, eg. _site_ `A` syncs wi
 # Backblaze site configuration
 
 Please use the [Backblaze official documentation](https://help.backblaze.com/hc/en-us/articles/360047425453) to gather:
+
  - S3 endpoint
  - Application Key
  - Application Key ID
