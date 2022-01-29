@@ -33,6 +33,7 @@ nav:
   - Advance details:
     - How it works: how-it-works.md
     - Configuration: configuration.md
+    - S3 compatible Cloud Storage: s3-compatible-storage.md
     - Authentication: authentication.md
     - k8s integration: k8s-integration.md
     - Prometheus exporter: prometheus-exporter.md
