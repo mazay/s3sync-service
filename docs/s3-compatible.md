@@ -23,6 +23,7 @@ Multiple storage providers can be used at the same time, eg. _site_ `A` syncs wi
 # Backblaze site configuration
 
 Please use the [Backblaze official documentation](https://help.backblaze.com/hc/en-us/articles/360047425453) to gather:
+
  - S3 endpoint
  - Application Key
  - Application Key ID
@@ -32,7 +33,7 @@ Those parameters are needed in order to configure your _site_ to use the Backbla
 ```yaml
 - name: backblaze
   local_path: /local/path
-  bucket: backblaze-nucket-name
+  bucket: backblaze-bucket-name
   endpoint: s3.eu-central-003.backblazeb2.com # your S3 endpoint
   access_key: app_key_id # your Application Key ID
   secret_access_key: app_key # your Application Key
