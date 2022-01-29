@@ -27,7 +27,7 @@ Please use the [Backblaze official documentation](https://help.backblaze.com/hc/
  - Application Key
  - Application Key ID
 
-Those parameters are needed in order to configure your _site_ to use the Backblaze B2 bucket. The `access_key` and `secret_access_key` can be set globally or via environment variables depending on your needs and use case, howevere, keep in mind that when you sync with different storage providers one of them would have to override global credentials as in the below example:
+Those parameters are needed in order to configure your _site_ to use the Backblaze B2 bucket. The `access_key` and `secret_access_key` can be set globally or via environment variables depending on your needs and use case, however, keep in mind that when you sync with different storage providers one of them would have to override global credentials as in the below example:
 
 ```yaml
 - name: backblaze
