@@ -18,6 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Release Notes
 
+## 0.0.10
+
+- The application version bumped to `0.2.0`
+
 ## 0.0.9
 
 - The application version bumped to `0.1.2`, minor description fixes
