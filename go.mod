@@ -25,7 +25,7 @@ require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/prometheus/client_golang v1.7.1
 	github.com/radovskyb/watcher v1.0.7
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	k8s.io/api v0.19.3
 	k8s.io/apimachinery v0.19.3
