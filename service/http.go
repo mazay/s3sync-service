@@ -21,7 +21,6 @@ package service
 import (
 	"encoding/json"
 	"net/http"
-	"path"
 	"strconv"
 	"time"
 
@@ -83,7 +82,7 @@ func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
 func handlerWrapper(fn http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		logger.Infof("%s - \"%s %s %s\" %s", req.RemoteAddr, req.Method,
-			path.Clean(req.URL.String()), req.Proto, strconv.FormatInt(req.ContentLength, 10))
+			req.URL.Path, req.Proto, strconv.FormatInt(req.ContentLength, 10))
 
 		res.Header().Set("Server", "s3sync-service"+"/"+version)
 		res.Header().Set("Content-Type", "application/json")
