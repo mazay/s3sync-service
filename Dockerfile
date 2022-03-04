@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.17.7-alpine3.15 AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.17.8-alpine3.15 AS builder
 ARG RELEASE_VERSION=devel
 ARG TARGETOS
 ARG TARGETARCH
