@@ -27,11 +27,28 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
+	k8smock "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
 
-func k8sClientset() kubernetes.Interface {
+type K8sClient struct {
+	Clientset kubernetes.Interface
+}
+
+// mockClient initializes mock k8s clientset with mock configmap
+func (_k8s *K8sClient) mockClient(config string) {
+	// define mock configmap
+	cm := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "mock-configmap"},
+		Data:       map[string]string{"config.yml": config},
+	}
+
+	// init mock clientset
+	_k8s.Clientset = k8smock.NewSimpleClientset(cm)
+}
+
+func (_k8s *K8sClient) initClientset() {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		logger.Panic(err.Error())
@@ -42,10 +59,10 @@ func k8sClientset() kubernetes.Interface {
 		logger.Panic(err.Error())
 	}
 
-	return clientset
+	_k8s.Clientset = clientset
 }
 
-func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan chan<- bool) {
+func (_k8s *K8sClient) k8sWatchCm(configmap string, reloaderChan chan<- bool) {
 	cm := strings.Split(configmap, "/")
 	namespace := cm[0]
 	configmapName := cm[1]
@@ -53,7 +70,7 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 	logger.Infoln("starting to watch for configmap changes")
 
 	watchlist := cache.NewListWatchFromClient(
-		clientset.CoreV1().RESTClient(),
+		_k8s.Clientset.CoreV1().RESTClient(),
 		"configmaps",
 		namespace,
 		fields.OneTermEqualSelector("metadata.name", configmapName),
@@ -85,7 +102,7 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 	}
 }
 
-func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
+func (_k8s *K8sClient) k8sGetCm(configmap string) string {
 	var configMap map[string]string
 
 	ctx := context.Background()
@@ -93,7 +110,7 @@ func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
 	namespace := cm[0]
 	configmapName := cm[1]
 
-	cmObj, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName,
+	cmObj, err := _k8s.Clientset.CoreV1().ConfigMaps(namespace).Get(ctx, configmapName,
 		metav1.GetOptions{})
 
 	if err != nil {
