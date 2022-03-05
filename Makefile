@@ -46,7 +46,8 @@ endef
 build:
 	$(eval FILENAME := $(call get-filename,$(OS)))
 	go build -o $(FILENAME) -ldflags \
-	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
+	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}" && \
+	tar -czvf s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz $(FILENAME)
 
 build-all: $(PLATFORMS)
 $(PLATFORMS):
