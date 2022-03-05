@@ -32,7 +32,7 @@ func TestGetConfig(t *testing.T) {
 	configpath = "../test_data/valid_config.yml"
 	empty, _ := getConfig()
 
-	if !empty {
+	if empty {
 		t.Error("Expected to get config data, got empty struct")
 	}
 }
