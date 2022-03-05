@@ -3,29 +3,17 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: s3sync-service-kube-system-serviceaccount
-  namespace: kube-system
----
-# Source: s3sync-service/templates/secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: s3sync-service-kube-system-secret
-  namespace: kube-system
-type: Opaque
-data:
-  token: |-
-    AWS_ACCESS_KEY_ID: QUtJQUk0NFFIOERIQkVYQU1QTEU=
-    AWS_SECRET_ACCESS_KEY: amU3TXRHYkNsd0JGLzJacDlVdGsvaDN5Q284bnZiRVhBTVBMRUtFWQ==
+  name: s3sync-service
+  namespace: tools
 ---
 # Source: s3sync-service/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app: s3sync-service-kube-system
-  name: s3sync-service-kube-system-configmap
-  namespace: kube-system
+    app: s3sync-service
+  name: s3sync-service
+  namespace: tools
 data:
   config.yml: |-
     aws_region: us-east-1
@@ -42,7 +30,7 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: s3sync-service-kube-system-clusterrole
+  name: s3sync-service
 rules:
   - apiGroups:
       - ""
@@ -57,29 +45,29 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: s3sync-service-kube-system-clusterrolebinding
+  name: s3sync-service
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: s3sync-service-kube-system-clusterrole
+  name: s3sync-service
 subjects:
   - kind: ServiceAccount
-    name: s3sync-service-kube-system-serviceaccount
-    namespace: kube-system
+    name: s3sync-service
+    namespace: tools
 ---
 # Source: s3sync-service/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: s3sync-service-kube-system-role
-  namespace: kube-system
+  name: s3sync-service
+  namespace: tools
 rules:
   - apiGroups:
       - ""
     resources:
       - configmaps
     resourceNames:
-      - "s3sync-service-kube-system-configmap"
+      - "s3sync-service"
     verbs:
       - get
       - watch
@@ -88,49 +76,66 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: s3sync-service-kube-system-rolebinding
-  namespace: kube-system
+  name: s3sync-service
+  namespace: tools
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: s3sync-service-kube-system-role
+  name: s3sync-service
 subjects:
   - kind: ServiceAccount
-    name: s3sync-service-kube-system-serviceaccount
-    namespace: kube-system
+    name: s3sync-service
+    namespace: tools
 ---
 # Source: s3sync-service/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: s3sync-service-kube-system
-  namespace: kube-system
+  name: s3sync-service
+  namespace: tools
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: s3sync-service-kube-system
+      app: s3sync-service
   template:
     metadata:
       labels:
-        app: s3sync-service-kube-system
+        app: s3sync-service
       annotations:
         prometheus.io/path: "/metrics"
         prometheus.io/port: "9350"
         prometheus.io/scrape: "true"
     spec:
-      serviceAccountName: s3sync-service-kube-system-serviceaccount
+      serviceAccountName: s3sync-service
       containers:
-      - name: s3sync-service-kube-system
-        image: zmazay/s3sync-service:0.1.0
+      - name: s3sync-service
+        image: quay.io/s3sync-service/s3sync-service:0.2.2
         imagePullPolicy: IfNotPresent
         command:
         - "./s3sync-service"
-        - "-configmap=kube-system/s3sync-service-kube-system-configmap"
+        - "-configmap=tools/s3sync-service"
         - "-metrics-path=/metrics"
         - "-metrics-port=9350"
         - "-http-port=8090"
-        envFrom:
-        - secretRef:
-            name: s3sync-service-kube-system-secret
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /info
+            port: 8090
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /info
+            port: 8090
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
       terminationGracePeriodSeconds: 300
