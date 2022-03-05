@@ -6,7 +6,6 @@ version: 0.0.10
 appVersion: 0.2.0
 kubeVersion: ">=1.13.10-0"
 home: https://docs.s3sync-service.org/
-description: Realtime S3 sync service
 
 sources:
   - https://github.com/mazay/s3sync-service
