@@ -16,11 +16,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 
-# HTTP server
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
 
-The HTTP server is started by default and listens for port `8090`, which can be changed via [the command line arguments](configuration.md#command-line-args).
+# Using the Helm Repository
 
-| Resource | Response code | Description |
-|----------|:-------------:|-------------|
-| `/reload` | `200` | Triggers [application reload](how-it-works.md#application-reload), there is an optional URL parameter - `force` |
-| `/info` | `200` | Returns some basic info on the application, such as running version, startup time, etc. Used for k8s health checks. |
+The following command can be used to add the repository:
+```bash
+helm repo add s3sync-service https://charts.s3sync-service.org
+```
+
+Please check [this page](running-on-k8s.md#helm) for examples.
+
+# Configuration
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

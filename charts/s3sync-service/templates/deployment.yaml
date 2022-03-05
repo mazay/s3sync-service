@@ -14,9 +14,11 @@ spec:
         app: s3sync-service
     {{- if or .Values.podAnnotations .Values.prometheusExporter.enable }}
       annotations:
+        {{- if .Values.prometheusExporter.enable }}
         prometheus.io/path: {{ .Values.prometheusExporter.path | quote }}
         prometheus.io/port: {{ .Values.prometheusExporter.port | quote }}
         prometheus.io/scrape: "true"
+        {{- end }}
       {{- range $key, $value := .Values.podAnnotations }}
         {{ $key }}: {{ $value | quote }}
       {{- end }}
@@ -50,7 +52,7 @@ spec:
         command:
         - "./s3sync-service"
       {{- if .Values.configmap.watch }}
-        - "-configmap={{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}{{ end }}"
+        - "-configmap={{ .Release.Namespace }}/{{ .Release.Name }}"
       {{- else }}
         - "-config=/opt/s3sync-service/config.yml"
       {{- end }}

@@ -49,7 +49,7 @@ sites:
 		{"test/mock-configmap-does-not-exist", "fail"},
 	}
 	for _, tt := range tests {
-		data := k8sGetCm(clientset, tt.cm)
+		_, data := k8sGetCm(clientset, tt.cm)
 		if !reflect.DeepEqual(config, data) && tt.want != "fail" {
 			t.Error(
 				"Expected:", config,

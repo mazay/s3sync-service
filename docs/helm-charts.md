@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 
+![Version: 0.0.11](https://img.shields.io/badge/Version-0.0.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.2.2](https://img.shields.io/badge/AppVersion-0.2.2-informational?style=flat-square)
+
 # Using the Helm Repository
 
 The following command can be used to add the repository:
@@ -23,46 +25,52 @@ The following command can be used to add the repository:
 helm repo add s3sync-service https://charts.s3sync-service.org
 ```
 
-The chart is know to work with k8s versions older than `0.13.10`, earlier versions was not tested thus not supported by the chart.
-
 Please check [this page](running-on-k8s.md#helm) for examples.
 
 # Configuration
 
-| Parameter | Description | Required | Default |
-|-----------|-------------|----------|---------|
-| **image.repository** | The image repository URL, useful if you want to use your registry | no | `zmazay/s3sync-service` |
-| **image.pullPolicy** | The image pull policy for the deployment | no | `IfNotPresent` |
-| **image.tag** | The `s3sync-service` tag, useful if you want to override default tag for the chart release | no | `depends on the chart release, >=0.1.0` |
-| **createRbac** | Set to `false` if you don't want to use [watch for configmap changes](how-it-works.md#application-reload) or willing to create RBAC manually | no | `true` |
-| **serviceAccountName** | Ability to use manually created `ServiceAccount` | no | `""` |
-| **imagePullSecrets** | The registry secret if private one is being used | no | `[]` |
-| **podAnnotations** | A map of extra pod annotation to be added | no | `{}` |
-| **podSecurityContext** | Defines the pod securityContext | no | `{}` |
-| **securityContext** | Security context to be set on the container | no | `{}` |
-| **resources** | Resources requests/limits for the container | no | `{}` |
-| **nodeSelector** | Node labels for pod assignment | no | `{}` |
-| **tolerations** | Node tolerations for pod assignment | no | `[]` |
-| **affinity** | Node affinity for pod assignment | no | `{}` |
-| **httpServer.enable** | Enable the `s3sync-service` HTTP server | no | `true` |
-| **httpServer.port** | Listen port for the `s3sync-service` HTTP server | no | `8090` |
-| **prometheusExporter.enable** | Enable the embedded Prometheus exporter | no | `true` |
-| **prometheusExporter.port** | Listen port for the the embedded Prometheus exporter | no | `9350` |
-| **prometheusExporter.path** | Metrics path for the the embedded Prometheus exporter | no | `/metrics` |
-| **configmap.name** | Name of a configmap if created manually | no | `""` |
-| **configmap.watch** | Enable configmap watch feature, requires RBAC | no | `true` |
-| **config.access_key** | AWS Access Key, could be provided here or in secret, also both could be omitted - (authentication)[authentication.md] | no | `""` |
-| **config.secret_access_key** | AWS Secret Access Key, could be provided here or in secret, also both could be omitted - (authentication)[authentication.md] | no | `""` |
-| **config.aws_region** | Global AWS region setting | no | `us-east-1` |
-| **config.loglevel** | Logging level | no | `info` |
-| **config.upload_queue_buffer** | Number of elements in the upload queue waiting for processing | no | `0` |
-| **config.upload_workers** | Number of upload workers | no | `10` |
-| **config.checksum_workers** | Number of checksum workers | no | `5` |
-| **config.watch_interval** | Interval for file system watcher | no | `1s` |
-| **config.s3_ops_retries** | Number of retries for upload and delete operations | no | `1s` |
-| **config.sites** | List of the site configurations, check [this](configuration.md) for available options | **yes** | `1s` |
-| **secret.name** | Name of a secret object if managed separately, the data expected in the following format: `data: { AWS_ACCESS_KEY_ID: KEYID, AWS_SECRET_ACCESS_KEY: SECRETKEY }` | no | `""` |
-| **secret.AWS_ACCESS_KEY_ID** | AWS Access Key, will be used to create secret object if provided | no | `""` |
-| **secret.AWS_SECRET_ACCESS_KEY** | AWS Secret Access Key, will be used to create secret object if provided | no | `""` |
-| **volumes** | A map of [volumes](https://kubernetes.io/docs/concepts/storage/volumes/) to be attached to the container and used for syncing the data | **yes** | `{}` |
-| **volumeMounts** | A map of volumeMounts for the listed above volumes | **yes** | `{}` |
+## Requirements
+
+Kubernetes: `>=1.13.10-0`
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` | [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) settings |
+| config.access_key | string | `""` | [global](configuration.md#global-configuration-options) AWS access key ID settings |
+| config.aws_region | string | `"us-east-1"` | [global](configuration.md#global-configuration-options) AWS Region settings |
+| config.checksum_workers | int | `5` | number of the checksum workers |
+| config.loglevel | string | `"info"` | logging level |
+| config.s3_ops_retries | int | `5` | [global](configuration.md#global-configuration-options) S3 retries settings |
+| config.secret_access_key | string | `""` | [global](configuration.md#global-configuration-options) AWS secret access key settings |
+| config.sites | object | `{}` | list of site configuration options, check the [documentation](configuration.md#site-configuration-options) for details |
+| config.upload_queue_buffer | int | `0` | the upload queue buffer, check the [documentation](configuration.md#global-configuration-options) for details |
+| config.upload_workers | int | `10` | number of the upload workers |
+| config.watch_interval | string | `"1s"` | [global](configuration.md#global-configuration-options) watch interval settings |
+| configmap.watch | bool | `true` | enable the [configmap watch](k8s-integration.md) feature |
+| createRbac | bool | `true` | set to false if you not planning on using configmap watch functionality or want to create RBAC objects manually |
+| httpServer.enable | bool | `true` | enable the s3sync-service [http service](http-server.md) |
+| httpServer.port | int | `8090` | listen port for the s3sync http service |
+| image.pullPolicy | string | `"IfNotPresent"` | image pull policy |
+| image.repository | string | `"quay.io/s3sync-service/s3sync-service"` | docker repository, uses `quay.io` mirror by default |
+| image.tag | string | `""` | overrides the image tag whose default is the chart appVersion |
+| imagePullSecrets | list | `[]` | might be useful when using private registry |
+| nodeSelector | object | `{}` | [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod |
+| podAnnotations | object | `{}` | extra pod annotations |
+| podSecurityContext | object | `{}` | the [pod security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) |
+| prometheusExporter.enable | bool | `true` | enable built-in prometheus exporter |
+| prometheusExporter.path | string | `"/metrics"` | netrics path for the prometheus exporter |
+| prometheusExporter.port | int | `9350` | listen port for the built-in prometheus exporter |
+| resources | object | `{}` | container [resources allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) |
+| secret.AWS_ACCESS_KEY_ID | string | `""` | AWS access Key ID, omit if you want to create the secret separately |
+| secret.AWS_SECRET_ACCESS_KEY | string | `""` | AWS secret access key, omit if you want to create the secret separately |
+| secret.name | string | `""` | k8s secret name containing `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, this needed only if you want to create the secret separately |
+| securityContext | object | `{}` | the [container security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container) |
+| serviceAccountName | string | `""` | ServiceAccount name if was created manually |
+| tolerations | list | `[]` | pod [tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/) |
+| volumeMounts | object | `{}` | the [volumeMounts](https://kubernetes.io/docs/concepts/storage/volumes/#background) definitions |
+| volumes | object | `{}` | the pod [volumes](https://kubernetes.io/docs/concepts/storage/volumes/) definitions |
+
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.7.0](https://github.com/norwoodj/helm-docs/releases/v1.7.0)

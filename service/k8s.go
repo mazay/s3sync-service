@@ -85,8 +85,9 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 	}
 }
 
-func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
+func k8sGetCm(clientset kubernetes.Interface, configmap string) (bool, string) {
 	var configMap map[string]string
+	var result bool
 
 	ctx := context.Background()
 	cm := strings.Split(configmap, "/")
@@ -98,9 +99,11 @@ func k8sGetCm(clientset kubernetes.Interface, configmap string) string {
 
 	if err != nil {
 		logger.Errorln(err.Error())
+		result = false
 	} else {
 		configMap = cmObj.Data
+		result = true
 	}
 
-	return configMap["config.yml"]
+	return result, configMap["config.yml"]
 }

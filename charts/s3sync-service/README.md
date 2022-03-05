@@ -16,28 +16,4 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 
-# Release Notes
-
-## 0.0.10
-
-- The application version bumped to `0.2.0`
-
-## 0.0.9
-
-- The application version bumped to `0.1.2`, minor description fixes
-
-## 0.0.8
-
-- Changed `kubeVersion` value to `">=1.13.10-0"` in order to support improper versioning of managed k8s services
-
-## 0.0.7
-
-- Specified `kubeVersion: ">=1.13.10"`
-- Use `.Release.Name` for naming all resources created by the chart
-- Fixed container level `securityContext`
-- Introduced `.Values.httpServer.enable` and `.Values.httpServer.port` to replace `.Values.httpServerPort`
-- Added container health checks using embedded HTTP server resource at `/info`
-
-## 0.0.6
-
-First working version, minimal supported application version is `0.1.0`.
+Please check the [documentation page](https://docs.s3sync-service.org/en/devel/helm-charts/).
