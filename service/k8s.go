@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+// K8sClient is a k8s client wrapper
 type K8sClient struct {
 	Clientset kubernetes.Interface
 }
@@ -52,11 +53,13 @@ func (_k8s *K8sClient) initClientset() {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		logger.Panic(err.Error())
+		osExit(6)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logger.Panic(err.Error())
+		osExit(6)
 	}
 
 	_k8s.Clientset = clientset

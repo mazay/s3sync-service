@@ -40,7 +40,7 @@ var (
 	configpath string
 	configmap  string
 	config     *Config
-	_k8s       *K8sClient
+	k8sClient  *K8sClient
 
 	startupTime = time.Now()
 
@@ -118,7 +118,7 @@ func Start() {
 	status = "STARTING"
 
 	if isInK8s() && configmap != "" {
-		_k8s.initClientset()
+		k8sClient.initClientset()
 	}
 
 	// Read the config
@@ -132,7 +132,7 @@ func Start() {
 	initLogger(config)
 
 	// Init channels
-	mainStopperChan := make(chan os.Signal)
+	mainStopperChan := make(chan os.Signal, 1)
 	siteStopperChan := make(chan bool)
 	checksumStopperChan := make(chan bool)
 	uploadStopperChan := make(chan bool)
@@ -157,7 +157,7 @@ func Start() {
 	go func() {
 		logger.Infoln("starting up")
 		if inK8s && configmap != "" {
-			go _k8s.k8sWatchCm(configmap, reloaderChan)
+			go k8sClient.k8sWatchCm(configmap, reloaderChan)
 		}
 		// Start upload workers
 		uploadWorker(config, uploadCh, uploadStopperChan)
