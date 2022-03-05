@@ -43,7 +43,6 @@ bucket: mock-bucket
 	}
 	for _, tt := range tests {
 		data := _k8s.k8sGetCm(tt.cm)
-		logger.Info(data)
 		if !reflect.DeepEqual(config, data) && tt.want != "fail" {
 			t.Error(
 				"Expected:", config,
