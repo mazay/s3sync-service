@@ -2,12 +2,12 @@ version: 2
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
-    target-branch: "devel"
+    target-branch: "master"
     schedule:
       interval: "daily"
 
   - package-ecosystem: "docker"
     directory: "/"
-    target-branch: "devel"
+    target-branch: "master"
     schedule:
       interval: "weekly"
