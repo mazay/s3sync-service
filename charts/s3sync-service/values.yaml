@@ -3,21 +3,29 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: zmazay/s3sync-service
+  # -- docker repository, uses `quay.io` mirror by default
+  repository: quay.io/s3sync-service/s3sync-service
+  # -- image pull policy
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+  # -- overrides the image tag whose default is the chart appVersion
   tag: ""
 
+# -- set to false if you not planning on using configmap watch functionality or want to create RBAC objects manually
 createRbac: true
+# -- ServiceAccount name if was created manually
 serviceAccountName: ""
 
+# -- might be useful when using private registry
 imagePullSecrets: []
 
+# -- extra pod annotations
 podAnnotations: {}
 
+# -- the [pod security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod)
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- the [container security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container)
 securityContext: {}
   # capabilities:
   #   drop:
@@ -26,6 +34,7 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+# -- container [resources allocation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
 resources: {}
   # limits:
   #   cpu: 100m
@@ -34,42 +43,65 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+# -- [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod
 nodeSelector: {}
 
+# -- pod [tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
 tolerations: []
 
+# -- [affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) settings
 affinity: {}
 
 httpServer:
+  # -- enable the s3sync-service [http service](http-server.md)
   enable: true
+  # -- listen port for the s3sync http service
   port: 8090
 
 prometheusExporter:
+  # -- enable built-in prometheus exporter
   enable: true
+  # -- listen port for the built-in prometheus exporter
   port: 9350
+  # -- netrics path for the prometheus exporter
   path: /metrics
 
 configmap:
-  name: ""
+  # -- enable the [configmap watch](k8s-integration.md) feature
   watch: true
 
 config:
+  # -- [global](configuration.md#global-configuration-options) AWS access key ID settings
   access_key: ""
+  # -- [global](configuration.md#global-configuration-options) AWS secret access key settings
   secret_access_key: ""
+  # -- [global](configuration.md#global-configuration-options) AWS Region settings
   aws_region: us-east-1
+  # -- logging level
   loglevel: info
+  # -- the upload queue buffer, check the [documentation](configuration.md#global-configuration-options) for details
   upload_queue_buffer: 0
+  # -- number of the upload workers
   upload_workers: 10
+  # -- number of the checksum workers
   checksum_workers: 5
+  # -- [global](configuration.md#global-configuration-options) watch interval settings
   watch_interval: 1s
+  # -- [global](configuration.md#global-configuration-options) S3 retries settings
   s3_ops_retries: 5
+  # -- list of site configuration options, check the [documentation](configuration.md#site-configuration-options) for details
   sites: {}
 
 secret:
+  # -- k8s secret name containing `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, this needed only if you want to create the secret separately
   name: ""
+  # -- AWS access Key ID, omit if you want to create the secret separately
   AWS_ACCESS_KEY_ID: ""
+  # -- AWS secret access key, omit if you want to create the secret separately
   AWS_SECRET_ACCESS_KEY: ""
 
+# -- the pod [volumes](https://kubernetes.io/docs/concepts/storage/volumes/) definitions
 volumes: {}
 
+# -- the [volumeMounts](https://kubernetes.io/docs/concepts/storage/volumes/#background) definitions
 volumeMounts: {}
