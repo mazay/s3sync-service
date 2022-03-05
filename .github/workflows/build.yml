@@ -53,6 +53,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: test
+    strategy:
+      matrix:
+        go-os: [darwin, windows, linux, freebsd]
+        go-arch: [amd64, 386, arm, arm64]
+        exclude:
+          # excludes 32 bit for darwin builds
+          - os: darwin
+            node: 386
+          - os: darwin
+            node: arm
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
@@ -75,9 +85,12 @@ jobs:
       - name: Build
         env:
           RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
+          OS: ${{ matrix.go-os }}
+          GOOS: ${{ matrix.go-os }}
+          GOARCH: ${{ matrix.go-arch }}
         run: |
           cd ./src/github.com/${{ github.repository }}
-          make build-all
+          make build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -153,7 +166,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'release' }}
-    needs: [build, docker, docker-quay]
+    needs: build
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
