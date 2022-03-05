@@ -31,8 +31,8 @@ sites:
 bucket: mock-bucket
 `
 
-	_k8s := K8sClient{}
-	_k8s.mockClient(config)
+	k8sClient := K8sClient{}
+	k8sClient.mockClient(config)
 
 	tests := []struct {
 		cm   string
@@ -42,7 +42,7 @@ bucket: mock-bucket
 		{"test/mock-configmap-does-not-exist", "fail"},
 	}
 	for _, tt := range tests {
-		data := _k8s.k8sGetCm(tt.cm)
+		data := k8sClient.k8sGetCm(tt.cm)
 		if !reflect.DeepEqual(config, data) && tt.want != "fail" {
 			t.Error(
 				"Expected:", config,

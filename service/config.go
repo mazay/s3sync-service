@@ -127,18 +127,18 @@ func configProcessError(err error) {
 
 func getConfig() (bool, *Config) {
 	var config *Config
-	var empty_config *Config
+	var emptyConfig *Config
 
 	empty := true
 
 	if inK8s && configmap != "" {
-		cfg := _k8s.k8sGetCm(configmap)
+		cfg := k8sClient.k8sGetCm(configmap)
 		config = readConfigString(cfg)
 	} else {
 		config = readConfigFile(configpath)
 	}
 
-	if config != empty_config {
+	if config != emptyConfig {
 		empty = false
 	}
 
