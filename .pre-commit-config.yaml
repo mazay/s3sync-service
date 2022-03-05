@@ -10,6 +10,5 @@ repos:
           # The `./` makes it relative to the chart-search-root set above
           - --template-files=./docs-template.md
 
-          # Documentation output files, the path is relative to the chart repository
+          # Documentation output file, the path is relative to the chart repository
           - --output-file=../../docs/helm-charts.md
-          - --output-file=README.md
