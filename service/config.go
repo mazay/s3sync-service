@@ -125,19 +125,24 @@ func configProcessError(err error) {
 	osExit(2)
 }
 
-func getConfig() *Config {
+func getConfig() (bool, *Config) {
 	var config *Config
+	var empty_config *Config
+
+	empty := true
 
 	if inK8s && configmap != "" {
-		result, cfg := k8sGetCm(clientset, configmap)
-		if result {
-			config = readConfigString(cfg)
-		}
+		cfg := k8sGetCm(clientset, configmap)
+		config = readConfigString(cfg)
 	} else {
 		config = readConfigFile(configpath)
 	}
 
-	return config
+	if config != empty_config {
+		empty = false
+	}
+
+	return empty, config
 }
 
 func readConfigFile(configpath string) *Config {

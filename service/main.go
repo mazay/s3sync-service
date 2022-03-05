@@ -123,7 +123,11 @@ func Start() {
 	}
 
 	// Read the config
-	config = getConfig()
+	_empty, config := getConfig()
+	if _empty {
+		logger.Error("something went wrong - got empty configuration structure")
+		osExit(5)
+	}
 
 	if isInK8s() && configmap != "" {
 		clientset = k8sClientset()
@@ -178,8 +182,8 @@ func Start() {
 				wg.Done()
 				return
 			case force := <-reloaderChan:
-				newConfig := getConfig()
-				if reflect.DeepEqual(config, newConfig) && !force {
+				_empty, newConfig := getConfig()
+				if !_empty && reflect.DeepEqual(config, newConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
@@ -193,18 +197,20 @@ func Start() {
 						errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "watcher").Set(0)
 					}
 					logger.Infoln("reloading configuration")
-					config = getConfig()
-					// Switch logging level (if needed), can't be switched to lower verbosity
-					setLogLevel(config.LogLevel)
-					stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
-					logger.Debugln("reading config file")
-					// Start upload workers
-					uploadWorker(config, uploadCh, uploadStopperChan)
-					// Start checksum checker workers
-					checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
-					// Start syncing sites
-					syncSites(config, uploadCh, checksumCh, siteStopperChan)
-					status = "RUNNING"
+					_empty, config = getConfig()
+					if !_empty {
+						// Switch logging level (if needed), can't be switched to lower verbosity
+						setLogLevel(config.LogLevel)
+						stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
+						logger.Debugln("reading config file")
+						// Start upload workers
+						uploadWorker(config, uploadCh, uploadStopperChan)
+						// Start checksum checker workers
+						checksumWorker(config, checksumCh, uploadCh, checksumStopperChan)
+						// Start syncing sites
+						syncSites(config, uploadCh, checksumCh, siteStopperChan)
+						status = "RUNNING"
+					}
 				}
 			}
 		}
