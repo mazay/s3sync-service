@@ -24,10 +24,16 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/bxcodec/faker/v3"
 )
 
 func TestInfoHandler(t *testing.T) {
-	config = &Config{}
+	// generate fake config
+	err := faker.FakeData(&config)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	req, err := http.NewRequest("GET", "/info", nil)
 	if err != nil {
