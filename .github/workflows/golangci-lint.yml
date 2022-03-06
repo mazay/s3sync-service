@@ -5,12 +5,11 @@ on:
     tags:
     branches:
       - master
-      - devel
   pull_request:
 
 jobs:
   golangci:
-    name: lint
+    name: go-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
