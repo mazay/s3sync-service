@@ -4,9 +4,6 @@ on:
   push:
     paths:
       - 'charts/**'
-    branches:
-      - master
-      - devel
   pull_request:
     paths:
       - 'charts/**'
@@ -15,6 +12,7 @@ on:
 
 jobs:
   lint:
+    name: helm-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
