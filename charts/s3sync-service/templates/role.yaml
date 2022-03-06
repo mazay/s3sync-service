@@ -13,5 +13,6 @@ rules:
       - "{{ .Release.Name }}"
     verbs:
       - get
+      - list
       - watch
 {{- end }}
