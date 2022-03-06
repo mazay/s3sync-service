@@ -114,6 +114,9 @@ jobs:
            password: QUAY_TOKEN
            base-repo: quay.io/s3sync-service/s3sync-service
     steps:
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
+
       - name: Chechout
         uses: actions/checkout@v2
         with:
