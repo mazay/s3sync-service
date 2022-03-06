@@ -105,7 +105,8 @@ jobs:
     strategy:
       matrix:
         include:
-         - registry: registry-1.docker.io
+        # empty registry for DockerHub
+         - registry: ""
            username: DOCKERHUB_USERNAME
            password: DOCKERHUB_TOKEN
            base-repo: zmazay/s3sync-service
