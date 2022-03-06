@@ -58,35 +58,35 @@ type Site struct {
 	S3OpsRetries    int           `yaml:"s3_ops_retries"`
 }
 
-func (config *Config) setDefaults() {
-	if config.LogLevel == "" {
-		config.LogLevel = "info"
+func (cfg *Config) setDefaults() {
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = "info"
 	}
 
-	if config.UploadWorkers == 0 {
-		config.UploadWorkers = 10
+	if cfg.UploadWorkers == 0 {
+		cfg.UploadWorkers = 10
 	}
 
-	if config.ChecksumWorkers == 0 {
+	if cfg.ChecksumWorkers == 0 {
 		// If in k8s then run 2 workers
 		// otherwise run 2 workers per core
 		if inK8s {
-			config.ChecksumWorkers = 2
+			cfg.ChecksumWorkers = 2
 		} else {
-			config.ChecksumWorkers = runtime.NumCPU() * 2
+			cfg.ChecksumWorkers = runtime.NumCPU() * 2
 		}
 	}
 
-	if config.WatchInterval == 0 {
-		config.WatchInterval = time.Millisecond * 1000
+	if cfg.WatchInterval == 0 {
+		cfg.WatchInterval = time.Millisecond * 1000
 	}
 
-	if config.S3OpsRetries == 0 {
-		config.S3OpsRetries = 5
+	if cfg.S3OpsRetries == 0 {
+		cfg.S3OpsRetries = 5
 	}
 }
 
-func (site *Site) setDefaults(config *Config) {
+func (site *Site) setDefaults(cfg *Config) {
 	// Remove leading slash from the BucketPath
 	site.BucketPath = strings.TrimPrefix(site.BucketPath, "/")
 	// Set site name
@@ -96,15 +96,15 @@ func (site *Site) setDefaults(config *Config) {
 	}
 	// Set site AccessKey
 	if site.AccessKey == "" {
-		site.AccessKey = config.AccessKey
+		site.AccessKey = cfg.AccessKey
 	}
 	// Set site SecretAccessKey
 	if site.SecretAccessKey == "" {
-		site.SecretAccessKey = config.SecretAccessKey
+		site.SecretAccessKey = cfg.SecretAccessKey
 	}
 	// Set site BucketRegion
 	if site.BucketRegion == "" {
-		site.BucketRegion = config.AwsRegion
+		site.BucketRegion = cfg.AwsRegion
 	}
 	// Set default value for StorageClass
 	if site.StorageClass == "" {
@@ -112,11 +112,11 @@ func (site *Site) setDefaults(config *Config) {
 	}
 	// Set site WatchInterval
 	if site.WatchInterval == 0 {
-		site.WatchInterval = config.WatchInterval
+		site.WatchInterval = cfg.WatchInterval
 	}
 	// Set site S3OpsRetries
 	if site.S3OpsRetries == 0 {
-		site.S3OpsRetries = config.S3OpsRetries
+		site.S3OpsRetries = cfg.S3OpsRetries
 	}
 }
 
@@ -126,7 +126,6 @@ func configProcessError(err error) {
 }
 
 func getConfig() (bool, *Config) {
-	var config *Config
 	var emptyConfig *Config
 
 	empty := true
@@ -146,8 +145,6 @@ func getConfig() (bool, *Config) {
 }
 
 func readConfigFile(configpath string) *Config {
-	var config *Config
-
 	f, err := os.Open(configpath)
 	if err != nil {
 		configProcessError(err)
@@ -166,8 +163,6 @@ func readConfigFile(configpath string) *Config {
 }
 
 func readConfigString(cfgData string) *Config {
-	var config *Config
-
 	err := yaml.Unmarshal([]byte(cfgData), &config)
 	if err != nil {
 		configProcessError(err)
