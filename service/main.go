@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -40,7 +41,7 @@ var (
 	configpath string
 	configmap  string
 	config     *Config
-	k8sClient  *K8sClient
+	clientset  kubernetes.Interface
 
 	startupTime = time.Now()
 
@@ -118,7 +119,7 @@ func Start() {
 	status = "STARTING"
 
 	if isInK8s() && configmap != "" {
-		k8sClient.initClientset()
+		clientset = k8sClientset()
 	}
 
 	// Read the config
@@ -157,7 +158,7 @@ func Start() {
 	go func() {
 		logger.Infoln("starting up")
 		if inK8s && configmap != "" {
-			go k8sClient.k8sWatchCm(configmap, reloaderChan)
+			go k8sWatchCm(clientset, configmap, reloaderChan)
 		}
 		// Start upload workers
 		uploadWorker(config, uploadCh, uploadStopperChan)

@@ -132,7 +132,7 @@ func getConfig() (bool, *Config) {
 	empty := true
 
 	if inK8s && configmap != "" {
-		cfg := k8sClient.k8sGetCm(configmap)
+		cfg := k8sGetCm(clientset, configmap)
 		config = readConfigString(cfg)
 	} else {
 		config = readConfigFile(configpath)
