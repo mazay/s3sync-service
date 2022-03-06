@@ -50,13 +50,13 @@ func (_k8s *K8sClient) mockClient(config string) {
 }
 
 func (_k8s *K8sClient) initClientset() {
-	config, err := rest.InClusterConfig()
+	cfg, err := rest.InClusterConfig()
 	if err != nil {
 		logger.Panic(err.Error())
 		osExit(6)
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		logger.Panic(err.Error())
 		osExit(6)
