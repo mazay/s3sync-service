@@ -72,6 +72,8 @@ sites:
   s3_ops_retries: 10
   exclusions:
   - logs
+  inclusions:
+  - "subpath/*"
 ```
 
 # Global configuration options
@@ -106,6 +108,7 @@ sites:
 | secret_access_key | Site AWS Secret Access Key | `global.secret_access_key` | no |
 | watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `global.watch_interval` | no |
 | exclusions | List of regex filters for exclusions, please consult with [Go regex syntax](https://github.com/google/re2/wiki/Syntax) for more details | n/a | no |
+| inclusions | List of regex filters for inclusions, please consult with [Go regex syntax](https://github.com/google/re2/wiki/Syntax) for more details, **`exclusions` have higher priority.** | `[".*"]` | no |
 | s3_ops_retries | Number of retries for upload and delete operations | `global.s3_ops_retries` | no |
 
 ---

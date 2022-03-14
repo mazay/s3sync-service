@@ -25,6 +25,7 @@ import (
 type exclusionsTest struct {
 	path       string
 	exclusions []string
+	inclusions []string
 	expected   bool
 }
 
@@ -37,17 +38,20 @@ type checksumComparisonTest struct {
 
 func TestIsExcluded(t *testing.T) {
 	var exclusionsTestData = []exclusionsTest{
-		{"/etc/init.d", []string{"etc", "init.d"}, true},
-		{"/var/log/messages", []string{}, false},
-		{"", []string{"etc"}, false},
+		{"/etc/init.d", []string{"etc", "init.d"}, []string{".*"}, true},
+		{"/some/file.txt", []string{".*"}, []string{"txt"}, true},
+		{"/some/file.txt", []string{}, []string{".*"}, false},
+		{"/var/log/messages", []string{}, []string{".*"}, false},
+		{"", []string{"etc"}, []string{".*"}, false},
 	}
 
 	for _, testSet := range exclusionsTestData {
-		result := IsExcluded(testSet.path, testSet.exclusions)
+		result := IsExcluded(testSet.path, testSet.exclusions, testSet.inclusions)
 		if result != testSet.expected {
 			t.Error(
 				"For path", testSet.path,
 				"with exclusions", testSet.exclusions,
+				"with inclusions", testSet.inclusions,
 				"expected", testSet.expected,
 				"got", result,
 			)

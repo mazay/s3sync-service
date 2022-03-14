@@ -33,8 +33,15 @@ import (
 )
 
 // IsExcluded check if a path is excluded
-func IsExcluded(path string, exclusions []string) bool {
-	excluded := false
+func IsExcluded(path string, exclusions []string, inclusions []string) bool {
+	var excluded bool
+
+	for _, inclusion := range inclusions {
+		re := regexp.MustCompile(inclusion)
+		if re.FindAll([]byte(path), -1) != nil {
+			excluded = false
+		}
+	}
 
 	for _, exclusion := range exclusions {
 		re := regexp.MustCompile(exclusion)
@@ -60,7 +67,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 			if d.Type() == fs.ModeSymlink {
 				logger.Infof("%s is a symlink, skipping", path)
 			} else {
-				excluded := IsExcluded(path, site.Exclusions)
+				excluded := IsExcluded(path, site.Exclusions, site.Inclusions)
 				s3Key := generateS3Key(site.BucketPath, site.LocalPath, path)
 				if excluded {
 					logger.Debugf("skipping without errors: %+v", path)

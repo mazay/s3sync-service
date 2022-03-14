@@ -54,6 +54,7 @@ type Site struct {
 	SecretAccessKey string        `yaml:"secret_access_key"`
 	RetireDeleted   bool          `yaml:"retire_deleted"`
 	Exclusions      []string      `yaml:",flow"`
+	Inclusions      []string      `yaml:",flow"`
 	WatchInterval   time.Duration `yaml:"watch_interval"`
 	S3OpsRetries    int           `yaml:"s3_ops_retries"`
 }
@@ -117,6 +118,10 @@ func (site *Site) setDefaults(cfg *Config) {
 	// Set site S3OpsRetries
 	if site.S3OpsRetries == 0 {
 		site.S3OpsRetries = cfg.S3OpsRetries
+	}
+	// Set site S3OpsRetries
+	if len(site.Inclusions) == 0 {
+		site.Inclusions = []string{".*"}
 	}
 }
 
