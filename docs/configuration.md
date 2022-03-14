@@ -108,7 +108,7 @@ sites:
 | secret_access_key | Site AWS Secret Access Key | `global.secret_access_key` | no |
 | watch_interval | Interval for file system watcher in format of number and a unit suffix. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". | `global.watch_interval` | no |
 | exclusions | List of regex filters for exclusions, please consult with [Go regex syntax](https://github.com/google/re2/wiki/Syntax) for more details | n/a | no |
-| inclusions | List of regex filters for inclusions, please consult with [Go regex syntax](https://github.com/google/re2/wiki/Syntax) for more details. **Makes sense when using jointly with `exclusions`.** The `inclusions` have higher precedence than `exclusions`, meaning you can exclude everything with `.*` and then include only what's needed, eg. include only images - `png`. | n/a | no |
+| inclusions | List of regex filters for inclusions, please consult with [Go regex syntax](https://github.com/google/re2/wiki/Syntax) for more details. **Makes sense when using jointly with `exclusions`.** The `inclusions` have higher precedence than `exclusions`, meaning you can exclude everything with `.*` and then include only what's needed, eg. include only PNG images with `png` for regex. | n/a | no |
 | s3_ops_retries | Number of retries for upload and delete operations | `global.s3_ops_retries` | no |
 
 ---
