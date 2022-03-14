@@ -73,7 +73,7 @@ sites:
   exclusions:
   - logs
   inclusions:
-  - png
+  - "subpath/*"
 ```
 
 # Global configuration options
