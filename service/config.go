@@ -119,6 +119,10 @@ func (site *Site) setDefaults(cfg *Config) {
 	if site.S3OpsRetries == 0 {
 		site.S3OpsRetries = cfg.S3OpsRetries
 	}
+	// Set site S3OpsRetries
+	if len(site.Inclusions) == 0 {
+		site.Inclusions = []string{".*"}
+	}
 }
 
 func configProcessError(err error) {

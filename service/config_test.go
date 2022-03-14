@@ -84,6 +84,8 @@ sites:
   secret_access_key: je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
   watch_interval: 5m
   s3_ops_retries: 5
+  inclusions:
+  - test
 `,
 			true,
 		},

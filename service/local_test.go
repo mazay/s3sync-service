@@ -38,10 +38,11 @@ type checksumComparisonTest struct {
 
 func TestIsExcluded(t *testing.T) {
 	var exclusionsTestData = []exclusionsTest{
-		{"/etc/init.d", []string{"etc", "init.d"}, []string{}, true},
-		{"/some/file.txt", []string{".*"}, []string{"txt"}, false},
-		{"/var/log/messages", []string{}, []string{}, false},
-		{"", []string{"etc"}, []string{}, false},
+		{"/etc/init.d", []string{"etc", "init.d"}, []string{".*"}, true},
+		{"/some/file.txt", []string{".*"}, []string{"txt"}, true},
+		{"/some/file.txt", []string{}, []string{".*"}, false},
+		{"/var/log/messages", []string{}, []string{".*"}, false},
+		{"", []string{"etc"}, []string{".*"}, false},
 	}
 
 	for _, testSet := range exclusionsTestData {

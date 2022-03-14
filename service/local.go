@@ -34,19 +34,19 @@ import (
 
 // IsExcluded check if a path is excluded
 func IsExcluded(path string, exclusions []string, inclusions []string) bool {
-	excluded := false
-
-	for _, exclusion := range exclusions {
-		re := regexp.MustCompile(exclusion)
-		if re.FindAll([]byte(path), -1) != nil {
-			excluded = true
-		}
-	}
+	var excluded bool
 
 	for _, inclusion := range inclusions {
 		re := regexp.MustCompile(inclusion)
 		if re.FindAll([]byte(path), -1) != nil {
 			excluded = false
+		}
+	}
+
+	for _, exclusion := range exclusions {
+		re := regexp.MustCompile(exclusion)
+		if re.FindAll([]byte(path), -1) != nil {
+			excluded = true
 		}
 	}
 
