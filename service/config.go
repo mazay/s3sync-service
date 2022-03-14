@@ -54,6 +54,7 @@ type Site struct {
 	SecretAccessKey string        `yaml:"secret_access_key"`
 	RetireDeleted   bool          `yaml:"retire_deleted"`
 	Exclusions      []string      `yaml:",flow"`
+	Inclusions      []string      `yaml:",flow"`
 	WatchInterval   time.Duration `yaml:"watch_interval"`
 	S3OpsRetries    int           `yaml:"s3_ops_retries"`
 }
