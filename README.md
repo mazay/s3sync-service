@@ -92,3 +92,10 @@ sites:
 # Contributing
 
 If you feel like contributing to the project - there are [various ways](CONTRIBUTING.md) of doing so.
+
+# Support
+
+You can buy me a coffee if you feel like supporting my motivation in working on this project. :)
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=DT2D2TTP46V62)
+
