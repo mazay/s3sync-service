@@ -133,7 +133,7 @@ func Start() {
 	initLogger(config)
 
 	// Init channels
-	mainStopperChan := make(chan os.Signal)
+	mainStopperChan := make(chan os.Signal, 1)
 	siteStopperChan := make(chan bool)
 	checksumStopperChan := make(chan bool)
 	uploadStopperChan := make(chan bool)
