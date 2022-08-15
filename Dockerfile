@@ -31,7 +31,7 @@ COPY go.sum ./
 RUN go mod download
 RUN go build -ldflags "-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
-FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.16.1
+FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.16.2
 ARG TARGETPLATFORM
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 RUN apk --no-cache add ca-certificates
