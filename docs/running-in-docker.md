@@ -21,15 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 1. Create directory with configuration file, eg. - `/path/to/config/config.yml`.
 1. Run docker container with providing AWS credentials via [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) ([EC2 instance profile](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html) role should also do the trick), alternatively credentials could be provided in the config file, mount directory containing the config file and all of the backup directories listed in the config file:
 
-```bash
+```shell
 docker run --rm -ti \
--e "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE" \
--e "AWS_SECRET_ACCESS_KEY=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY" \
--e "AWS_DEFAULT_REGION=us-east-1" \
--v "/path/to/config:/opt/s3sync-service" \
--v "/backup/path:/backup" \
-zmazay/s3sync-service \
-./s3sync-service -config /opt/s3sync-service/config.yml
+  -e "AWS_ACCESS_KEY_ID=AKIAI44QH8DHBEXAMPLE" \
+  -e "AWS_SECRET_ACCESS_KEY=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY" \
+  -e "AWS_DEFAULT_REGION=us-east-1" \
+  -v "/path/to/config:/opt/s3sync-service" \
+  -v "/backup/path:/backup" \
+  zmazay/s3sync-service \
+  ./s3sync-service -config /opt/s3sync-service/config.yml
 ```
 
 or docker compose:
