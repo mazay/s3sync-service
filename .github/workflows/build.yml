@@ -94,7 +94,7 @@ jobs:
           make build
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'release' }}
         with:
           name: s3sync-service-${{ env.GITHUB_REF_SLUG }}
