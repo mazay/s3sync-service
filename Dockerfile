@@ -23,17 +23,20 @@ ARG TARGETARCH
 ENV GOOS=${TARGETOS}
 ENV GOARCH=${TARGETARCH}
 WORKDIR /go/src/github.com/mazay/s3sync-service
-RUN apk add git curl
+# hadolint ignore=DL3018
+RUN apk --no-cache add git curl
 COPY service ./service
 COPY *.go ./
 COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
+# hadolint ignore=DL3059
 RUN go build -ldflags "-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.17.2
 ARG TARGETPLATFORM
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
+# hadolint ignore=DL3018
 RUN apk --no-cache add ca-certificates
 WORKDIR /app/
 COPY --from=builder /go/src/github.com/mazay/s3sync-service/s3sync-service .
