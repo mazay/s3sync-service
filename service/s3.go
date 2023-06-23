@@ -20,6 +20,7 @@ package service
 
 import (
 	"context"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -74,7 +75,15 @@ func (site *Site) getS3Session() {
 	s3Client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		// override endpoint if needed
 		if site.Endpoint != "" {
-			o.EndpointResolver = s3.EndpointResolverFromURL(site.Endpoint)
+			u, err := url.Parse(site.Endpoint)
+			if err != nil {
+				logger.Fatal(err)
+			}
+			if u.Scheme == "" {
+				u.Scheme = "https"
+				logger.Debugf("URL scheme for site %s was not provided, using https", site.Name)
+			}
+			o.EndpointResolver = s3.EndpointResolverFromURL(u.String())
 		}
 		// set static credentials if needed
 		if site.AccessKey != "" && site.SecretAccessKey != "" {
