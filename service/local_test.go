@@ -69,7 +69,7 @@ func TestCompareChecksum(t *testing.T) {
 	}
 
 	for _, testSet := range checksumTestData {
-		result := CompareChecksum(testSet.filename, testSet.checksum, testSet.site)
+		result := CompareChecksum(testSet.filename, testSet.checksum, &testSet.site)
 		if result != testSet.expected {
 			t.Error(
 				"For file", testSet.filename,
