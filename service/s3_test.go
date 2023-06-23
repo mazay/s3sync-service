@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
 )
 
 type generateS3KeyTest struct {
