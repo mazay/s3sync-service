@@ -143,49 +143,52 @@ func (site *Site) getAwsS3ItemMap() (map[string]string, error) {
 }
 
 func (site *Site) uploadFile(file string) {
+	var err error
+
 	s3Key := generateS3Key(site.BucketPath, site.LocalPath, file)
 	uploader := manager.NewUploader(site.client, func(u *manager.Uploader) {
 		u.PartSize = 5 * 1024 * 1024
 		u.Concurrency = 5
 	})
 
-	f, fileErr := os.Open(file)
+	f, err := os.Open(file)
+
+	if err != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
+		logger.Errorf("failed to open file %q, %v", file, err)
+		return
+	}
 	defer f.Close()
 
 	// Try to get object size in case we updating already existing
 	objSize := site.getObjectSize(s3Key)
 
-	if fileErr != nil {
-		// Update errors metric
-		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
-		logger.Errorf("failed to open file %q, %v", file, fileErr)
-	} else {
-		_, err := uploader.Upload(context.TODO(), &s3.PutObjectInput{
-			Bucket:       aws.String(site.Bucket),
-			Key:          aws.String(s3Key),
-			Body:         f,
-			StorageClass: types.StorageClass(site.StorageClass),
-		})
+	_, err = uploader.Upload(context.TODO(), &s3.PutObjectInput{
+		Bucket:       aws.String(site.Bucket),
+		Key:          aws.String(s3Key),
+		Body:         f,
+		StorageClass: types.StorageClass(site.StorageClass),
+	})
 
-		if err != nil {
-			// Update errors metric
-			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
-			logger.Errorf("failed to upload object, %v", err)
+	if err != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
+		logger.Errorf("failed to upload object, %v", err)
+	} else {
+		// Get file size
+		fs, _ := f.Stat()
+		fileSize := fs.Size()
+		// Update metrics
+		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(fileSize))
+		if objSize > 0 {
+			// Substitute old file size
+			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
 		} else {
-			// Get file size
-			fs, _ := f.Stat()
-			fileSize := fs.Size()
-			// Update metrics
-			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(fileSize))
-			if objSize > 0 {
-				// Substitute old file size
-				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
-			} else {
-				// Only upodate object counter when it's a new object
-				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
-			}
-			logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
+			// Only upodate object counter when it's a new object
+			objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
 		}
+		logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
 	}
 }
 
