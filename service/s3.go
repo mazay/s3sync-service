@@ -128,7 +128,7 @@ func (site *Site) getAwsS3ItemMap() (map[string]string, error) {
 		// Log the objects found
 		for _, s3obj := range page.Contents {
 			if string(s3obj.StorageClass) != site.StorageClass {
-				logger.Infof("storage class does not match, marking for re-upload: %s", aws.String(*s3obj.Key))
+				logger.Infof("storage class does not match, marking for re-upload: %s", string(*s3obj.Key))
 				items[*aws.String(*s3obj.Key)] = "none"
 			} else {
 				// Update metrics
