@@ -28,7 +28,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/s3"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -83,10 +82,9 @@ var (
 
 // UploadCFG - structure for the upload queue
 type UploadCFG struct {
-	s3Service *s3.S3
-	file      string
-	site      Site
-	action    string
+	file   string
+	site   *Site
+	action string
 }
 
 // ChecksumCFG - structure for the checksum comparison queue
@@ -94,7 +92,7 @@ type ChecksumCFG struct {
 	UploadCFG      UploadCFG
 	filename       string
 	checksumRemote string
-	site           Site
+	site           *Site
 }
 
 func isInK8s() bool {
@@ -241,9 +239,9 @@ func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
 				select {
 				case cfg := <-uploadCh:
 					if cfg.action == "upload" {
-						uploadFile(cfg.s3Service, cfg.file, cfg.site)
+						cfg.site.uploadFile(cfg.file)
 					} else if cfg.action == "delete" {
-						deleteFile(cfg.s3Service, cfg.file, cfg.site)
+						cfg.site.deleteFile(cfg.file)
 					} else {
 						logger.Errorf("programming error, unknown action: %s", cfg.action)
 					}
@@ -283,24 +281,24 @@ func syncSites(config *Config, uploadCh chan<- UploadCFG,
 	checksumCh chan<- ChecksumCFG, siteStopperChan <-chan bool) {
 	// Start separate goroutine for each site
 	for _, site := range config.Sites {
-		go func(site Site) {
+		go func(site *Site) {
 			site.setDefaults(config)
 			wg.Add(1)
 			// Initi S3 session
-			s3Service := s3.New(getS3Session(site))
+			site.getS3Session()
 			// Watch directory for realtime sync
-			go watch(s3Service, site, uploadCh, siteStopperChan)
+			go watch(site, uploadCh, siteStopperChan)
 			// Fetch S3 objects
-			awsItems, err := getAwsS3ItemMap(s3Service, site)
+			awsItems, err := site.getAwsS3ItemMap()
 			if err != nil {
 				logger.Errorln(err)
 				wg.Done()
 				osExit(4)
 			} else {
 				// Compare S3 objects with local
-				FilePathWalkDir(site, awsItems, s3Service, uploadCh, checksumCh)
+				FilePathWalkDir(site, awsItems, uploadCh, checksumCh)
 				logger.Infof("finished initial sync for site %s", site.Name)
 			}
-		}(site)
+		}(&site)
 	}
 }
