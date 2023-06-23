@@ -281,13 +281,13 @@ func syncSites(config *Config, uploadCh chan<- UploadCFG,
 	checksumCh chan<- ChecksumCFG, siteStopperChan <-chan bool) {
 	// Start separate goroutine for each site
 	for _, site := range config.Sites {
-		go func(site *Site) {
+		go func(site Site) {
 			site.setDefaults(config)
 			wg.Add(1)
 			// Initi S3 session
 			site.getS3Session()
 			// Watch directory for realtime sync
-			go watch(site, uploadCh, siteStopperChan)
+			go watch(&site, uploadCh, siteStopperChan)
 			// Fetch S3 objects
 			awsItems, err := site.getAwsS3ItemMap()
 			if err != nil {
@@ -296,9 +296,9 @@ func syncSites(config *Config, uploadCh chan<- UploadCFG,
 				osExit(4)
 			} else {
 				// Compare S3 objects with local
-				FilePathWalkDir(site, awsItems, uploadCh, checksumCh)
+				FilePathWalkDir(&site, awsItems, uploadCh, checksumCh)
 				logger.Infof("finished initial sync for site %s", site.Name)
 			}
-		}(&site)
+		}(site)
 	}
 }
