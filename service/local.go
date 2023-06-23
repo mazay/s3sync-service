@@ -28,8 +28,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 // IsExcluded check if a path is excluded
@@ -54,7 +52,7 @@ func IsExcluded(path string, exclusions []string, inclusions []string) bool {
 }
 
 // FilePathWalkDir walks through the directory and all subdirectories returning list of files for upload and list of files to be deleted from S3
-func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
+func FilePathWalkDir(site *Site, awsItems map[string]string, uploadCh chan<- UploadCFG, checksumCh chan<- ChecksumCFG) {
 	err := filepath.WalkDir(site.LocalPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			// Update errors metric
@@ -73,10 +71,10 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 					logger.Debugf("skipping without errors: %+v", path)
 					// Delete the excluded object if already in the cloud
 					if awsItems[s3Key] != "" && site.RetireDeleted {
-						uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
+						uploadCh <- UploadCFG{s3Key, site, "delete"}
 					}
 				} else {
-					checksumCh <- ChecksumCFG{UploadCFG{s3Service, path, site, "upload"}, path, awsItems[s3Key], site}
+					checksumCh <- ChecksumCFG{UploadCFG{path, site, "upload"}, path, awsItems[s3Key], site}
 				}
 			}
 		}
@@ -90,7 +88,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 			localPath := filepath.Join(site.LocalPath, strings.Replace(key, site.BucketPath, "", 1))
 			// Send s3 key for deleteion if generated localPath does not exist
 			if _, err := os.Stat(localPath); os.IsNotExist(err) {
-				uploadCh <- UploadCFG{s3Service, key, site, "delete"}
+				uploadCh <- UploadCFG{key, site, "delete"}
 			}
 		}
 	}
@@ -103,7 +101,7 @@ func FilePathWalkDir(site Site, awsItems map[string]string, s3Service *s3.S3, up
 }
 
 // CompareChecksum compares local file checksum with S3 ETag value
-func CompareChecksum(filename string, checksumRemote string, site Site) string {
+func CompareChecksum(filename string, checksumRemote string, site *Site) string {
 	var sumOfSums []byte
 	var parts int
 	var finalSum []byte

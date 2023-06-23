@@ -41,24 +41,6 @@ type Config struct {
 	Sites             []Site        `yaml:",flow"`
 }
 
-// Site is a option for backing up data to S3
-type Site struct {
-	Name            string        `yaml:"name"`
-	LocalPath       string        `yaml:"local_path"`
-	Bucket          string        `yaml:"bucket"`
-	Endpoint        string        `yaml:"endpoint"`
-	BucketPath      string        `yaml:"bucket_path"`
-	BucketRegion    string        `yaml:"bucket_region"`
-	StorageClass    string        `yaml:"storage_class"`
-	AccessKey       string        `yaml:"access_key"`
-	SecretAccessKey string        `yaml:"secret_access_key"`
-	RetireDeleted   bool          `yaml:"retire_deleted"`
-	Exclusions      []string      `yaml:",flow"`
-	Inclusions      []string      `yaml:",flow"`
-	WatchInterval   time.Duration `yaml:"watch_interval"`
-	S3OpsRetries    int           `yaml:"s3_ops_retries"`
-}
-
 func (cfg *Config) setDefaults() {
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = "info"

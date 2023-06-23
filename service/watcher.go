@@ -24,11 +24,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/radovskyb/watcher"
 )
 
-func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG,
+func watch(site *Site, uploadCh chan<- UploadCFG,
 	siteStopperChan <-chan bool) {
 	logger.Printf("starting the FS watcher for site %s", site.Name)
 
@@ -50,21 +49,21 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG,
 						if fmt.Sprint(event.Op) == "REMOVE" {
 							if site.RetireDeleted {
 								s3Key := generateS3Key(site.BucketPath, site.LocalPath, filepath)
-								uploadCh <- UploadCFG{s3Service, s3Key, site, "delete"}
+								uploadCh <- UploadCFG{s3Key, site, "delete"}
 							}
 						} else if fmt.Sprint(event.Op) == "RENAME" || fmt.Sprint(event.Op) == "MOVE" {
 							// Upload the new object with new name/path
-							uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
+							uploadCh <- UploadCFG{filepath, site, "upload"}
 							// remove the old object
 							oldFilepath := fmt.Sprint(event.OldPath)
 							removedS3Key := generateS3Key(site.BucketPath, site.LocalPath, oldFilepath)
-							uploadCh <- UploadCFG{s3Service, removedS3Key, site, "delete"}
+							uploadCh <- UploadCFG{removedS3Key, site, "delete"}
 						} else {
 							// A shorthand workaround for skipping symlinks from processing
 							if event.FileInfo.Mode().Type() == fs.ModeSymlink {
 								logger.Infof("%s is a symlink, skipping", event.Path)
 							} else {
-								fileWatcher(s3Service, site, uploadCh, filepath)
+								fileWatcher(site, uploadCh, filepath)
 							}
 						}
 					}
@@ -98,13 +97,13 @@ func watch(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG,
 
 // fileWatcher is watching for file mtime and adds the file into the upload queue if it's > 30 seconds old
 // Workaround for - https://github.com/radovskyb/watcher/issues/66
-func fileWatcher(s3Service *s3.S3, site Site, uploadCh chan<- UploadCFG, filepath string) {
+func fileWatcher(site *Site, uploadCh chan<- UploadCFG, filepath string) {
 	for {
 		file, _ := os.Stat(filepath)
 		mtime := file.ModTime()
 		if time.Since(mtime).Seconds() >= 30 {
 			logger.Debugf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
-			uploadCh <- UploadCFG{s3Service, filepath, site, "upload"}
+			uploadCh <- UploadCFG{filepath, site, "upload"}
 			return
 		}
 

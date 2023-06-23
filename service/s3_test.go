@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
 )
 
 type generateS3KeyTest struct {
@@ -55,10 +55,10 @@ func TestGetS3Session(t *testing.T) {
 		config, err := FakeConfig()
 		if err == nil {
 			for _, site := range config.Sites {
-				s3Service := getS3Service(site)
-				responseType := reflect.TypeOf(s3Service).String()
-				if responseType != "*s3.S3" {
-					t.Error("Expected type *s3.S3, got", responseType)
+				site.getS3Session()
+				responseType := reflect.TypeOf(site.client).String()
+				if responseType != "*s3.Client" {
+					t.Error("Expected type *s3.Client, got", responseType)
 				}
 			}
 		} else {
@@ -96,8 +96,8 @@ func TestGetObjectSize(t *testing.T) {
 	for _, testSet := range getObjectSizeTestData {
 		site.SeBucket(testSet.bucket)
 		site.BucketRegion = "us-east-1"
-		s3Service := getS3Service(site)
-		size := getObjectSize(s3Service, site, "some-key")
+		site.getS3Session()
+		size := site.getObjectSize("some-key")
 		if size != testSet.expected {
 			t.Error(
 				"Expected", testSet.expected,

@@ -19,33 +19,39 @@
 package service
 
 import (
+	"context"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsCfg "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
-func getObjectSize(s3Service *s3.S3, site Site, s3Key string) int64 {
-	size := int64(0)
-
-	// Get object size
-	obj, err := s3Service.HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String(site.Bucket),
-		Key:    aws.String(s3Key),
-	})
-
-	if err == nil {
-		size = *obj.ContentLength
-	}
-
-	return size
+// Site is a set of options for backing up data to S3
+type Site struct {
+	Name            string        `yaml:"name"`
+	LocalPath       string        `yaml:"local_path"`
+	Bucket          string        `yaml:"bucket"`
+	Endpoint        string        `yaml:"endpoint"`
+	BucketPath      string        `yaml:"bucket_path"`
+	BucketRegion    string        `yaml:"bucket_region"`
+	StorageClass    string        `yaml:"storage_class"`
+	AccessKey       string        `yaml:"access_key"`
+	SecretAccessKey string        `yaml:"secret_access_key"`
+	RetireDeleted   bool          `yaml:"retire_deleted"`
+	Exclusions      []string      `yaml:",flow"`
+	Inclusions      []string      `yaml:",flow"`
+	WatchInterval   time.Duration `yaml:"watch_interval"`
+	S3OpsRetries    int           `yaml:"s3_ops_retries"`
+	client          *s3.Client
 }
 
 func generateS3Key(bucketPath string, localPath string, filePath string) string {
@@ -53,111 +59,151 @@ func generateS3Key(bucketPath string, localPath string, filePath string) string 
 	return path.Join(bucketPath, relativePath)
 }
 
-func getS3Session(site Site) *session.Session {
-	config := aws.Config{
-		Region:     aws.String(site.BucketRegion),
-		MaxRetries: aws.Int(site.S3OpsRetries),
+func (site *Site) getS3Session() {
+	var (
+		err error
+	)
+
+	cfg, err := awsCfg.LoadDefaultConfig(context.TODO(),
+		awsCfg.WithRegion(site.BucketRegion),
+	)
+
+	if err != nil {
+		logger.Fatalf("failed to load SDK configuration, %v", err)
 	}
 
-	if site.Endpoint != "" {
-		config.Endpoint = &site.Endpoint
-	}
+	s3Client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		// override endpoint if needed
+		if site.Endpoint != "" {
+			u, err := url.Parse(site.Endpoint)
+			if err != nil {
+				logger.Fatal(err)
+			}
+			if u.Scheme == "" {
+				u.Scheme = "https"
+				logger.Debugf("URL scheme for site %s was not provided, using https", site.Name)
+			}
+			o.EndpointResolver = s3.EndpointResolverFromURL(u.String())
+		}
+		// set static credentials if needed
+		if site.AccessKey != "" && site.SecretAccessKey != "" {
+			o.Credentials = aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(site.AccessKey, site.SecretAccessKey, ""))
+		}
+		o.RetryMaxAttempts = site.S3OpsRetries
+	})
 
-	if site.AccessKey != "" && site.SecretAccessKey != "" {
-		config.Credentials = credentials.NewStaticCredentials(site.AccessKey, site.SecretAccessKey, "")
-	}
-
-	return session.Must(session.NewSession(&config))
+	site.client = s3Client
 }
 
-func getS3Service(site Site) *s3.S3 {
-	return s3.New(getS3Session(site))
+func (site *Site) getObjectSize(s3Key string) int64 {
+	size := int64(0)
+
+	// Get object size
+	obj, err := site.client.HeadObject(context.TODO(), &s3.HeadObjectInput{
+		Bucket: aws.String(site.Bucket),
+		Key:    aws.String(s3Key),
+	})
+
+	if err == nil {
+		size = obj.ContentLength
+	}
+
+	return size
 }
 
-func getAwsS3ItemMap(s3Service *s3.S3, site Site) (map[string]string, error) {
-	var items = make(map[string]string)
+func (site *Site) getAwsS3ItemMap() (map[string]string, error) {
+	var (
+		err   error
+		iter  int
+		items = make(map[string]string)
+	)
 
-	params := &s3.ListObjectsInput{
+	params := &s3.ListObjectsV2Input{
 		Bucket: aws.String(site.Bucket),
 		Prefix: aws.String(site.BucketPath),
 	}
 
-	err := s3Service.ListObjectsPages(params,
-		func(page *s3.ListObjectsOutput, last bool) bool {
-			// Process the objects for each page
-			for _, s3obj := range page.Contents {
-				if aws.StringValue(s3obj.StorageClass) != site.StorageClass {
-					logger.Infof("storage class does not match, marking for re-upload: %s", aws.StringValue(s3obj.Key))
-					items[aws.StringValue(s3obj.Key)] = "none"
-				} else {
-					// Update metrics
-					sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(*s3obj.Size))
-					objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
-					items[aws.StringValue(s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
-				}
+	p := s3.NewListObjectsV2Paginator(site.client, params)
+
+	for p.HasMorePages() {
+		iter++
+
+		page, err := p.NextPage(context.TODO())
+		if err != nil {
+			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
+			logger.Fatalf("%s: failed to get page %v, %v", site.Bucket, iter, err)
+		}
+
+		// Log the objects found
+		for _, s3obj := range page.Contents {
+			if string(s3obj.StorageClass) != site.StorageClass {
+				logger.Infof("storage class does not match, marking for re-upload: %s", string(*s3obj.Key))
+				items[*aws.String(*s3obj.Key)] = "none"
+			} else {
+				// Update metrics
+				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(s3obj.Size))
+				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
+				items[*aws.String(*s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
 			}
-			return true
-		},
-	)
-	if err != nil {
-		// Update errors metric
-		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
-		logger.Errorf("Error listing %s objects: %s", *params.Bucket, err)
-		return nil, err
+		}
 	}
-	return items, nil
+
+	return items, err
 }
 
-func uploadFile(s3Service *s3.S3, file string, site Site) {
+func (site *Site) uploadFile(file string) {
+	var err error
+
 	s3Key := generateS3Key(site.BucketPath, site.LocalPath, file)
-	uploader := s3manager.NewUploader(getS3Session(site), func(u *s3manager.Uploader) {
+	uploader := manager.NewUploader(site.client, func(u *manager.Uploader) {
 		u.PartSize = 5 * 1024 * 1024
 		u.Concurrency = 5
 	})
 
-	f, fileErr := os.Open(file)
+	f, err := os.Open(file)
 
-	// Try to get object size in case we updating already existing
-	objSize := getObjectSize(s3Service, site, s3Key)
-
-	if fileErr != nil {
+	if err != nil {
 		// Update errors metric
 		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
-		logger.Errorf("failed to open file %q, %v", file, fileErr)
-	} else {
-		_, err := uploader.Upload(&s3manager.UploadInput{
-			Bucket:       aws.String(site.Bucket),
-			Key:          aws.String(s3Key),
-			Body:         f,
-			StorageClass: aws.String(site.StorageClass),
-		})
-
-		if err != nil {
-			// Update errors metric
-			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
-			logger.Errorf("failed to upload object, %v", err)
-		} else {
-			// Get file size
-			fs, _ := f.Stat()
-			fileSize := fs.Size()
-			// Update metrics
-			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(fileSize))
-			if objSize > 0 {
-				// Substitute old file size
-				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
-			} else {
-				// Only upodate object counter when it's a new object
-				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
-			}
-			logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
-		}
+		logger.Errorf("failed to open file %q, %v", file, err)
+		return
 	}
 	defer f.Close()
+
+	// Try to get object size in case we updating already existing
+	objSize := site.getObjectSize(s3Key)
+
+	_, err = uploader.Upload(context.TODO(), &s3.PutObjectInput{
+		Bucket:       aws.String(site.Bucket),
+		Key:          aws.String(s3Key),
+		Body:         f,
+		StorageClass: types.StorageClass(site.StorageClass),
+	})
+
+	if err != nil {
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
+		logger.Errorf("failed to upload object, %v", err)
+	} else {
+		// Get file size
+		fs, _ := f.Stat()
+		fileSize := fs.Size()
+		// Update metrics
+		sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(fileSize))
+		if objSize > 0 {
+			// Substitute old file size
+			sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Sub(float64(objSize))
+		} else {
+			// Only upodate object counter when it's a new object
+			objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
+		}
+		logger.Infof("successfully uploaded file: %s/%s", site.Bucket, s3Key)
+	}
 }
 
-func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
+func (site *Site) deleteFile(s3Key string) {
 	// Get object size
-	objSize := getObjectSize(s3Service, site, s3Key)
+	objSize := site.getObjectSize(s3Key)
 
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(site.Bucket),
@@ -165,20 +211,11 @@ func deleteFile(s3Service *s3.S3, s3Key string, site Site) {
 	}
 
 	// Delete the object
-	_, err := s3Service.DeleteObject(input)
+	_, err := site.client.DeleteObject(context.TODO(), input)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			default:
-				// Update errors metric
-				errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
-				logger.Errorln(aerr.Error())
-			}
-		} else {
-			// Update errors metric
-			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
-			logger.Errorln(err.Error())
-		}
+		// Update errors metric
+		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "cloud").Inc()
+		logger.Errorln(err.Error())
 		return
 	}
 
