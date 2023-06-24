@@ -198,9 +198,9 @@ jobs:
           version=$(helm show chart ./s3sync-service | grep version | awk '{ print $2 }')
           exists=$(aws s3api head-object --bucket ${BUCKET} --key charts/s3sync-service-${version}.tgz || true)
           if [ -z "${exists}" ]; then
-            echo "::set-output name=exists::false"
+            echo "exists=false" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=exists::$exists"
+            echo "exists=$exists" >> $GITHUB_OUTPUT
           fi
 
       - name: Package Helm Chart
