@@ -58,6 +58,7 @@ func FilePathWalkDir(site *Site, awsItems map[string]string, uploadCh chan<- Upl
 			// Update errors metric
 			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
 			logger.Error(err)
+			return err
 		}
 
 		if !d.IsDir() {

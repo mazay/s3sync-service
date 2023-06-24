@@ -63,7 +63,10 @@ func watch(site *Site, uploadCh chan<- UploadCFG,
 							if event.FileInfo.Mode().Type() == fs.ModeSymlink {
 								logger.Infof("%s is a symlink, skipping", event.Path)
 							} else {
-								fileWatcher(site, uploadCh, filepath)
+								err := fileWatcher(site, uploadCh, filepath)
+								if err != nil {
+									return
+								}
 							}
 						}
 					}
@@ -97,14 +100,18 @@ func watch(site *Site, uploadCh chan<- UploadCFG,
 
 // fileWatcher is watching for file mtime and adds the file into the upload queue if it's > 30 seconds old
 // Workaround for - https://github.com/radovskyb/watcher/issues/66
-func fileWatcher(site *Site, uploadCh chan<- UploadCFG, filepath string) {
+func fileWatcher(site *Site, uploadCh chan<- UploadCFG, filepath string) error {
 	for {
-		file, _ := os.Stat(filepath)
+		file, err := os.Stat(filepath)
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
 		mtime := file.ModTime()
 		if time.Since(mtime).Seconds() >= 30 {
 			logger.Debugf("there were no writes to the file for 30 seconds, adding to the upload queue: %s", filepath)
 			uploadCh <- UploadCFG{filepath, site, "upload"}
-			return
+			return nil
 		}
 
 		logger.Debugf("looks like the file %s is still being written into, waiting", filepath)
