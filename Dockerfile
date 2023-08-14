@@ -33,7 +33,7 @@ RUN go mod download
 # hadolint ignore=DL3059
 RUN go build -ldflags "-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
-FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.18.2
+FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.18.3
 ARG TARGETPLATFORM
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 # hadolint ignore=DL3018
