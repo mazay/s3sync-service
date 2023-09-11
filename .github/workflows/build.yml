@@ -26,7 +26,7 @@ jobs:
         uses: rlespinasse/github-slug-action@v3.x
 
       - name: Chechout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ./src/github.com/${{ github.repository }}
 
@@ -70,7 +70,7 @@ jobs:
         uses: rlespinasse/github-slug-action@v3.x
 
       - name: Chechout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ./src/github.com/${{ github.repository }}
 
@@ -123,7 +123,7 @@ jobs:
         uses: rlespinasse/github-slug-action@v3.x
 
       - name: Chechout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ./src/github.com/${{ github.repository }}
 
@@ -154,7 +154,7 @@ jobs:
         uses: rlespinasse/github-slug-action@v3.x
 
       - name: Chechout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -175,7 +175,7 @@ jobs:
     if: ${{ github.event_name == 'release' }}
     needs: docker
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Helm
         run: |
