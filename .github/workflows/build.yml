@@ -167,7 +167,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for artifact in $(ls artifacts/*); do ATTACHMENTS="${ATTACHMENTS} -a ${artifact}"; done;
-          hub release edit -m "" ${{ env.GITHUB_REF_SLUG }} ${ATTACHMENTS}
+          gh release upload ${{ env.GITHUB_REF_SLUG }} ${ATTACHMENTS}
 
   helm-release:
     name: helm-release
