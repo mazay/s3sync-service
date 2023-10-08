@@ -83,7 +83,7 @@ func (site *Site) getS3Session() {
 				u.Scheme = "https"
 				logger.Debugf("URL scheme for site %s was not provided, using https", site.Name)
 			}
-			o.EndpointResolver = s3.EndpointResolverFromURL(u.String())
+			o.BaseEndpoint = aws.String(u.String())
 		}
 		// set static credentials if needed
 		if site.AccessKey != "" && site.SecretAccessKey != "" {
