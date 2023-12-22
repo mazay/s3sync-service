@@ -97,9 +97,8 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
-        if: ${{ github.event_name == 'release' }}
         with:
-          name: s3sync-service-${{ env.GITHUB_REF_SLUG }}
+          name: s3sync-service-${{ env.GITHUB_REF_SLUG }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
           path: ./src/github.com/${{ github.repository }}/s3sync-service-*
 
   docker:
