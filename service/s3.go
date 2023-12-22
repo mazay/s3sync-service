@@ -105,7 +105,7 @@ func (site *Site) getObjectSize(s3Key string) int64 {
 	})
 
 	if err == nil {
-		size = obj.ContentLength
+		size = *obj.ContentLength
 	}
 
 	return size
@@ -141,7 +141,7 @@ func (site *Site) getAwsS3ItemMap() (map[string]string, error) {
 				items[*aws.String(*s3obj.Key)] = "none"
 			} else {
 				// Update metrics
-				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(s3obj.Size))
+				sizeMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Add(float64(*s3obj.Size))
 				objectsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name).Inc()
 				items[*aws.String(*s3obj.Key)] = strings.Trim(*(s3obj.ETag), "\"")
 			}
