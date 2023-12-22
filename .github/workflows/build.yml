@@ -118,6 +118,7 @@ jobs:
             password: QUAY_TOKEN
             base-repo: quay.io/s3sync-service/s3sync-service
           - registry: ghcr.io
+            username: GHCR_REGISTRY_USERNAME
             password: GITHUB_TOKEN
             base-repo: ghcr.io/${{ github.repository }}
     steps:
