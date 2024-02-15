@@ -28,7 +28,7 @@ docker run --rm -ti \
   -e "AWS_DEFAULT_REGION=us-east-1" \
   -v "/path/to/config:/opt/s3sync-service" \
   -v "/backup/path:/backup" \
-  zmazay/s3sync-service \
+  ghcr.io/mazay/s3sync-service:master \
   ./s3sync-service -config /opt/s3sync-service/config.yml
 ```
 
@@ -44,7 +44,7 @@ services:
     volumes:
       - '/backup/path:/backup'
       - '/path/to/config.yml:/app/config.yml'
-    image: zmazay/s3sync-service
+    image: ghcr.io/mazay/s3sync-service:master
 ```
 
 # Configuration
