@@ -53,7 +53,7 @@ Kubernetes: `>=1.13.10-0`
 | httpServer.enable | bool | `true` | enable the s3sync-service [http service](http-server.md) |
 | httpServer.port | int | `8090` | listen port for the s3sync http service |
 | image.pullPolicy | string | `"IfNotPresent"` | image pull policy |
-| image.repository | string | `"quay.io/s3sync-service/s3sync-service"` | docker repository, uses `quay.io` mirror by default |
+| image.repository | string | `"ghcr.io/mazay/s3sync-service"` | docker repository, uses `quay.io` mirror by default |
 | image.tag | string | `""` | overrides the image tag whose default is the chart appVersion |
 | imagePullSecrets | list | `[]` | might be useful when using private registry |
 | nodeSelector | object | `{}` | [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod |
