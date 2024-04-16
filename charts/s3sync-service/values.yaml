@@ -4,7 +4,7 @@
 
 image:
   # -- docker repository, uses `quay.io` mirror by default
-  repository: quay.io/s3sync-service/s3sync-service
+  repository: ghcr.io/mazay/s3sync-service
   # -- image pull policy
   pullPolicy: IfNotPresent
   # -- overrides the image tag whose default is the chart appVersion
