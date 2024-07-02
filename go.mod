@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.22
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.54.4
 	github.com/bxcodec/faker/v3 v3.8.1
-	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_golang v1.19.1
 	github.com/radovskyb/watcher v1.0.7
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v3 v3.0.1
