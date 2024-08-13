@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22.6-alpine3.19 AS builder
+FROM golang:1.22.6-alpine3.19 AS builder
 ARG RELEASE_VERSION=devel
 ARG TARGETOS
 ARG TARGETARCH
@@ -33,7 +33,7 @@ RUN go mod download
 # hadolint ignore=DL3059
 RUN go build -ldflags "-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
-FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.20.1
+FROM alpine:3.20.2
 ARG TARGETPLATFORM
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 # hadolint ignore=DL3018
