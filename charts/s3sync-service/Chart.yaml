@@ -2,8 +2,8 @@ apiVersion: v2
 name: s3sync-service
 description: A Helm chart for deploying s3sync-service on Kubernetes
 type: application
-version: 0.4.11
-appVersion: 0.4.11
+version: 0.4.12
+appVersion: 0.4.12
 kubeVersion: ">=1.13.10-0"
 home: https://docs.s3sync-service.org/
 
