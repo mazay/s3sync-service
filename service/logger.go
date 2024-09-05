@@ -58,7 +58,7 @@ func setLogLevel(level string) {
 			log.SetReportCaller(true)
 		}
 	} else {
-		LoggerInitError(fmt.Errorf("Log level definition not found for '%s'", level))
+		LoggerInitError(fmt.Errorf("log level definition not found for '%s'", level))
 	}
 }
 

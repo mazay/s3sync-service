@@ -24,9 +24,6 @@
 *.iml
 .teamcity/target
 
-### VSCode
-.vscode
-
 ### Test config
 config.yml
 

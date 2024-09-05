@@ -1,0 +1,13 @@
+{
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "gopls": {
+        "fomatting.gofumpt": true
+    },
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "run",
+        "--fast"
+    ]
+}
