@@ -1,7 +1,7 @@
 name: Build
 
 env:
-  GO_VERSION: "1.22"
+  GO_VERSION: "1.23"
   ATTACHMENTS: ""
   GOPATH: ${{ github.workspace }}
   BUCKET: charts.s3sync-service.org
