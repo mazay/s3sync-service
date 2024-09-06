@@ -13,5 +13,5 @@ jobs:
       with:
         git-push: true
         chart-search-root: charts/s3sync-service
-        template-files: ./docs-template.md
-        output-file: ../../docs/helm-charts.md
+        template-files: charts/s3sync-service/docs-template.md
+        output-file: docs/helm-charts.md
