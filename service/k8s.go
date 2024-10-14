@@ -77,7 +77,6 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 				reloaderChan <- false
 			},
 		},
-		ResyncPeriod: time.Minute,
 	}
 
 	_, controller := cache.NewInformerWithOptions(opts)
