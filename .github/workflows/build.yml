@@ -61,16 +61,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: test
-    strategy:
-      matrix:
-        go-os: [darwin, windows, linux, freebsd]
-        go-arch: [amd64, 386, arm, arm64]
-        exclude:
-          # excludes 32 bit architectures for darwin builds
-          - go-os: darwin
-            go-arch: 386
-          - go-os: darwin
-            go-arch: arm
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
