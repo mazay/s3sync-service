@@ -25,11 +25,10 @@ ENV GOARCH=${TARGETARCH}
 WORKDIR /go/src/github.com/mazay/s3sync-service
 # hadolint ignore=DL3018
 RUN apk --no-cache add git curl
+COPY go.mod go.sum ./
+RUN go mod download
 COPY service ./service
 COPY *.go ./
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
 # hadolint ignore=DL3059
 RUN go build -ldflags "-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}"
 
