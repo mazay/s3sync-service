@@ -91,16 +91,14 @@ jobs:
           cd ./src/github.com/${{ github.repository }}
           go mod download
 
-      - name: Build
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --clean
         env:
-          RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
-          OS: ${{ matrix.go-os }}
-          GOOS: ${{ matrix.go-os }}
-          ARCH: ${{ matrix.go-arch }}
-          GOARCH: ${{ matrix.go-arch }}
-        run: |
-          cd ./src/github.com/${{ github.repository }}
-          make build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
