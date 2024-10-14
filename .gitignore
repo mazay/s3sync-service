@@ -40,3 +40,5 @@ vendor
 
 ### Tests output
 cover.out
+
+dist/
