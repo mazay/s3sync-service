@@ -24,7 +24,7 @@ ENV GOOS=${TARGETOS}
 ENV GOARCH=${TARGETARCH}
 WORKDIR /go/src/github.com/mazay/s3sync-service
 # hadolint ignore=DL3018
-RUN apk --no-cache add git curl
+RUN apk --no-cache add git
 COPY go.mod go.sum ./
 RUN go mod download
 COPY service ./service
