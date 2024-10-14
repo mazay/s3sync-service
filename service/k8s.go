@@ -61,11 +61,10 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 		fields.OneTermEqualSelector("metadata.name", configmapName),
 	)
 
-	_, controller := cache.NewInformer(
-		watchlist,
-		&v1.ConfigMap{},
-		time.Second*0,
-		cache.ResourceEventHandlerFuncs{
+	opts := cache.InformerOptions{
+		ListerWatcher: watchlist,
+		ObjectType:    &v1.ConfigMap{},
+		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				logger.Infof("configmap %s added, triggering reload", configmap)
 				reloaderChan <- false
@@ -78,7 +77,9 @@ func k8sWatchCm(clientset kubernetes.Interface, configmap string, reloaderChan c
 				reloaderChan <- false
 			},
 		},
-	)
+	}
+
+	_, controller := cache.NewInformerWithOptions(opts)
 
 	stop := make(chan struct{})
 	go controller.Run(stop)
