@@ -48,6 +48,7 @@ Kubernetes: `>=1.13.10-0`
 | config.watch_interval | string | `"1s"` | [global](configuration.md#global-configuration-options) watch interval settings |
 | configmap.watch | bool | `true` | enable the [configmap watch](k8s-integration.md) feature |
 | createRbac | bool | `true` | set to false if you not planning on using configmap watch functionality or want to create RBAC objects manually |
+| foo | string | `"bar"` |  |
 | httpServer.enable | bool | `true` | enable the s3sync-service [http service](http-server.md) |
 | httpServer.port | int | `8090` | listen port for the s3sync http service |
 | image.pullPolicy | string | `"IfNotPresent"` | image pull policy |
