@@ -1,0 +1,6 @@
+target-branch: master
+chart-dirs:
+  - charts
+check-version-increment: false
+validate-maintainers: false
+lint-conf: lintconf.yaml
