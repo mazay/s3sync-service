@@ -1,7 +1,6 @@
 # Default values for s3sync-service.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-foo: bar
 
 image:
   # -- docker repository, uses `quay.io` mirror by default
