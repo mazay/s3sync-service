@@ -183,6 +183,7 @@ jobs:
         with:
           merge-multiple: true
           path: artifacts/
+          pattern: s3sync-service-*
 
       - name: Upload assets
         env:
