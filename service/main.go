@@ -176,8 +176,9 @@ func Start() {
 				wg.Done()
 				return
 			case force := <-reloaderChan:
-				_empty, newConfig := getConfig()
-				if !_empty && reflect.DeepEqual(config, newConfig) && !force {
+				oldConfig := config
+				_empty, config := getConfig()
+				if !_empty && reflect.DeepEqual(config, oldConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
@@ -214,7 +215,8 @@ func Start() {
 }
 
 func stopWorkers(config *Config, siteStopperChan chan<- bool,
-	uploadStopperChan chan<- bool, checksumStopperChan chan<- bool) {
+	uploadStopperChan chan<- bool, checksumStopperChan chan<- bool,
+) {
 	logger.Debugln("sending stop signal to all site watchers")
 	for range config.Sites {
 		siteStopperChan <- true
@@ -230,7 +232,8 @@ func stopWorkers(config *Config, siteStopperChan chan<- bool,
 }
 
 func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
-	uploadStopperChan <-chan bool) {
+	uploadStopperChan <-chan bool,
+) {
 	logger.Infof("starting %s upload workers", strconv.Itoa(config.UploadWorkers))
 	for x := 0; x < config.UploadWorkers; x++ {
 		wg.Add(1)
@@ -255,7 +258,8 @@ func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
 }
 
 func checksumWorker(config *Config, checksumCh <-chan ChecksumCFG,
-	uploadCh chan<- UploadCFG, checksumStopperChan <-chan bool) {
+	uploadCh chan<- UploadCFG, checksumStopperChan <-chan bool,
+) {
 	logger.Infof("starting %s checksum workers", strconv.Itoa(config.ChecksumWorkers))
 	for x := 0; x < config.ChecksumWorkers; x++ {
 		wg.Add(1)
@@ -278,7 +282,8 @@ func checksumWorker(config *Config, checksumCh <-chan ChecksumCFG,
 }
 
 func syncSites(config *Config, uploadCh chan<- UploadCFG,
-	checksumCh chan<- ChecksumCFG, siteStopperChan <-chan bool) {
+	checksumCh chan<- ChecksumCFG, siteStopperChan <-chan bool,
+) {
 	// Start separate goroutine for each site
 	for _, site := range config.Sites {
 		go func(site Site) {
