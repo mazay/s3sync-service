@@ -42,7 +42,7 @@ jobs:
 
       - name: Run tests
         env:
-          RELEASE_VERSION: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
         run: |
           cd ./src/github.com/${{ github.repository }}
           make test
@@ -85,7 +85,7 @@ jobs:
 
       - name: Build
         env:
-          RELEASE_VERSION: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
           OS: ${{ matrix.go-os }}
           GOOS: ${{ matrix.go-os }}
           ARCH: ${{ matrix.go-arch }}
@@ -97,7 +97,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: s3sync-service-${{ github.ref_name }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
+          name: s3sync-service-${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
           path: ./src/github.com/${{ github.repository }}/s3sync-service-*
 
   docker:
