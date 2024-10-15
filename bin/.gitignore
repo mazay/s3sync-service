@@ -1,0 +1,5 @@
+# ignore all binary files
+*
+
+# include selt
+!.gitignore

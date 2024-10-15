@@ -98,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: s3sync-service-${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
-          path: ./src/github.com/${{ github.repository }}/s3sync-service-*
+          path: ./src/github.com/${{ github.repository }}/bin/s3sync-service-*
 
   docker:
     runs-on: ubuntu-latest

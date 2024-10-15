@@ -16,9 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-DOCKER_PLATFORMS=linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le
-DOCKER_IMAGE_NAME=${DOCKER_BASE_REPO}:${RELEASE_VERSION}
-
 PLATFORMS=darwin/amd64 darwin/arm64 \
 windows/amd64 windows/386 windows/arm \
 linux/amd64 linux/386 linux/arm linux/arm64 \
@@ -45,43 +42,23 @@ endef
 
 build:
 	$(eval FILENAME := $(call get-filename,$(OS)))
-	go build -o $(FILENAME) -ldflags \
+	go build -o bin/$(FILENAME) -ldflags \
 	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}" && \
-	tar -czvf s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz $(FILENAME) && \
-	rm $(FILENAME)
+	tar -czvf bin/s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz bin/$(FILENAME) && \
+	rm bin/$(FILENAME)
 
 build-all: $(PLATFORMS)
 $(PLATFORMS):
 	$(eval OS := $(word 1,$(subst /, ,$@)))
 	$(eval ARCH := $(word 2,$(subst /, ,$@)))
 	$(eval FILENAME := $(call get-filename,$(OS)))
-	GOOS=$(OS) GOARCH=$(ARCH) go build -o $(FILENAME) -ldflags \
+	GOOS=$(OS) GOARCH=$(ARCH) go build -o bin/$(FILENAME) -ldflags \
 	"-X github.com/mazay/s3sync-service/service.version=${RELEASE_VERSION}" && \
-	tar -czvf s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz $(FILENAME) && \
-	rm $(FILENAME)
+	tar -czvf bin/s3sync-service-${RELEASE_VERSION}-$(OS)-$(ARCH).tar.gz bin/$(FILENAME) && \
+	rm bin/$(FILENAME)
 
 clean:
-	rm -rf ./s3sync-service*
-
-docker:
-	DOCKER_CLI_EXPERIMENTAL=enabled
-	docker buildx create --use
-	docker buildx build \
-	--build-arg RELEASE_VERSION=${RELEASE_VERSION} \
-	--push \
-	--tag $(DOCKER_IMAGE_NAME) -f ./Dockerfile .
-	docker buildx rm
-
-docker-multi-arch:
-	DOCKER_CLI_EXPERIMENTAL=enabled
-	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-	docker buildx create --use
-	docker buildx build \
-	--build-arg RELEASE_VERSION=${RELEASE_VERSION} \
-	--push \
-	--platform $(DOCKER_PLATFORMS) \
-	--tag $(DOCKER_IMAGE_NAME) -f ./Dockerfile .
-	docker buildx rm
+	rm -rf bin/s3sync-service*
 
 test:
 	GOFLAGS="-json" go test ./... -coverprofile cover.out
