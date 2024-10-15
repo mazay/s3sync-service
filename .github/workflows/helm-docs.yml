@@ -5,13 +5,20 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ github.event.pull_request.head.ref }}
-    - name: Run helm-docs
-      uses: losisin/helm-docs-github-action@v1
-      with:
-        git-push: true
-        chart-search-root: charts/s3sync-service
-        template-files: ./docs-template.md
-        output-file: ../../docs/helm-charts.md
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Add Homebrew to $PATH
+        run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+
+      - name: Install helm-docs
+        run: brew install helm-docs
+
+      - name: Run helm-docs
+        run: |
+          helm-docs \
+            --chart-search-root charts/s3sync-service \
+            --template-files ./docs-template.md \
+            --output-file ../../docs/helm-charts.md \
+            --values-file values.yaml
