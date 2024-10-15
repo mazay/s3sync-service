@@ -2,7 +2,7 @@ name: Generate Helm documentation
 on:
   - pull_request
 jobs:
-  generate:
+  helm-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
