@@ -42,7 +42,7 @@ jobs:
 
       - name: Run tests
         env:
-          RELEASE_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+          RELEASE_VERSION: devel # version doesn't really matter for tests but still has to be set
         run: |
           cd ./src/github.com/${{ github.repository }}
           make test
@@ -67,6 +67,21 @@ jobs:
           - go-os: darwin
             go-arch: arm
     steps:
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
       - name: Chechout
         uses: actions/checkout@v4
         with:
@@ -85,7 +100,7 @@ jobs:
 
       - name: Build
         env:
-          RELEASE_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
           OS: ${{ matrix.go-os }}
           GOOS: ${{ matrix.go-os }}
           ARCH: ${{ matrix.go-arch }}
@@ -97,7 +112,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: s3sync-service-${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
+          name: s3sync-service-${{ steps.meta.outputs.version }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
           path: ./src/github.com/${{ github.repository }}/bin/s3sync-service-*
 
   docker:
@@ -161,7 +176,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args:
-            RELEASE_VERSION=${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+            RELEASE_VERSION=${{ steps.meta.outputs.version }}
 
   publish:
     runs-on: ubuntu-latest
