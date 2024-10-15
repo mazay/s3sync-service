@@ -160,6 +160,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args:
+            RELEASE_VERSION=${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
 
   publish:
     runs-on: ubuntu-latest
