@@ -37,6 +37,13 @@ ARG TARGETPLATFORM
 LABEL maintainer="Yevgeniy Valeyev <z.mazay@gmail.com>"
 # hadolint ignore=DL3018
 RUN apk --no-cache add ca-certificates
+# hadolint ignore=DL3059
+RUN adduser \
+    --disabled-password \
+    --no-create-home \
+    -u 8888 \
+    s3sync
+USER s3sync
 WORKDIR /app/
 COPY --from=builder /go/src/github.com/mazay/s3sync-service/s3sync-service .
 CMD ["./s3sync-service"]
