@@ -24,9 +24,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v3.x
-
       - name: Chechout
         uses: actions/checkout@v4
         with:
@@ -45,7 +42,7 @@ jobs:
 
       - name: Run tests
         env:
-          RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
+          RELEASE_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
         run: |
           cd ./src/github.com/${{ github.repository }}
           make test
@@ -70,9 +67,6 @@ jobs:
           - go-os: darwin
             go-arch: arm
     steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v3.x
-
       - name: Chechout
         uses: actions/checkout@v4
         with:
@@ -91,7 +85,7 @@ jobs:
 
       - name: Build
         env:
-          RELEASE_VERSION: ${{ env.GITHUB_REF_SLUG }}
+          RELEASE_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
           OS: ${{ matrix.go-os }}
           GOOS: ${{ matrix.go-os }}
           ARCH: ${{ matrix.go-arch }}
@@ -103,7 +97,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: s3sync-service-${{ env.GITHUB_REF_SLUG }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
+          name: s3sync-service-${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
           path: ./src/github.com/${{ github.repository }}/s3sync-service-*
 
   docker:
@@ -172,9 +166,6 @@ jobs:
     if: ${{ github.event_name == 'release' }}
     needs: build
     steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v3.x
-
       - name: Chechout
         uses: actions/checkout@v4
 
@@ -190,7 +181,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for artifact in $(ls artifacts/*); do ATTACHMENTS="${ATTACHMENTS} ${artifact}"; done;
-          gh release upload ${{ env.GITHUB_REF_SLUG }} ${ATTACHMENTS}
+          gh release upload ${{ github.ref_name }} ${ATTACHMENTS}
 
   helm-release:
     name: helm-release
