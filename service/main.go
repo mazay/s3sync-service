@@ -177,8 +177,8 @@ func Start() {
 				return
 			case force := <-reloaderChan:
 				oldConfig := &config
-				_empty, config := getConfig()
-				if !_empty && reflect.DeepEqual(config, oldConfig) && !force {
+				_empty, newConfig := getConfig()
+				if !_empty && reflect.DeepEqual(newConfig, oldConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
