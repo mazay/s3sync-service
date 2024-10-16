@@ -192,14 +192,13 @@ func readConfigFile(configpath string) *Config {
 }
 
 func readConfigString(cfgData string) *Config {
-	var cfg *Config
+	err := yaml.Unmarshal([]byte(cfgData), &config)
 
-	err := yaml.Unmarshal([]byte(cfgData), &cfg)
 	if err != nil {
 		configProcessError(err)
 	} else {
-		cfg.setDefaults()
+		config.setDefaults()
 	}
 
-	return cfg
+	return config
 }
