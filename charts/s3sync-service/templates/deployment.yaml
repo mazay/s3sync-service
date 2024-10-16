@@ -78,7 +78,7 @@ spec:
         livenessProbe:
           failureThreshold: 3
           httpGet:
-            path: /info
+            path: /healthz
             port: {{ .Values.httpServer.port }}
             scheme: HTTP
           initialDelaySeconds: 20
@@ -88,7 +88,7 @@ spec:
         readinessProbe:
           failureThreshold: 3
           httpGet:
-            path: /info
+            path: /healthz
             port: {{ .Values.httpServer.port }}
             scheme: HTTP
           initialDelaySeconds: 20
