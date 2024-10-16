@@ -177,8 +177,8 @@ func Start() {
 				return
 			case force := <-reloaderChan:
 				oldConfig := &config
-				_empty, newConfig := getConfig()
-				if !_empty && reflect.DeepEqual(newConfig, oldConfig) && !force {
+				_empty, config := getConfig()
+				if !_empty && reflect.DeepEqual(config, oldConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
@@ -192,7 +192,6 @@ func Start() {
 						errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "watcher").Set(0)
 					}
 					logger.Infoln("reloading configuration")
-					_empty, config = getConfig()
 					if !_empty {
 						// Switch logging level (if needed), can't be switched to lower verbosity
 						setLogLevel(config.LogLevel)
