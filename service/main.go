@@ -20,7 +20,6 @@ package service
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"reflect"
@@ -179,9 +178,9 @@ func Start() {
 			case force := <-reloaderChan:
 				oldConfig := &config
 				_empty, newConfig := getConfig()
-				fmt.Printf("%+v\n", oldConfig)
-				fmt.Printf("%+v\n", newConfig)
-				fmt.Printf("%+v\n", config)
+				logger.Infoln(oldConfig)
+				logger.Infoln(newConfig)
+				logger.Infoln(config)
 				if !_empty && reflect.DeepEqual(newConfig, oldConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
