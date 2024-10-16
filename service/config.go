@@ -134,30 +134,34 @@ func getConfig() (bool, *Config) {
 }
 
 func readConfigFile(configpath string) *Config {
+	var cfg *Config
+
 	f, err := os.Open(configpath)
 	if err != nil {
 		configProcessError(err)
 	}
 
 	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&config)
+	err = decoder.Decode(&cfg)
 	f.Close()
 	if err != nil {
 		configProcessError(err)
 	} else {
-		config.setDefaults()
+		cfg.setDefaults()
 	}
 
-	return config
+	return cfg
 }
 
 func readConfigString(cfgData string) *Config {
-	err := yaml.Unmarshal([]byte(cfgData), &config)
+	var cfg *Config
+
+	err := yaml.Unmarshal([]byte(cfgData), &cfg)
 	if err != nil {
 		configProcessError(err)
 	} else {
-		config.setDefaults()
+		cfg.setDefaults()
 	}
 
-	return config
+	return cfg
 }
