@@ -39,15 +39,13 @@ var (
 	status     string
 	configpath string
 	configmap  string
-	config     *Config
 	clientset  kubernetes.Interface
 
+	config      = &Config{}
 	startupTime = time.Now()
-
-	osExit = os.Exit
-	wg     = sync.WaitGroup{}
-
-	inK8s = isInK8s()
+	osExit      = os.Exit
+	wg          = sync.WaitGroup{}
+	inK8s       = isInK8s()
 
 	sizeMetric = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
