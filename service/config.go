@@ -69,6 +69,7 @@ func (cfg *Config) setDefaults() {
 	}
 }
 
+// DeppCopy the config data
 func (cfg *Config) DeepCopy() *Config {
 	copy := &Config{
 		AccessKey:         cfg.AccessKey,
