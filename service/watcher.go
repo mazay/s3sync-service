@@ -28,7 +28,8 @@ import (
 )
 
 func watch(site *Site, uploadCh chan<- UploadCFG,
-	siteStopperChan <-chan bool) {
+	siteStopperChan <-chan bool,
+) {
 	logger.Printf("starting the FS watcher for site %s", site.Name)
 
 	w := watcher.New()

@@ -69,6 +69,45 @@ func (cfg *Config) setDefaults() {
 	}
 }
 
+// DeppCopy the config data
+func (cfg *Config) DeepCopy() *Config {
+	copy := &Config{
+		AccessKey:         cfg.AccessKey,
+		SecretAccessKey:   cfg.SecretAccessKey,
+		AwsRegion:         cfg.AwsRegion,
+		LogLevel:          cfg.LogLevel,
+		UploadQueueBuffer: cfg.UploadQueueBuffer,
+		UploadWorkers:     cfg.UploadWorkers,
+		ChecksumWorkers:   cfg.ChecksumWorkers,
+		WatchInterval:     cfg.WatchInterval,
+		S3OpsRetries:      cfg.S3OpsRetries,
+	}
+
+	for _, site := range cfg.Sites {
+		siteCopy := &Site{
+			Name:            site.Name,
+			LocalPath:       site.LocalPath,
+			Bucket:          site.Bucket,
+			Endpoint:        site.Endpoint,
+			BucketPath:      site.BucketPath,
+			BucketRegion:    site.BucketRegion,
+			StorageClass:    site.StorageClass,
+			AccessKey:       site.AccessKey,
+			SecretAccessKey: site.SecretAccessKey,
+			RetireDeleted:   site.RetireDeleted,
+			WatchInterval:   site.WatchInterval,
+			S3OpsRetries:    site.S3OpsRetries,
+			client:          site.client,
+		}
+		siteCopy.Exclusions = append(siteCopy.Exclusions, site.Exclusions...)
+		siteCopy.Inclusions = append(siteCopy.Inclusions, site.Inclusions...)
+
+		copy.Sites = append(copy.Sites, *siteCopy)
+	}
+
+	return copy
+}
+
 func (site *Site) setDefaults(cfg *Config) {
 	// Remove leading slash from the BucketPath
 	site.BucketPath = strings.TrimPrefix(site.BucketPath, "/")
@@ -113,9 +152,10 @@ func configProcessError(err error) {
 }
 
 func getConfig() (bool, *Config) {
-	var emptyConfig *Config
-
-	empty := true
+	var (
+		emptyConfig *Config
+		empty       = true
+	)
 
 	if inK8s && configmap != "" {
 		cfg := k8sGetCm(clientset, configmap)
@@ -151,6 +191,7 @@ func readConfigFile(configpath string) *Config {
 
 func readConfigString(cfgData string) *Config {
 	err := yaml.Unmarshal([]byte(cfgData), &config)
+
 	if err != nil {
 		configProcessError(err)
 	} else {
