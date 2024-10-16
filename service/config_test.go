@@ -63,7 +63,7 @@ func TestReadNonexistentConfigFile(t *testing.T) {
 }
 
 func TestSetDefaults(t *testing.T) {
-	var SetDefaultsData = []SetDefaultsTest{
+	SetDefaultsData := []SetDefaultsTest{
 		// Valid set with all fields set - no overrides with defaults
 		{
 			`
@@ -115,5 +115,19 @@ sites:
 				)
 			}
 		}
+	}
+}
+
+func TestConfigDeepCopy(t *testing.T) {
+	configpath = "../test_data/valid_config.yml"
+	empty, config := getConfig()
+	oldConfig := config.DeepCopy()
+
+	if !reflect.DeepEqual(config, oldConfig) {
+		t.Error("Expected the deep copy would produce equal configs")
+	}
+
+	if empty {
+		t.Error("Expected to get config data, got empty struct")
 	}
 }
