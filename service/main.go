@@ -176,6 +176,7 @@ func Start() {
 				wg.Done()
 				return
 			case force := <-reloaderChan:
+				logger.Infoln(config)
 				oldConfig := &config
 				_empty, config := getConfig()
 				logger.Infoln(config)
