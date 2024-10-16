@@ -181,6 +181,7 @@ func Start() {
 				_empty, newConfig := getConfig()
 				fmt.Printf("%+v\n", oldConfig)
 				fmt.Printf("%+v\n", newConfig)
+				fmt.Printf("%+v\n", config)
 				if !_empty && reflect.DeepEqual(newConfig, oldConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
