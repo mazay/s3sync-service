@@ -176,12 +176,10 @@ func Start() {
 				wg.Done()
 				return
 			case force := <-reloaderChan:
-				oldConfig := &config
 				_empty, newConfig := getConfig()
-				logger.Infoln(oldConfig)
 				logger.Infoln(newConfig)
 				logger.Infoln(config)
-				if !_empty && reflect.DeepEqual(newConfig, oldConfig) && !force {
+				if !_empty && reflect.DeepEqual(newConfig, config) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
