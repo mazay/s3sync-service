@@ -119,7 +119,7 @@ func infoHandler(res http.ResponseWriter, req *http.Request) {
 		version,
 		startupTime,
 		status,
-		len(config.Sites),
+		0,
 		config.UploadWorkers,
 		config.ChecksumWorkers,
 		config.LogLevel,
