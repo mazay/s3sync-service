@@ -176,11 +176,8 @@ func Start() {
 				wg.Done()
 				return
 			case force := <-reloaderChan:
-				logger.Infoln(config)
 				oldConfig := config.DeepCopy()
 				_empty, config := getConfig()
-				logger.Infoln(config)
-				logger.Infoln(oldConfig)
 				if !_empty && reflect.DeepEqual(config, oldConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
