@@ -22,8 +22,9 @@ imagePullSecrets: []
 podAnnotations: {}
 
 # -- the [pod security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod)
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  runAsUser: 8888
+  runAsNonRoot: true
 
 # -- the [container security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container)
 securityContext: {}
