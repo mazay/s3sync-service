@@ -177,7 +177,7 @@ func Start() {
 				return
 			case force := <-reloaderChan:
 				logger.Infoln(config)
-				oldConfig := &config
+				oldConfig := config.DeepCopy()
 				_empty, config := getConfig()
 				logger.Infoln(config)
 				logger.Infoln(oldConfig)
