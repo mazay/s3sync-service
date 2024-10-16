@@ -172,23 +172,21 @@ func getConfig() (bool, *Config) {
 }
 
 func readConfigFile(configpath string) *Config {
-	var cfg *Config
-
 	f, err := os.Open(configpath)
 	if err != nil {
 		configProcessError(err)
 	}
 
 	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&cfg)
+	err = decoder.Decode(&config)
 	f.Close()
 	if err != nil {
 		configProcessError(err)
 	} else {
-		cfg.setDefaults()
+		config.setDefaults()
 	}
 
-	return cfg
+	return config
 }
 
 func readConfigString(cfgData string) *Config {
