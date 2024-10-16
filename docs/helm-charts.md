@@ -56,7 +56,7 @@ Kubernetes: `>=1.13.10-0`
 | imagePullSecrets | list | `[]` | might be useful when using private registry |
 | nodeSelector | object | `{}` | [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod |
 | podAnnotations | object | `{}` | extra pod annotations |
-| podSecurityContext | object | `{}` | the [pod security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) |
+| podSecurityContext | object | `{"runAsNonRoot":true,"runAsUser":8888}` | the [pod security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) |
 | prometheusExporter.enable | bool | `true` | enable built-in prometheus exporter |
 | prometheusExporter.path | string | `"/metrics"` | netrics path for the prometheus exporter |
 | prometheusExporter.port | int | `9350` | listen port for the built-in prometheus exporter |
