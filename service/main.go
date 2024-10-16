@@ -20,6 +20,7 @@ package service
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"reflect"
@@ -177,11 +178,14 @@ func Start() {
 				return
 			case force := <-reloaderChan:
 				oldConfig := &config
-				_empty, config := getConfig()
-				if !_empty && reflect.DeepEqual(config, oldConfig) && !force {
+				_empty, newConfig := getConfig()
+				fmt.Printf("%+v\n", oldConfig)
+				fmt.Printf("%+v\n", newConfig)
+				if !_empty && reflect.DeepEqual(newConfig, oldConfig) && !force {
 					logger.Infoln("no config changes detected, reload cancelled")
 				} else {
 					status = "RELOADING"
+					config = newConfig
 					// Reset metrics
 					for _, site := range config.Sites {
 						site.setDefaults(config)
