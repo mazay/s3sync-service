@@ -23,4 +23,5 @@ The HTTP server is started by default and listens for port `8090`, which can be 
 | Resource | Response code | Description |
 |----------|:-------------:|-------------|
 | `/reload` | `200` | Triggers [application reload](how-it-works.md#application-reload), there is an optional URL parameter - `force` |
-| `/info` | `200` | Returns some basic info on the application, such as running version, startup time, etc. Used for k8s health checks. |
+| `/info` | `200` | Returns some basic info on the application, such as running version, startup time, etc. |
+| `/healthz` | `200` | Same as `/info` but excluded from the logs. Used for k8s health checks. |
