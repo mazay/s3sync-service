@@ -81,8 +81,10 @@ func (rh *ReloadHandler) handler(res http.ResponseWriter, req *http.Request) {
 // HTTP handler wrapper function
 func handlerWrapper(fn http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		logger.Infof("%s - \"%s %s %s\" %s", req.RemoteAddr, req.Method,
-			req.URL.Path, req.Proto, strconv.FormatInt(req.ContentLength, 10))
+		if req.URL.Path != "/healthz" {
+			logger.Infof("%s - \"%s %s %s\" %s", req.RemoteAddr, req.Method,
+				req.URL.Path, req.Proto, strconv.FormatInt(req.ContentLength, 10))
+		}
 
 		res.Header().Set("Server", "s3sync-service"+"/"+version)
 		res.Header().Set("Content-Type", "application/json")
@@ -102,6 +104,7 @@ func prometheusExporter(metricsPort string, metricsPath string) {
 func httpServer(httpPort string, reloaderChan chan<- bool) {
 	logger.Infof("starting http server on port %s", httpPort)
 	reloadHandler := ReloadHandler{Chan: reloaderChan}
+	http.HandleFunc("/healthz", handlerWrapper(infoHandler))
 	http.HandleFunc("/info", handlerWrapper(infoHandler))
 	http.HandleFunc("/reload", handlerWrapper(reloadHandler.handler))
 	logger.Fatalln(http.ListenAndServe(":"+httpPort, nil))
