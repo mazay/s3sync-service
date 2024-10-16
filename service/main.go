@@ -195,7 +195,7 @@ func Start() {
 					if !_empty {
 						// Switch logging level (if needed), can't be switched to lower verbosity
 						setLogLevel(config.LogLevel)
-						stopWorkers(config, siteStopperChan, uploadStopperChan, checksumStopperChan)
+						stopWorkers(oldConfig, siteStopperChan, uploadStopperChan, checksumStopperChan)
 						logger.Debugln("reading config file")
 						// Start upload workers
 						uploadWorker(config, uploadCh, uploadStopperChan)
