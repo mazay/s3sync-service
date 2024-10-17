@@ -104,15 +104,17 @@ func isInK8s() bool {
 
 // Start function starts the s3sync-service daemon
 func Start() {
-	var httpPort string
-	var metricsPort string
-	var metricsPath string
+	var (
+		httpPort    int
+		metricsPort int
+		metricsPath string
+	)
 
 	// Read command line args
 	flag.StringVar(&configpath, "config", "config.yml", "Path to the config.yml")
 	flag.StringVar(&configmap, "configmap", "", "K8s configmap in the format namespace/configmap, if set config is ignored and s3sync-service will read and watch for changes in the specified configmap")
-	flag.StringVar(&httpPort, "http-port", "8090", "Port for internal HTTP server, 0 to disable")
-	flag.StringVar(&metricsPort, "metrics-port", "9350", "Prometheus exporter port, 0 to disable the exporter")
+	flag.IntVar(&httpPort, "http-port", 8090, "Port for internal HTTP server, 0 to disable")
+	flag.IntVar(&metricsPort, "metrics-port", 9350, "Prometheus exporter port, 0 to disable the exporter")
 	flag.StringVar(&metricsPath, "metrics-path", "/metrics", "Prometheus exporter path")
 	flag.Parse()
 
@@ -150,12 +152,12 @@ func Start() {
 	checksumCh := make(chan ChecksumCFG)
 
 	// Start http server
-	if httpPort != "0" {
+	if httpPort != 0 {
 		go httpServer(httpPort, reloaderChan)
 	}
 
 	// Start prometheus exporter
-	if metricsPort != "0" {
+	if metricsPort != 0 {
 		go prometheusExporter(metricsPort, metricsPath)
 	}
 
