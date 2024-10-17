@@ -19,6 +19,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -40,6 +42,24 @@ func TestIsInK8s(t *testing.T) {
 			}
 			if got := isInK8s(); got != tt.want {
 				t.Errorf("isInK8s() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCmValidate(t *testing.T) {
+	tests := []struct {
+		cm     string
+		result bool
+	}{
+		{"configmap-name", false},
+		{"namespace/configmap-name", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.cm, func(t *testing.T) {
+			if err := cmValidate(tt.cm); errors.Is(err, nil) != tt.result {
+				fmt.Print(errors.Is(err, nil))
+				t.Errorf("cmValidate unexpectedly failed with %s", err)
 			}
 		})
 	}
