@@ -20,10 +20,12 @@ package service
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -115,6 +117,14 @@ func Start() {
 	flag.Parse()
 
 	status = "STARTING"
+
+	if configmap != "" {
+		err := cmValidate(configmap)
+		if err != nil {
+			logger.Error(err)
+			osExit(7)
+		}
+	}
 
 	if isInK8s() && configmap != "" {
 		clientset = k8sClientset()
@@ -305,4 +315,14 @@ func syncSites(config *Config, uploadCh chan<- UploadCFG,
 			}
 		}(site)
 	}
+}
+
+// cmValidate checks if provided configmap argument matches the pattern
+func cmValidate(cm string) error {
+	cmSplit := strings.Split(cm, "/")
+	if len(cmSplit) != 2 {
+		return fmt.Errorf("unexpected format for the configmap argument, expected format is '<namespace>/<configmap-name>', got '%s'", cm)
+	}
+
+	return nil
 }
