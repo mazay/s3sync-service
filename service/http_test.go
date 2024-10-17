@@ -111,7 +111,7 @@ func TestReloadHandler(t *testing.T) {
 }
 
 func TestPrometheusExporter(t *testing.T) {
-	go prometheusExporter("9350", "/metrics")
+	go prometheusExporter(9350, "/metrics")
 
 	// Give http server some time to start
 	time.Sleep(time.Second * 5)
@@ -132,7 +132,7 @@ func TestPrometheusExporter(t *testing.T) {
 func TestHttpServerr(t *testing.T) {
 	tstReloaderChan := make(chan bool)
 
-	go httpServer("8090", tstReloaderChan)
+	go httpServer(8090, tstReloaderChan)
 
 	// Give http server some time to start
 	time.Sleep(time.Second * 5)

@@ -20,6 +20,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -94,20 +95,20 @@ func handlerWrapper(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 // Prometheus exporter http server
-func prometheusExporter(metricsPort string, metricsPath string) {
-	logger.Infof("starting prometheus exporter on port %s and path %s", metricsPort, metricsPath)
+func prometheusExporter(metricsPort int, metricsPath string) {
+	logger.Infof("starting prometheus exporter on port %d and path %s", metricsPort, metricsPath)
 	http.Handle(metricsPath, promhttp.Handler())
-	logger.Fatalln(http.ListenAndServe(":"+metricsPort, nil))
+	logger.Fatalln(http.ListenAndServe(fmt.Sprintf(":%d", metricsPort), nil))
 }
 
 // API http server
-func httpServer(httpPort string, reloaderChan chan<- bool) {
-	logger.Infof("starting http server on port %s", httpPort)
+func httpServer(httpPort int, reloaderChan chan<- bool) {
+	logger.Infof("starting http server on port %d", httpPort)
 	reloadHandler := ReloadHandler{Chan: reloaderChan}
 	http.HandleFunc("/healthz", handlerWrapper(infoHandler))
 	http.HandleFunc("/info", handlerWrapper(infoHandler))
 	http.HandleFunc("/reload", handlerWrapper(reloadHandler.handler))
-	logger.Fatalln(http.ListenAndServe(":"+httpPort, nil))
+	logger.Fatalln(http.ListenAndServe(fmt.Sprintf(":%d", httpPort), nil))
 }
 
 // Info resource handler
