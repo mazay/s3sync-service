@@ -9,7 +9,7 @@ changelog:
     - title: 🐞 Bug fixes
       labels:
         - bug
-    - title: 👒 Dependencies
+    - title: 📦 Dependencies
       labels:
         - dependencies
     - title: 📘 Documentation
