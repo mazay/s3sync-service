@@ -20,6 +20,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"os"
 	"path"
@@ -60,14 +61,11 @@ func generateS3Key(bucketPath string, localPath string, filePath string) string 
 }
 
 func (site *Site) getS3Session() {
-	var (
-		err error
-	)
+	var err error
 
 	cfg, err := awsCfg.LoadDefaultConfig(context.TODO(),
 		awsCfg.WithRegion(site.BucketRegion),
 	)
-
 	if err != nil {
 		logger.Fatalf("failed to load SDK configuration, %v", err)
 	}
@@ -161,10 +159,11 @@ func (site *Site) uploadFile(file string) {
 	})
 
 	f, err := os.Open(file)
-
 	if err != nil {
-		// Update errors metric
-		errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
+		// Update errors metric unless the error is file does not exist
+		if !errors.Is(err, os.ErrNotExist) {
+			errorsMetric.WithLabelValues(site.LocalPath, site.Bucket, site.BucketPath, site.Name, "local").Inc()
+		}
 		logger.Errorf("failed to open file %q, %v", file, err)
 		return
 	}
