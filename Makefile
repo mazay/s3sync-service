@@ -61,4 +61,4 @@ clean:
 	rm -rf bin/s3sync-service*
 
 test:
-	GOFLAGS="-json" go test ./... -coverprofile cover.out
+	GOFLAGS="-json" go test -timeout 5m ./... -coverprofile cover.out
