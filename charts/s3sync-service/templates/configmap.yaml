@@ -20,7 +20,5 @@ data:
     checksum_workers: {{ .Values.config.checksum_workers }}
     watch_interval: {{ .Values.config.watch_interval }}
     s3_ops_retries: {{ .Values.config.s3_ops_retries }}
-    {{- if .Values.config.sites}}
     sites:
     {{- toYaml .Values.config.sites | nindent 4 -}}
-    {{- end }}
