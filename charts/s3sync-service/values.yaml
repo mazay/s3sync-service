@@ -18,6 +18,9 @@ serviceAccountName: ""
 # -- might be useful when using private registry
 imagePullSecrets: []
 
+# -- extra labels
+labels: {}
+
 # -- extra pod annotations
 podAnnotations: {}
 
@@ -68,6 +71,8 @@ prometheusExporter:
   path: /metrics
 
 configmap:
+  # -- configmap.name overrides the default configmap name
+  name: ""
   # -- enable the [configmap watch](k8s-integration.md) feature
   watch: true
 

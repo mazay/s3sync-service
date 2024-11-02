@@ -22,3 +22,5 @@ docs-template.md
 .idea/
 *.tmproj
 .vscode/
+# CI values
+ci/*

@@ -46,6 +46,7 @@ Kubernetes: `>=1.13.10-0`
 | config.upload_queue_buffer | int | `0` | the upload queue buffer, check the [documentation](configuration.md#global-configuration-options) for details |
 | config.upload_workers | int | `10` | number of the upload workers |
 | config.watch_interval | string | `"1s"` | [global](configuration.md#global-configuration-options) watch interval settings |
+| configmap.name | string | `""` | configmap.name overrides the default configmap name |
 | configmap.watch | bool | `true` | enable the [configmap watch](k8s-integration.md) feature |
 | createRbac | bool | `true` | set to false if you not planning on using configmap watch functionality or want to create RBAC objects manually |
 | httpServer.enable | bool | `true` | enable the s3sync-service [http service](http-server.md) |
@@ -54,6 +55,7 @@ Kubernetes: `>=1.13.10-0`
 | image.repository | string | `"ghcr.io/mazay/s3sync-service"` | docker repository, uses `quay.io` mirror by default |
 | image.tag | string | `""` | overrides the image tag whose default is the chart appVersion |
 | imagePullSecrets | list | `[]` | might be useful when using private registry |
+| labels | object | `{}` | extra labels |
 | nodeSelector | object | `{}` | [nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) for the pod |
 | podAnnotations | object | `{}` | extra pod annotations |
 | podSecurityContext | object | `{"runAsNonRoot":true,"runAsUser":8888}` | the [pod security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod) |

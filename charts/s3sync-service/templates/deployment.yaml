@@ -1,34 +1,25 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "s3sync.fullname" . }}
+  labels:
+    {{- include "s3sync.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: s3sync-service
+      {{- include "s3sync.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: s3sync-service
+        {{- include "s3sync.labels" . | nindent 8 }}
     {{- if or .Values.podAnnotations .Values.prometheusExporter.enable }}
       annotations:
-        {{- if .Values.prometheusExporter.enable }}
-        prometheus.io/path: {{ .Values.prometheusExporter.path | quote }}
-        prometheus.io/port: {{ .Values.prometheusExporter.port | quote }}
-        prometheus.io/scrape: "true"
-        {{- end }}
-      {{- range $key, $value := .Values.podAnnotations }}
-        {{ $key }}: {{ $value | quote }}
-      {{- end }}
+        {{- include "s3sync.podAnnotations" . | nindent 8 }}
     {{- end }}
     spec:
-    {{- if .Values.createRbac }}
-      serviceAccountName: {{ .Release.Name }}
-    {{- else if .Values.serviceAccountName }}
-      serviceAccountName: {{ .Values.serviceAccountName }}
-    {{- end }}
+      serviceAccountName: {{ include "s3sync.serviceAccountName" . }}
     {{- if .Values.imagePullSecrets }}
       imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
     {{- end }}
@@ -46,13 +37,13 @@ spec:
       affinity: {{ toYaml .Values.affinity | nindent 8 }}
     {{- end }}
       containers:
-      - name: {{ .Release.Name }}
+      - name: "s3sync"
         image: {{ .Values.image.repository }}:{{- if .Values.image.tag }}{{ .Values.image.tag }}{{- else }}{{ .Chart.AppVersion }}{{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - "./s3sync-service"
       {{- if .Values.configmap.watch }}
-        - "-configmap={{ .Release.Namespace }}/{{ .Release.Name }}"
+        - "-configmap={{ .Release.Namespace }}/{{ include "s3sync.configmapName" . }}"
       {{- else }}
         - "-config=/opt/s3sync-service/config.yml"
       {{- end }}
@@ -68,8 +59,8 @@ spec:
       {{- if or (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) .Values.secret.name }}
         envFrom:
         - secretRef:
-          {{- if and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY }}
-            name: {{ .Release.Name }}
+          {{- if and (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) (eq .Values.secret.name "") }}
+            name: {{ include "s3sync.fullname" . }}
           {{- else }}
             name: {{ .Values.secret.name }}
           {{- end }}
@@ -116,6 +107,6 @@ spec:
       - name: config-volume
         configMap:
           defaultMode: 420
-          name: {{ if .Values.configmap.name }}{{ .Values.configmap.name }}{{ else }}{{ .Release.Namespace }}/{{ .Release.Name }}{{ end }}
+          name: {{ include "s3sync.configmapName" . }}
     {{- end }}
     {{- end }}
