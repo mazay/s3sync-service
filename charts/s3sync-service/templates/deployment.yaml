@@ -59,7 +59,7 @@ spec:
       {{- if or (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) .Values.secret.name }}
         envFrom:
         - secretRef:
-          {{- if and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY }}
+          {{- if and (and .Values.secret.AWS_ACCESS_KEY_ID .Values.secret.AWS_SECRET_ACCESS_KEY) (eq .Values.secret.name "") }}
             name: {{ include "s3sync.fullname" . }}
           {{- else }}
             name: {{ .Values.secret.name }}
