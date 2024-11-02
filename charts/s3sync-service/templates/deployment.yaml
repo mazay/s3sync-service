@@ -3,18 +3,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "s3sync.fullname" . }}
+  labels:
+    {{- include "s3sync.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{ include "s3sync.labels" . | nindent 6 }}
+      {{- include "s3sync.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{ include "s3sync.labels" . | nindent 8 }}
+        {{- include "s3sync.labels" . | nindent 8 }}
     {{- if or .Values.podAnnotations .Values.prometheusExporter.enable }}
       annotations:
-        {{ include "s3sync.podAnnotations" . | nindent 8 }}
+        {{- include "s3sync.podAnnotations" . | nindent 8 }}
     {{- end }}
     spec:
       serviceAccountName: {{ include "s3sync.serviceAccountName" . }}

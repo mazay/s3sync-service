@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  labels:
-    {{ include "s3sync.labels" . | nindent 4 }}
   name: {{ include "s3sync.fullname" . }}
+  labels:
+    {{- include "s3sync.labels" . | nindent 4 }}
 data:
   config.yml: |-
   {{- if .Values.config.access_key }}
@@ -20,5 +20,7 @@ data:
     checksum_workers: {{ .Values.config.checksum_workers }}
     watch_interval: {{ .Values.config.watch_interval }}
     s3_ops_retries: {{ .Values.config.s3_ops_retries }}
+    {{- if .Values.config.sites}}
     sites:
     {{- toYaml .Values.config.sites | nindent 4 -}}
+    {{- end }}

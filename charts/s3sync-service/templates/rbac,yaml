@@ -5,7 +5,7 @@ kind: Role
 metadata:
   name: {{ include "s3sync.fullname" . }}
   labels:
-    {{ include "s3sync.labels" . | nindent 4 }}
+    {{- include "s3sync.labels" . | nindent 4 }}
 rules:
   - apiGroups:
       - ""
@@ -23,7 +23,7 @@ kind: RoleBinding
 metadata:
   name: {{ include "s3sync.fullname" . }}
   labels:
-    {{ include "s3sync.labels" . | nindent 4 }}
+    {{- include "s3sync.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -38,5 +38,5 @@ kind: ServiceAccount
 metadata:
   name: {{ include "s3sync.fullname" . }}
   labels:
-    {{ include "s3sync.labels" . | nindent 4 }}
+    {{- include "s3sync.labels" . | nindent 4 }}
 {{- end }}

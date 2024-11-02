@@ -12,14 +12,18 @@
 
 {{- define "s3sync.labels" -}}
 app: {{ include "s3sync.fullname" . | quote }}
+{{- if .Values.labels -}}
 {{ toYaml .Values.labels }}
+{{- end -}}
 {{- end -}}
 
 {{- define "s3sync.podAnnotations" -}}
+{{- if .Values.podAnnotations -}}
 {{ toYaml .Values.podAnnotations }}
-{{- if .Values.prometheusExporter.enable }}
+{{- end -}}
+{{- if .Values.prometheusExporter.enable -}}
 prometheus.io/path: {{ .Values.prometheusExporter.path | quote }}
 prometheus.io/port: {{ .Values.prometheusExporter.port | quote }}
 prometheus.io/scrape: "true"
-{{- end }}
+{{- end -}}
 {{- end -}}
