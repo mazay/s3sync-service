@@ -7,7 +7,13 @@
 {{- end -}}
 
 {{- define "s3sync.serviceAccountName" -}}
-{{- .Values.serviceAccountName | default (include "s3sync.fullname" .) -}}
+{{- if .Values.serviceAccountName -}}
+{{- .Values.serviceAccountName -}}
+{{- else if .Values.createRbac -}}
+{{- include "s3sync.fullname" . -}}
+{{- else -}}
+default
+{{- end -}}
 {{- end -}}
 
 {{- define "s3sync.labels" -}}

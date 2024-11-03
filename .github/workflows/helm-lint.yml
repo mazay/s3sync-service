@@ -30,7 +30,13 @@ jobs:
         uses: helm/chart-testing-action@v2
 
       - name: Helm template
-        run: helm template charts/s3sync-service
+        run: |
+          shopt -s globstar
+          for v in charts/s3sync-service/ci/**/*.y*ml; do
+            echo "::group::Template for ${v}"
+            helm template charts/s3sync-service -f "${v}"
+            echo "::endgroup::"
+          done
 
       - name: Run chart-testing (list-changed)
         id: list-changed
