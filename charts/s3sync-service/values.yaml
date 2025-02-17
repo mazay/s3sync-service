@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 image:
-  # -- docker repository, uses `quay.io` mirror by default
+  # -- docker repository, uses `gchr.io` mirror by default
   repository: ghcr.io/mazay/s3sync-service
   # -- image pull policy
   pullPolicy: IfNotPresent
