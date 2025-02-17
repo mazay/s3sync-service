@@ -52,7 +52,7 @@ Kubernetes: `>=1.13.10-0`
 | httpServer.enable | bool | `true` | enable the s3sync-service [http service](http-server.md) |
 | httpServer.port | int | `8090` | listen port for the s3sync http service |
 | image.pullPolicy | string | `"IfNotPresent"` | image pull policy |
-| image.repository | string | `"ghcr.io/mazay/s3sync-service"` | docker repository, uses `quay.io` mirror by default |
+| image.repository | string | `"ghcr.io/mazay/s3sync-service"` | docker repository, uses `gchr.io` mirror by default |
 | image.tag | string | `""` | overrides the image tag whose default is the chart appVersion |
 | imagePullSecrets | list | `[]` | might be useful when using private registry |
 | labels | object | `{}` | extra labels |
