@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.8
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.61
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.64
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.1
 	github.com/bxcodec/faker/v3 v3.8.1
 	github.com/prometheus/client_golang v1.21.0
 	github.com/radovskyb/watcher v1.0.7
