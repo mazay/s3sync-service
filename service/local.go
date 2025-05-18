@@ -122,7 +122,7 @@ func CompareChecksum(filename string, checksumRemote string, site *Site) string 
 		logger.Error(err)
 		return ""
 	}
-	defer file.Close()
+	defer secureFileClose(file)
 
 	dataSize, err := file.Seek(0, io.SeekEnd)
 	if err != nil {

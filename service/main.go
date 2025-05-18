@@ -252,11 +252,12 @@ func uploadWorker(config *Config, uploadCh <-chan UploadCFG,
 			for {
 				select {
 				case cfg := <-uploadCh:
-					if cfg.action == "upload" {
+					switch cfg.action {
+					case "upload":
 						cfg.site.uploadFile(cfg.file)
-					} else if cfg.action == "delete" {
+					case "delete":
 						cfg.site.deleteFile(cfg.file)
-					} else {
+					default:
 						logger.Errorf("programming error, unknown action: %s", cfg.action)
 					}
 				case <-uploadStopperChan:

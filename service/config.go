@@ -173,13 +173,13 @@ func getConfig() (bool, *Config) {
 
 func readConfigFile(configpath string) *Config {
 	f, err := os.Open(configpath)
+	defer secureFileClose(f)
 	if err != nil {
 		configProcessError(err)
 	}
 
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&config)
-	f.Close()
 	if err != nil {
 		configProcessError(err)
 	} else {

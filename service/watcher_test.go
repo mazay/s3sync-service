@@ -38,7 +38,7 @@ func TestWatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpPath)
+	defer secureRemoveAll(tmpPath)
 
 	// Create a mock site
 	site := &Site{
@@ -66,7 +66,7 @@ func TestWatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(testFile.Name())
+	defer secureRemove(testFile.Name())
 
 	// Wait for the watcher to detect the file
 	time.Sleep(time.Second * 35)
