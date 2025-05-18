@@ -167,7 +167,7 @@ func (site *Site) uploadFile(file string) {
 		logger.Errorf("failed to open file %q, %v", file, err)
 		return
 	}
-	defer f.Close()
+	defer secureFileClose(f)
 
 	// Try to get object size in case we updating already existing
 	objSize := site.getObjectSize(s3Key)

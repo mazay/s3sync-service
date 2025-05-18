@@ -26,19 +26,30 @@ import (
 )
 
 func TestIsInK8s(t *testing.T) {
-	tests := []struct {
-		name string
-		want bool
-	}{
-		{"inK8s", true},
-		{"notInK8s", false},
-	}
+	var (
+		err   error
+		tests = []struct {
+			name string
+			want bool
+		}{
+			{"inK8s", true},
+			{"notInK8s", false},
+		}
+	)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.name == "inK8s" {
-				os.Setenv("KUBERNETES_SERVICE_HOST", "127.0.0.1")
-			} else if tt.name == "notInK8s" {
-				os.Unsetenv("KUBERNETES_SERVICE_HOST")
+			switch tt.name {
+			case "inK8s":
+				err = os.Setenv("KUBERNETES_SERVICE_HOST", "127.0.0.1")
+				if err != nil {
+					t.Fatal(err)
+				}
+			case "notInK8s":
+				err = os.Unsetenv("KUBERNETES_SERVICE_HOST")
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 			if got := isInK8s(); got != tt.want {
 				t.Errorf("isInK8s() = %v, want %v", got, tt.want)
