@@ -213,7 +213,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Install Helm
-        uses: azure/setup-helm@v4.3.0
+        uses: azure/setup-helm@v4.3.1
 
       - name: Check if version exists
         id: version-check
