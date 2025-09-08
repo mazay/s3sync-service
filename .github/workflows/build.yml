@@ -31,7 +31,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version-file: ./src/github.com/${{ github.repository }}/go.mod
           cache-dependency-path: "**/go.sum"
 
       - name: Install dependencies
@@ -89,7 +89,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version-file: ./src/github.com/${{ github.repository }}/go.mod
           cache-dependency-path: "**/go.sum"
 
       - name: Install dependencies
