@@ -2,7 +2,6 @@ name: Build
 
 env:
   ATTACHMENTS: ""
-  GOPATH: ${{ github.workspace }}
 
 on:
   release:
@@ -25,36 +24,31 @@ jobs:
     steps:
       - name: Chechout
         uses: actions/checkout@v5
-        with:
-          path: ./src/github.com/${{ github.repository }}
 
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: ./src/github.com/${{ github.repository }}/go.mod
-          cache-dependency-path: "**/go.sum"
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
 
       - name: Install dependencies
         run: |
-          cd ./src/github.com/${{ github.repository }}
           go mod download
 
       - name: Run tests
         env:
           RELEASE_VERSION: devel # version doesn't really matter for tests but still has to be set
         run: |
-          cd ./src/github.com/${{ github.repository }}
           make test
 
       - name: Codecov
         uses: codecov/codecov-action@v5
         with:
-          file: ./src/github.com/${{ github.repository }}/cover.out
+          files: ./cover.out
           token: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     runs-on: ubuntu-latest
-    needs: test
     strategy:
       matrix:
         go-os: [darwin, windows, linux, freebsd]
@@ -83,18 +77,15 @@ jobs:
 
       - name: Chechout
         uses: actions/checkout@v5
-        with:
-          path: ./src/github.com/${{ github.repository }}
 
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: ./src/github.com/${{ github.repository }}/go.mod
-          cache-dependency-path: "**/go.sum"
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
 
       - name: Install dependencies
         run: |
-          cd ./src/github.com/${{ github.repository }}
           go mod download
 
       - name: Build
@@ -105,18 +96,16 @@ jobs:
           ARCH: ${{ matrix.go-arch }}
           GOARCH: ${{ matrix.go-arch }}
         run: |
-          cd ./src/github.com/${{ github.repository }}
           make build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: s3sync-service-${{ steps.meta.outputs.version }}-${{ matrix.go-os }}-${{ matrix.go-arch }}
-          path: ./src/github.com/${{ github.repository }}/bin/s3sync-service-*
+          path: ./bin/s3sync-service-*
 
   docker:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - name: Docker meta
         id: meta
