@@ -39,7 +39,7 @@ sites:
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "mock-configmap"},
 		Data:       map[string]string{"config.yml": config},
 	}
-	clientset := k8smock.NewSimpleClientset(cm)
+	clientset := k8smock.NewClientset(cm)
 
 	tests := []struct {
 		cm   string
