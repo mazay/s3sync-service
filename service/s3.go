@@ -31,9 +31,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsCfg "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 // Site is a set of options for backing up data to S3
@@ -153,9 +153,9 @@ func (site *Site) uploadFile(file string) {
 	var err error
 
 	s3Key := generateS3Key(site.BucketPath, site.LocalPath, file)
-	uploader := manager.NewUploader(site.client, func(u *manager.Uploader) {
-		u.PartSize = 5 * 1024 * 1024
-		u.Concurrency = 5
+	uploader := transfermanager.New(site.client, func(o *transfermanager.Options) {
+		o.PartSizeBytes = 5 * 1024 * 1024
+		o.Concurrency = 5
 	})
 
 	f, err := os.Open(file)
@@ -172,7 +172,7 @@ func (site *Site) uploadFile(file string) {
 	// Try to get object size in case we updating already existing
 	objSize := site.getObjectSize(s3Key)
 
-	_, err = uploader.Upload(context.TODO(), &s3.PutObjectInput{
+	_, err = uploader.UploadObject(context.TODO(), &transfermanager.UploadObjectInput{
 		Bucket:       aws.String(site.Bucket),
 		Key:          aws.String(s3Key),
 		Body:         f,
