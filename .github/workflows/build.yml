@@ -59,6 +59,9 @@ jobs:
             go-arch: 386
           - go-os: darwin
             go-arch: arm
+          # exclude 32 bit arm for windows builds
+          - go-os: windows
+            go-arch: arm
     steps:
       - name: Docker meta
         id: meta
@@ -163,8 +166,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args:
-            RELEASE_VERSION=${{ steps.meta.outputs.version }}
+          build-args: RELEASE_VERSION=${{ steps.meta.outputs.version }}
 
   publish:
     runs-on: ubuntu-latest
