@@ -43,7 +43,7 @@ RUN adduser \
     --no-create-home \
     -u 8888 \
     s3sync
-USER s3sync
+USER 8888
 WORKDIR /app/
 COPY --from=builder /go/src/github.com/mazay/s3sync-service/s3sync-service .
 CMD ["./s3sync-service"]
